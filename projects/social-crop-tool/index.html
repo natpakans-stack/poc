@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Listening Cropper — ครอปโพสต์อัตโนมัติ</title>
+<meta name="description" content="ครอปรูป screenshot จาก Social Listening tool ให้เป็นโพสต์แยกอัตโนมัติ ไม่ต้องลงโปรแกรม เปิดในเบราว์เซอร์ได้เลย">
+<meta property="og:title" content="Social Listening Cropper | ครอปโพสต์อัตโนมัติ">
+<meta property="og:description" content="ลากรูป screenshot จาก Social Listening มาวาง — ครอปแยกเป็นโพสต์อัตโนมัติ ไม่ต้องลงโปรแกรม">
+<meta property="og:image" content="https://natpakans-stack.github.io/Muniverse/Preview/og-social-crop.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://natpakans-stack.github.io/Muniverse/Preview/og-social-crop.png">
+<meta name="theme-color" content="#1B1D22">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' text-anchor='middle' font-size='80'>✂️</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans Thai', sans-serif;
+    background: #F0F1F4;
+    color: #1B1D22;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1B1D22 0%, #282160 100%);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .header p {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 2px dashed #CBCDD6;
+    border-radius: 20px;
+    background: #fff;
+    padding: 80px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: #EC599D;
+    background: #FDEFF5;
+    transform: scale(1.005);
+  }
+
+  .dropzone-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #FDEFF5, #F1F2FF);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+  }
+
+  .dropzone h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .dropzone p {
+    color: #6A6E83;
+    font-size: 14px;
+  }
+
+  .dropzone-hint {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 20px;
+    background: #F8F8F9;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #9A9DAD;
+  }
+
+  /* Queue section */
+  .queue-section {
+    display: none;
+    margin-top: 24px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px;
+  }
+
+  .queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .queue-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .queue-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 24px;
+  }
+
+  .queue-file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #F8F8F9;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+  }
+
+  .queue-file-item.processing {
+    background: #F1F2FF;
+    border-color: #7279FB40;
+  }
+
+  .queue-file-item.done {
+    background: #F0F8F0;
+    border-color: #A5D6A740;
+  }
+
+  .queue-file-item.error {
+    background: #FFEBEE;
+    border-color: #EF9A9A40;
+  }
+
+  .queue-file-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: #7279FB;
+    flex-shrink: 0;
+    min-width: 28px;
+  }
+
+  .queue-file-name {
+    flex: 1;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .queue-file-size {
+    color: #9A9DAD;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .queue-file-status {
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 80px;
+    text-align: right;
+  }
+
+  .queue-file-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9A9DAD;
+    font-size: 18px;
+    padding: 0 4px;
+    transition: color 0.15s;
+  }
+
+  .queue-file-remove:hover { color: #C62828; }
+
+  .queue-file-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #EC599D, #7279FB);
+    border-radius: 0 0 12px 12px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  .queue-file-item.done .queue-file-progress {
+    background: #2E7D32;
+    width: 100%;
+  }
+
+  .queue-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .queue-add-more {
+    font-size: 14px;
+    color: #7279FB;
+    cursor: pointer;
+    font-weight: 600;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+
+  .queue-add-more:hover { text-decoration: underline; }
+
+  /* Progress */
+  .progress-section {
+    display: none;
+    background: #fff;
+    border-radius: 20px;
+    padding: 48px 32px;
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .progress-title {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-track {
+    background: #EBECEF;
+    border-radius: 8px;
+    height: 6px;
+    margin-top: 20px;
+    overflow: hidden;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .progress-bar-fill {
+    background: linear-gradient(90deg, #EC599D, #7279FB);
+    height: 100%;
+    border-radius: 8px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-text {
+    font-size: 14px;
+    color: #6A6E83;
+    margin-top: 12px;
+  }
+
+  .progress-sub {
+    font-size: 13px;
+    color: #9A9DAD;
+    margin-top: 6px;
+  }
+
+  /* Results */
+  .results-section {
+    display: none;
+    margin-top: 24px;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .results-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #6A6E83;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: #EC599D;
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #D94488; }
+
+  .btn-secondary {
+    background: #F1F2FF;
+    color: #7279FB;
+  }
+
+  .btn-secondary:hover { background: #E0E2FF; }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Filter dropdown */
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-size: 14px;
+    color: #6A6E83;
+    font-weight: 600;
+  }
+
+  .filter-select {
+    padding: 8px 36px 8px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid #EBECEF;
+    background: #fff;
+    color: #1B1D22;
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%236A6E83' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    min-width: 200px;
+    transition: all 0.15s;
+  }
+
+  .filter-select:hover {
+    border-color: #EC599D;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: #EC599D;
+    box-shadow: 0 0 0 3px #EC599D20;
+  }
+
+  .post-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #EBECEF;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .post-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    border-color: #EC599D40;
+  }
+
+  .post-card img {
+    width: 100%;
+    display: block;
+  }
+
+  .post-card .post-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(16,17,20,0.6) 0%, transparent 40%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 40px;
+  }
+
+  .post-card:hover .post-overlay { opacity: 1; }
+
+  .post-overlay-text {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    border-radius: 8px;
+  }
+
+  .post-card .post-label {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #6A6E83;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FAFAFA;
+  }
+
+  .post-card .dl-icon {
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-size: 16px;
+  }
+
+  .post-card:hover .dl-icon { opacity: 1; }
+
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 20px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #fff 0%, #F8F8FF 100%);
+    border-radius: 16px;
+    border: 1px solid #EBECEF;
+  }
+
+  .stat-item {
+    text-align: center;
+    flex: 1;
+    position: relative;
+    padding: 8px 24px;
+  }
+
+  .stat-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 1px;
+    background: #EBECEF;
+  }
+
+  .stat-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #EC599D, #7279FB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: #6A6E83;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* Reset button */
+  .reset-link {
+    color: #7279FB;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  /* Lightbox */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(16,17,20,0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  .lightbox.active { display: flex; }
+
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 75vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    object-fit: contain;
+  }
+
+  .lightbox-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lightbox-name {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+
+  .lightbox-close:hover { opacity: 1; }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #fff;
+    font-size: 36px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+    background: none;
+    border: none;
+    padding: 16px;
+    user-select: none;
+  }
+
+  .lightbox-nav:hover { opacity: 1; }
+  .lightbox-prev { left: 12px; }
+  .lightbox-next { right: 12px; }
+
+  .btn-light {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    backdrop-filter: blur(8px);
+  }
+
+  .btn-light:hover { background: rgba(255,255,255,0.25); }
+
+  .lightbox-counter {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Footer */
+  .site-footer {
+    text-align: center;
+    padding: 48px 24px 0;
+    background: #F0F1F4;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .mascot-half {
+    width: 180px;
+    height: 120px;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+
+  .mascot-half img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .closing {
+    text-align: center;
+    padding: 48px 24px 64px;
+    border-top: 1px solid #CBCDD6;
+    background: #F0F1F4;
+  }
+
+  .closing h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .closing p {
+    color: #6A6E83;
+    font-size: 0.95rem;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .closing .stack-icons {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .closing .stack-icon {
+    background: #fff;
+    border: 1px solid #EBECEF;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #6A6E83;
+  }
+
+  /* QA Validation badges */
+  .qa-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    z-index: 2;
+    line-height: 1.3;
+  }
+
+  .qa-pass {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+  }
+
+  .qa-warn {
+    background: #FFF8E1;
+    color: #F57F17;
+    border: 1px solid #FFE082;
+  }
+
+  .qa-fail {
+    background: #FFEBEE;
+    color: #C62828;
+    border: 1px solid #EF9A9A;
+  }
+
+  .qa-details {
+    font-size: 11px;
+    color: #9A9DAD;
+    padding: 4px 12px 6px;
+    line-height: 1.4;
+  }
+
+  .qa-check { color: #2E7D32; }
+  .qa-cross { color: #C62828; }
+  .qa-triangle { color: #F57F17; }
+
+  /* Column section — collapsible */
+  .col-section {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+
+  .col-section:first-child {
+    margin-top: 0;
+  }
+
+  .col-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #EBECEF;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+
+  .col-section-header:hover {
+    background: #F8F8F9;
+    border-color: #CBCDD6;
+  }
+
+  .col-section-toggle {
+    font-size: 12px;
+    color: #9A9DAD;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+
+  .col-section.collapsed .col-section-toggle {
+    transform: rotate(-90deg);
+  }
+
+  .col-section-num {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1B1D22;
+  }
+
+  .col-section-count {
+    font-size: 13px;
+    color: #6A6E83;
+    font-weight: 500;
+  }
+
+  .col-section-qa {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .col-section-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding-top: 12px;
+    transition: all 0.2s;
+  }
+
+  .col-section.collapsed .col-section-body {
+    display: none;
+  }
+
+  /* Column source badge */
+  .col-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    z-index: 2;
+    background: rgba(16,17,20,0.6);
+    color: #fff;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Source file section header */
+  .source-section-header {
+    grid-column: 1 / -1;
+    padding: 20px 0 12px;
+    border-top: 3px solid #7279FB30;
+    margin-top: 12px;
+  }
+
+  .source-section-header:first-child {
+    border-top: none;
+    margin-top: 0;
+  }
+
+  .source-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1B1D22;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .source-section-meta {
+    font-size: 13px;
+    color: #6A6E83;
+    display: flex;
+    gap: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">✂️</div>
+  <div>
+    <h1>Social Listening Cropper <span style="font-size:14px;font-weight:400;color:#9A9DAD">v3.1</span></h1>
+    <p>ลากรูป screenshot จาก Social Listening มาวาง — ครอปแยกเป็นโพสต์อัตโนมัติ รองรับหลายไฟล์</p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Drop Zone -->
+  <div class="dropzone" id="dropzone">
+    <div class="dropzone-icon">🖼️</div>
+    <h2>ลากรูป screenshot มาวางตรงนี้</h2>
+    <p>หรือคลิกเพื่อเลือกไฟล์ — รองรับ PNG, JPG สูงสุด 50 ไฟล์</p>
+    <div class="dropzone-hint">รองรับหลายไฟล์พร้อมกัน</div>
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+  </div>
+
+  <!-- Queue Section -->
+  <div class="queue-section" id="queueSection">
+    <div class="queue-header">
+      <h2 id="queueTitle">ไฟล์ที่เลือก</h2>
+      <div class="btn-group">
+        <button class="queue-add-more" id="addMoreBtn">+ เพิ่มไฟล์</button>
+        <button class="btn btn-secondary" onclick="clearQueue()">ล้างทั้งหมด</button>
+      </div>
+    </div>
+    <div class="queue-file-list" id="queueFileList"></div>
+    <div class="queue-actions">
+      <span id="queueSummary" style="font-size:13px;color:#9A9DAD"></span>
+      <button class="btn btn-primary" id="startProcessBtn" onclick="startProcessing()">
+        ✂️ เริ่มครอป
+      </button>
+    </div>
+    <input type="file" id="addMoreInput" accept="image/*" multiple style="display:none">
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section" id="progressSection">
+    <div class="progress-title" id="progressTitle">กำลังวิเคราะห์รูป...</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <div class="progress-text" id="progressText">เตรียมพร้อม...</div>
+    <div class="progress-sub" id="progressSub"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="resultsSection">
+    <div class="stats-bar" id="statsBar"></div>
+
+    <div class="results-header">
+      <h2 id="resultsTitle">ผลลัพธ์</h2>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="resetAll()">เริ่มใหม่</button>
+        <button class="btn btn-primary" id="downloadAllBtn" onclick="downloadAll()">
+          ⬇ ดาวน์โหลดทั้งหมด (.zip)
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter dropdown -->
+    <div class="filter-bar" id="filterBar"></div>
+
+    <div id="postsGrid"></div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <button class="lightbox-nav lightbox-prev" onclick="navLightbox(-1)">&#8249;</button>
+  <button class="lightbox-nav lightbox-next" onclick="navLightbox(1)">&#8250;</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-footer">
+    <span class="lightbox-counter" id="lightboxCounter"></span>
+    <span class="lightbox-name" id="lightboxName"></span>
+    <button class="btn btn-light" onclick="downloadLightboxCurrent()">⬇ ดาวน์โหลด</button>
+  </div>
+</div>
+
+<script>
+// ─── Config ─────────────────────────────────────────────
+const MAX_FILES = 50;
+
+// Column detection
+const MIN_COL_SEP_WIDTH = 5;
+const MIN_COL_WIDTH = 50;
+
+// Gray SEPARATOR detection
+const GRAY_SEP_MIN = 225;
+const GRAY_SEP_MAX = 248;
+const GRAY_MAX_DIFF = 8;
+const GRAY_ROW_THRESH = 0.85;
+const WHITE_ROW_MIN = 248;
+const WHITE_ROW_THRESH = 0.70;
+
+// Blue bar detection
+const BLUE_BAR_BR_MIN = 228;
+const BLUE_BAR_BR_MAX = 244;
+const BLUE_BAR_BMR_MIN = 5;
+const BLUE_BAR_BMR_MAX = 14;
+const BLUE_BAR_MIN_H = 12;
+const BLUE_BAR_MAX_H = 25;
+
+// Post detection
+const MIN_CARD_H = 100;
+
+// ─── State ──────────────────────────────────────────────
+let sourceFiles = [];      // { file, name, size, status: 'queued'|'processing'|'done'|'error' }
+let sourceResults = [];    // { fileName, blobs[], names[], thumbs[], fullUrls[], validations[], cropMeta[], colCounts[], numCols }
+let activeFilter = 'all';  // 'all' or index into sourceResults
+let lightboxIdx = -1;
+let filteredIndices = [];   // indices into the flattened view for lightbox nav
+let isProcessing = false;
+
+// ─── Drop Zone ──────────────────────────────────────────
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const addMoreInput = document.getElementById('addMoreInput');
+
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+dropzone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropzone.classList.add('drag-over');
+});
+dropzone.addEventListener('dragleave', () => {
+  dropzone.classList.remove('drag-over');
+});
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+
+document.getElementById('addMoreBtn').addEventListener('click', () => addMoreInput.click());
+addMoreInput.addEventListener('change', e => {
+  handleFiles(e.target.files);
+  addMoreInput.value = '';
+});
+
+// ─── File Queue ─────────────────────────────────────────
+function handleFiles(fileList) {
+  const newFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  if (newFiles.length === 0) return;
+
+  const remaining = MAX_FILES - sourceFiles.length;
+  if (remaining <= 0) {
+    alert(`สูงสุด ${MAX_FILES} ไฟล์`);
+    return;
+  }
+
+  const toAdd = newFiles.slice(0, remaining);
+  for (const file of toAdd) {
+    sourceFiles.push({ file, name: file.name, size: file.size, status: 'queued' });
+  }
+
+  if (toAdd.length < newFiles.length) {
+    alert(`เพิ่มได้แค่ ${toAdd.length} ไฟล์ (ครบ ${MAX_FILES} ไฟล์แล้ว)`);
+  }
+
+  showQueue();
+}
+
+function showQueue() {
+  dropzone.style.display = 'none';
+  document.getElementById('queueSection').style.display = 'block';
+  document.getElementById('queueTitle').textContent = `ไฟล์ที่เลือก (${sourceFiles.length})`;
+
+  const list = document.getElementById('queueFileList');
+  list.innerHTML = '';
+
+  for (let i = 0; i < sourceFiles.length; i++) {
+    const sf = sourceFiles[i];
+    const item = document.createElement('div');
+    item.className = `queue-file-item ${sf.status !== 'queued' ? sf.status : ''}`;
+    item.id = `queue-item-${i}`;
+
+    const sizeStr = sf.size > 1048576
+      ? (sf.size / 1048576).toFixed(1) + ' MB'
+      : (sf.size / 1024).toFixed(0) + ' KB';
+
+    let statusText = '';
+    if (sf.status === 'queued') statusText = '<span style="color:#9A9DAD">รอคิว</span>';
+    else if (sf.status === 'processing') statusText = '<span style="color:#7279FB">กำลังทำ...</span>';
+    else if (sf.status === 'done') statusText = '<span style="color:#2E7D32">เสร็จ ✓</span>';
+    else if (sf.status === 'error') statusText = '<span style="color:#C62828">ผิดพลาด</span>';
+
+    const removeBtn = sf.status === 'queued' && !isProcessing
+      ? `<button class="queue-file-remove" onclick="removeFromQueue(${i})" title="ลบ">&times;</button>`
+      : '';
+
+    const progressPct = sf.progress || 0;
+
+    item.innerHTML = `
+      <span class="queue-file-num">#${i + 1}</span>
+      <span class="queue-file-name">${sf.name}</span>
+      <span class="queue-file-size">${sizeStr}</span>
+      <span class="queue-file-status">${statusText}</span>
+      ${removeBtn}
+      <div class="queue-file-progress" id="queue-progress-${i}" style="width:${progressPct}%"></div>
+    `;
+    list.appendChild(item);
+  }
+
+  const totalSize = sourceFiles.reduce((s, f) => s + f.size, 0);
+  const totalStr = totalSize > 1048576
+    ? (totalSize / 1048576).toFixed(1) + ' MB'
+    : (totalSize / 1024).toFixed(0) + ' KB';
+  document.getElementById('queueSummary').textContent = `${sourceFiles.length} ไฟล์ · ${totalStr}`;
+
+  document.getElementById('startProcessBtn').disabled = isProcessing || sourceFiles.length === 0;
+  document.getElementById('addMoreBtn').style.display = isProcessing ? 'none' : '';
+}
+
+function removeFromQueue(idx) {
+  sourceFiles.splice(idx, 1);
+  if (sourceFiles.length === 0) {
+    clearQueue();
+  } else {
+    showQueue();
+  }
+}
+
+function clearQueue() {
+  sourceFiles = [];
+  sourceResults = [];
+  document.getElementById('queueSection').style.display = 'none';
+  dropzone.style.display = '';
+  fileInput.value = '';
+}
+
+// ─── Processing ─────────────────────────────────────────
+let currentFileIdx = -1; // track which file is being processed for progress updates
+
+async function startProcessing() {
+  if (isProcessing || sourceFiles.length === 0) return;
+  isProcessing = true;
+  sourceResults = [];
+
+  document.getElementById('startProcessBtn').disabled = true;
+  document.getElementById('addMoreBtn').style.display = 'none';
+  document.getElementById('progressSection').style.display = 'block';
+
+  // Remove all remove buttons
+  document.querySelectorAll('.queue-file-remove').forEach(b => b.remove());
+
+  const total = sourceFiles.length;
+
+  for (let fi = 0; fi < total; fi++) {
+    const sf = sourceFiles[fi];
+    sf.status = 'processing';
+    sf.progress = 0;
+    currentFileIdx = fi;
+    updateQueueItem(fi);
+
+    document.getElementById('progressTitle').textContent =
+      `#${fi + 1}/${total}: ${sf.name}`;
+    document.getElementById('progressSub').textContent =
+      `ภาพรวม: ${fi}/${total} เสร็จ`;
+
+    try {
+      const img = await loadImage(sf.file);
+      const result = await processImageForSource(img, sf.name, fi, total);
+      sourceResults.push(result);
+      sf.status = 'done';
+      sf.progress = 100;
+    } catch (err) {
+      console.error(`Error processing ${sf.name}:`, err);
+      sf.status = 'error';
+    }
+
+    updateQueueItem(fi);
+  }
+
+  currentFileIdx = -1;
+  isProcessing = false;
+
+  setProgress(100, 'เสร็จสิ้น!');
+  document.getElementById('progressSub').textContent =
+    `${sourceResults.length}/${total} ไฟล์สำเร็จ`;
+  await sleep(400);
+
+  showResults();
+}
+
+function updateQueueItem(idx) {
+  const sf = sourceFiles[idx];
+  const item = document.getElementById(`queue-item-${idx}`);
+  if (!item) return;
+  item.className = `queue-file-item ${sf.status}`;
+  const statusEl = item.querySelector('.queue-file-status');
+  if (statusEl) {
+    if (sf.status === 'processing') statusEl.innerHTML = '<span style="color:#7279FB">กำลังทำ...</span>';
+    else if (sf.status === 'done') statusEl.innerHTML = '<span style="color:#2E7D32">เสร็จ ✓</span>';
+    else if (sf.status === 'error') statusEl.innerHTML = '<span style="color:#C62828">ผิดพลาด</span>';
+  }
+  // Update progress bar
+  const progressEl = document.getElementById(`queue-progress-${idx}`);
+  if (progressEl) {
+    progressEl.style.width = (sf.progress || 0) + '%';
+  }
+}
+
+function updateFileProgress(pct) {
+  if (currentFileIdx < 0) return;
+  const sf = sourceFiles[currentFileIdx];
+  if (sf) sf.progress = pct;
+  const progressEl = document.getElementById(`queue-progress-${currentFileIdx}`);
+  if (progressEl) progressEl.style.width = pct + '%';
+}
+
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
+    img.src = url;
+  });
+}
+
+function setProgress(pct, text) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = text;
+}
+
+// ─── Core Processing (per source file) ─────────────────
+async function processImageForSource(img, fileName, fileIdx, totalFiles) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+
+  const w = img.width;
+  const h = img.height;
+
+  // Progress helper — maps per-file progress (0-100) to overall progress
+  const fileBase = (fileIdx / totalFiles) * 100;
+  const fileSpan = (1 / totalFiles) * 100;
+  const fp = (pct, text) => {
+    const overall = fileBase + (pct / 100) * fileSpan;
+    setProgress(overall, text);
+    updateFileProgress(pct);
+  };
+
+  fp(10, `${w} x ${h} px — กำลังวิเคราะห์คอลัมน์...`);
+  await sleep(30);
+
+  // ─── Detect columns ────────────────────────────────
+  const sampleRows = 50;
+  const colBrightness = new Float32Array(w);
+  for (let sy = 0; sy < sampleRows; sy++) {
+    const y = Math.floor((sy / sampleRows) * h);
+    const rowData = ctx.getImageData(0, y, w, 1).data;
+    for (let x = 0; x < w; x++) {
+      const idx = x * 4;
+      colBrightness[x] += (rowData[idx] + rowData[idx+1] + rowData[idx+2]) / 3;
+    }
+  }
+  for (let x = 0; x < w; x++) colBrightness[x] /= sampleRows;
+
+  const isSepCol = colBrightness.map(v => v > 230);
+  const sepStrips = [];
+  let cnt = 0;
+  for (let x = 0; x < w; x++) {
+    if (isSepCol[x]) { cnt++; }
+    else {
+      if (cnt >= MIN_COL_SEP_WIDTH) sepStrips.push([x - cnt, x]);
+      cnt = 0;
+    }
+  }
+  if (cnt >= MIN_COL_SEP_WIDTH) sepStrips.push([w - cnt, w]);
+
+  const columns = [];
+  for (let i = 0; i < sepStrips.length - 1; i++) {
+    const cs = sepStrips[i][1];
+    const ce = sepStrips[i+1][0];
+    if (ce - cs > MIN_COL_WIDTH) columns.push([cs, ce]);
+  }
+
+  fp(20, `พบ ${columns.length} คอลัมน์ — เริ่มวิเคราะห์...`);
+  await sleep(50);
+
+  // ─── Find posts per column ─────────────────────────
+  const allCrops = [];
+  const colCounts = [];
+  const colPctEach = 50 / Math.max(columns.length, 1);
+
+  for (let ci = 0; ci < columns.length; ci++) {
+    const [cx1, cx2] = columns[ci];
+    const colW = cx2 - cx1;
+    const colBase = 20 + ci * colPctEach;
+
+    fp(colBase, `คอลัมน์ ${ci+1}/${columns.length}: กำลังอ่านพิกเซล...`);
+    await sleep(0);
+
+    const colData = ctx.getImageData(cx1, 0, colW, h).data;
+    const stride = colW * 4;
+
+    const isGray = new Uint8Array(h);
+    const isWhite = new Uint8Array(h);
+    const isBlue = new Uint8Array(h);
+    const rowBrightness = new Float32Array(h);
+    const darkRatio = new Float32Array(h);
+    const DARK_PIXEL_THRESH = 180;
+
+    for (let y = 0; y < h; y++) {
+      const rowOff = y * stride;
+      let grayCount = 0, whiteCount = 0, darkCount = 0;
+      let sumR = 0, sumG = 0, sumB = 0;
+
+      for (let x = 0; x < colW; x++) {
+        const idx = rowOff + x * 4;
+        const r = colData[idx], g = colData[idx+1], b = colData[idx+2];
+        sumR += r; sumG += g; sumB += b;
+
+        const br = (r + g + b) / 3;
+        const maxDiff = Math.max(Math.abs(r - br), Math.abs(g - br), Math.abs(b - br));
+
+        if (br >= GRAY_SEP_MIN && br <= GRAY_SEP_MAX && maxDiff < GRAY_MAX_DIFF) grayCount++;
+        if (br >= WHITE_ROW_MIN) whiteCount++;
+        if (br < DARK_PIXEL_THRESH) darkCount++;
+      }
+      isGray[y] = (grayCount / colW) > GRAY_ROW_THRESH ? 1 : 0;
+      isWhite[y] = (whiteCount / colW) > WHITE_ROW_THRESH ? 1 : 0;
+      darkRatio[y] = darkCount / colW;
+      rowBrightness[y] = (sumR + sumG + sumB) / (3 * colW);
+
+      const avgR = sumR / colW, avgB = sumB / colW;
+      const avgBr = rowBrightness[y];
+      const avgBmR = avgB - avgR;
+      isBlue[y] = (avgBr >= BLUE_BAR_BR_MIN && avgBr <= BLUE_BAR_BR_MAX
+                   && avgBmR >= BLUE_BAR_BMR_MIN && avgBmR <= BLUE_BAR_BMR_MAX) ? 1 : 0;
+    }
+
+    // Find blue bar positions
+    const blueBarsRaw = [];
+    let blueRun = 0;
+    for (let y = 0; y < h; y++) {
+      if (isBlue[y]) { blueRun++; }
+      else {
+        if (blueRun >= BLUE_BAR_MIN_H && blueRun <= BLUE_BAR_MAX_H) {
+          blueBarsRaw.push({ top: y - blueRun, bottom: y, height: blueRun });
+        }
+        blueRun = 0;
+      }
+    }
+    if (blueRun >= BLUE_BAR_MIN_H && blueRun <= BLUE_BAR_MAX_H) {
+      blueBarsRaw.push({ top: h - blueRun, bottom: h, height: blueRun });
+    }
+
+    const blueBars = [];
+    for (const bar of blueBarsRaw) {
+      const prev = blueBars[blueBars.length - 1];
+      if (prev && bar.top - prev.bottom < 300) {
+        if (bar.height > prev.height) blueBars[blueBars.length - 1] = bar;
+      } else {
+        blueBars.push(bar);
+      }
+    }
+
+    console.log(`[${fileName}][Col ${ci+1}] ${blueBarsRaw.length} raw → ${blueBars.length} blue bars`);
+
+    // Find separator between consecutive blue bars
+    function findSepBetween(fromY, toY) {
+      const range = toY - fromY;
+      if (range < 80) return Math.floor((fromY + toY) / 2);
+
+      const nsStart = fromY + 65;
+      const nsEnd = Math.min(fromY + 110, toY - 10);
+
+      if (nsStart + 10 >= nsEnd) {
+        return Math.min(fromY + 82, Math.floor((fromY + toY) / 2));
+      }
+
+      let maxBr = 0, maxBrY = fromY + 82;
+      for (let y = nsStart; y < nsEnd; y++) {
+        if (rowBrightness[y] > maxBr) { maxBr = rowBrightness[y]; maxBrY = y; }
+      }
+
+      let bestAvg = 1, bestDrY = fromY + 82;
+      for (let y = nsStart + 2; y < nsEnd - 2; y++) {
+        const avg = (darkRatio[y-2] + darkRatio[y-1] + darkRatio[y] + darkRatio[y+1] + darkRatio[y+2]) / 5;
+        if (avg < bestAvg) { bestAvg = avg; bestDrY = y; }
+      }
+
+      return maxBr > 170 ? maxBrY : bestDrY;
+    }
+
+    const posts = [];
+    for (let bi = 0; bi < blueBars.length; bi++) {
+      const bar = blueBars[bi];
+
+      let postTop;
+      if (bi === 0) {
+        postTop = 0;
+        for (let y = bar.top - 1; y >= 0; y--) {
+          if (isGray[y]) {
+            let gRun = 1;
+            for (let gy = y - 1; gy >= 0 && isGray[gy]; gy--) gRun++;
+            if (gRun >= 3) { postTop = y + 1; break; }
+          }
+        }
+      } else {
+        postTop = findSepBetween(blueBars[bi - 1].bottom, bar.top);
+      }
+
+      let postBottom;
+      if (bi === blueBars.length - 1) {
+        postBottom = h;
+        for (let y = bar.bottom + 30; y < h; y++) {
+          if (isGray[y]) {
+            let gRun = 1;
+            for (let gy = y + 1; gy < h && isGray[gy]; gy++) gRun++;
+            if (gRun >= 3) { postBottom = y; break; }
+          }
+        }
+      } else {
+        postBottom = findSepBetween(bar.bottom, blueBars[bi + 1].top);
+      }
+
+      if (postBottom - postTop >= MIN_CARD_H) {
+        posts.push({ top: postTop, bottom: postBottom });
+      }
+    }
+
+    console.log(`[${fileName}][Col ${ci+1}] ${posts.length} posts`);
+
+    for (let pi = 0; pi < posts.length; pi++) {
+      const p = posts[pi];
+      allCrops.push({ x1: cx1, y1: p.top, x2: cx2, y2: p.bottom, colIdx: ci, postIdx: pi });
+    }
+    colCounts.push(posts.length);
+
+    fp(colBase + colPctEach, `คอลัมน์ ${ci+1}/${columns.length}: ${posts.length} โพสต์ ✓`);
+    await sleep(50);
+  }
+
+  if (allCrops.length === 0) {
+    return { fileName, blobs: [], names: [], thumbs: [], fullUrls: [], validations: [], cropMeta: [], colCounts: [], numCols: columns.length };
+  }
+
+  // ─── QA Validation ─────────────────────────────────
+  fp(72, `กำลังตรวจสอบ ${allCrops.length} โพสต์...`);
+  await sleep(30);
+
+  const postValidations = [];
+  for (const crop of allCrops) {
+    const cx1 = crop.x1, cy1 = crop.y1, cx2 = crop.x2, cy2 = crop.y2;
+    const cw = cx2 - cx1, ch = cy2 - cy1;
+    const checks = { postHeight: ch, issues: [] };
+
+    const cropData = ctx.getImageData(cx1, cy1, cw, ch).data;
+    const cStride = cw * 4;
+
+    let blueBarY = -1, blueBarCount = 0;
+    for (let y = 0; y < ch; y++) {
+      const rowOff = y * cStride;
+      let sumR = 0, sumB = 0, sumBr = 0;
+      for (let x = 0; x < cw; x++) {
+        const idx = rowOff + x * 4;
+        sumR += cropData[idx];
+        sumB += cropData[idx + 2];
+        sumBr += (cropData[idx] + cropData[idx + 1] + cropData[idx + 2]) / 3;
+      }
+      const avgR = sumR / cw, avgB = sumB / cw, avgBr = sumBr / cw;
+      const bmr = avgB - avgR;
+      if (avgBr >= BLUE_BAR_BR_MIN && avgBr <= BLUE_BAR_BR_MAX
+          && bmr >= BLUE_BAR_BMR_MIN && bmr <= BLUE_BAR_BMR_MAX) {
+        if (blueBarY < 0) blueBarY = y;
+        blueBarCount++;
+      }
+    }
+    checks.hasBlueBar = blueBarCount >= BLUE_BAR_MIN_H;
+    checks.blueBarY = blueBarY;
+    checks.blueBarRatio = blueBarY >= 0 ? blueBarY / ch : -1;
+    checks.blueBarInLowerHalf = checks.blueBarRatio > 0.35;
+
+    let topDarkCount = 0, topTotalPx = 0;
+    const topCheckH = Math.min(30, ch);
+    for (let y = 0; y < topCheckH; y++) {
+      const rowOff = y * cStride;
+      for (let x = 0; x < cw; x++) {
+        const idx = rowOff + x * 4;
+        const br = (cropData[idx] + cropData[idx + 1] + cropData[idx + 2]) / 3;
+        if (br < 80) topDarkCount++;
+        topTotalPx++;
+      }
+    }
+    checks.topNotDark = (topDarkCount / topTotalPx) < 0.9;
+
+    let botBrightCount = 0, botTotalPx = 0;
+    const botCheckH = Math.min(80, ch);
+    for (let y = ch - botCheckH; y < ch; y++) {
+      const rowOff = y * cStride;
+      for (let x = 0; x < cw; x++) {
+        const idx = rowOff + x * 4;
+        const br = (cropData[idx] + cropData[idx + 1] + cropData[idx + 2]) / 3;
+        if (br > 150) botBrightCount++;
+        botTotalPx++;
+      }
+    }
+    checks.bottomHasContent = (botBrightCount / botTotalPx) > 0.3;
+    checks.heightOk = ch >= 300 && ch <= 1800;
+
+    if (!checks.hasBlueBar) checks.issues.push('ไม่พบ Blue Bar');
+    if (!checks.blueBarInLowerHalf && checks.hasBlueBar) checks.issues.push('Blue Bar อยู่สูงเกินไป');
+    if (!checks.topNotDark) checks.issues.push('ด้านบนมืดผิดปกติ');
+    if (!checks.bottomHasContent) checks.issues.push('ด้านล่างไม่มีเนื้อหา');
+    if (!checks.heightOk) checks.issues.push(ch < 300 ? 'สั้นเกินไป' : 'ยาวเกินไป');
+
+    const passCount = [checks.hasBlueBar, checks.blueBarInLowerHalf, checks.topNotDark,
+                       checks.bottomHasContent, checks.heightOk].filter(Boolean).length;
+    checks.score = passCount;
+    checks.status = passCount === 5 ? 'pass' : passCount >= 3 ? 'warn' : 'fail';
+
+    postValidations.push(checks);
+  }
+
+  // ─── Pass 2: Refine crop boundaries ─────────────────
+  fp(76, `Refine ขอบ ${allCrops.length} โพสต์...`);
+  await sleep(30);
+
+  const REFINE_DARK_THRESH = 120;
+  const REFINE_DARK_RUN = 3;
+  const REFINE_MAX_TRIM = 150;
+
+  for (let i = 0; i < allCrops.length; i++) {
+    const crop = allCrops[i];
+    const cw = crop.x2 - crop.x1, ch = crop.y2 - crop.y1;
+    if (ch < 150) continue;
+
+    const marginX = Math.floor(cw * 0.2);
+    const sampleW = cw - marginX * 2;
+    if (sampleW < 20) continue;
+    const sampleData = ctx.getImageData(crop.x1 + marginX, crop.y1, sampleW, ch).data;
+    const sStride = sampleW * 4;
+
+    const rowBr = new Float32Array(ch);
+    for (let y = 0; y < ch; y++) {
+      let sum = 0;
+      const off = y * sStride;
+      for (let x = 0; x < sampleW; x++) {
+        const idx = off + x * 4;
+        sum += (sampleData[idx] + sampleData[idx+1] + sampleData[idx+2]) / 3;
+      }
+      rowBr[y] = sum / sampleW;
+    }
+
+    let trimTop = 0;
+    let inDarkZone = false;
+    for (let y = 0; y < Math.min(REFINE_MAX_TRIM, ch - 100); y++) {
+      if (rowBr[y] < REFINE_DARK_THRESH) {
+        inDarkZone = true;
+        trimTop = y + 1;
+      } else if (inDarkZone) {
+        let brightRun = 0;
+        for (let ry = y; ry < Math.min(y + 5, ch); ry++) {
+          if (rowBr[ry] >= REFINE_DARK_THRESH) brightRun++;
+        }
+        if (brightRun >= 3) break;
+      }
+    }
+
+    let trimBottom = 0;
+    for (let y = ch - 1; y >= Math.max(ch - REFINE_MAX_TRIM, 100); y--) {
+      let darkRun = 0;
+      for (let ry = y; ry >= Math.max(y - REFINE_DARK_RUN + 1, 0); ry--) {
+        if (rowBr[ry] < REFINE_DARK_THRESH) darkRun++;
+      }
+      if (darkRun >= REFINE_DARK_RUN) {
+        let darkGapTop = y - REFINE_DARK_RUN + 1;
+        while (darkGapTop > 0 && rowBr[darkGapTop - 1] < REFINE_DARK_THRESH) darkGapTop--;
+        trimBottom = ch - darkGapTop;
+        break;
+      }
+    }
+
+    if (trimTop > 2 || trimBottom > 2) {
+      crop.y1 += trimTop;
+      crop.y2 -= trimBottom;
+      crop.refined = true;
+      crop.trimTop = trimTop;
+      crop.trimBottom = trimBottom;
+    }
+  }
+
+  // Re-run QA after refine
+  for (let i = 0; i < allCrops.length; i++) {
+    const crop = allCrops[i];
+    const ch = crop.y2 - crop.y1;
+    const v = postValidations[i];
+    if (v) {
+      v.postHeight = ch;
+      v.heightOk = ch >= 300 && ch <= 1800;
+      if (crop.refined) {
+        v.trimInfo = `ตัด: บน ${crop.trimTop || 0}px, ล่าง ${crop.trimBottom || 0}px`;
+      }
+      v.issues = [];
+      if (!v.hasBlueBar) v.issues.push('ไม่พบ Blue Bar');
+      if (!v.blueBarInLowerHalf && v.hasBlueBar) v.issues.push('Blue Bar อยู่สูงเกินไป');
+      if (!v.topNotDark) v.issues.push('ด้านบนมืดผิดปกติ');
+      if (!v.bottomHasContent) v.issues.push('ด้านล่างไม่มีเนื้อหา');
+      if (!v.heightOk) v.issues.push(ch < 300 ? 'สั้นเกินไป' : 'ยาวเกินไป');
+      const passCount = [v.hasBlueBar, v.blueBarInLowerHalf, v.topNotDark,
+                         v.bottomHasContent, v.heightOk].filter(Boolean).length;
+      v.score = passCount;
+      v.status = passCount === 5 ? 'pass' : passCount >= 3 ? 'warn' : 'fail';
+    }
+  }
+
+  // ─── Sort into rows (for naming) ──────────────────
+  allCrops.sort((a, b) => a.y1 - b.y1 || a.x1 - b.x1);
+
+  const rows = [];
+  let curRow = [allCrops[0]];
+  for (let i = 1; i < allCrops.length; i++) {
+    if (Math.abs(allCrops[i].y1 - curRow[0].y1) < 100) {
+      curRow.push(allCrops[i]);
+    } else {
+      curRow.sort((a, b) => a.x1 - b.x1);
+      rows.push(curRow);
+      curRow = [allCrops[i]];
+    }
+  }
+  curRow.sort((a, b) => a.x1 - b.x1);
+  rows.push(curRow);
+
+  // ─── Crop & generate blobs ────────────────────────
+  const blobs = [];
+  const names = [];
+  const fullUrls = [];
+  const thumbs = [];
+  const sortedValidations = [];
+  const cropMeta = [];
+
+  const cropCanvas = document.createElement('canvas');
+  const cropCtx = cropCanvas.getContext('2d');
+  let idx = 0;
+
+  // Build a clean name prefix from the source file (keep Thai chars)
+  const nameBase = fileName.replace(/\.[^.]+$/, '').substring(0, 50);
+  const now = new Date();
+  const dateStamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  let fileNum = 0;
+
+  for (let ri = 0; ri < rows.length; ri++) {
+    for (let ci = 0; ci < rows[ri].length; ci++) {
+      const crop = rows[ri][ci];
+      const cw = crop.x2 - crop.x1, ch = crop.y2 - crop.y1;
+      cropCanvas.width = cw;
+      cropCanvas.height = ch;
+      cropCtx.drawImage(img, crop.x1, crop.y1, cw, ch, 0, 0, cw, ch);
+
+      fileNum++;
+      const name = `${String(fileNum).padStart(2,'0')}-${nameBase}-${dateStamp}.png`;
+      const blob = await canvasToBlob(cropCanvas);
+      blobs.push(blob);
+      names.push(name);
+      fullUrls.push(URL.createObjectURL(blob));
+      thumbs.push(cropCanvas.toDataURL('image/jpeg', 0.6));
+
+      const vi = allCrops.indexOf(crop);
+      sortedValidations.push(postValidations[vi]);
+
+      cropMeta.push({
+        rowIdx: ri,
+        colInRow: ci,
+        srcCol: (crop.colIdx != null ? crop.colIdx + 1 : ci + 1),
+        srcPostIdx: (crop.postIdx != null ? crop.postIdx + 1 : '?'),
+      });
+
+      idx++;
+      fp(82 + (idx / allCrops.length) * 16, `ครอป ${idx}/${allCrops.length}`);
+      await sleep(0);
+    }
+  }
+
+  return {
+    fileName,
+    blobs,
+    names,
+    thumbs,
+    fullUrls,
+    validations: sortedValidations,
+    cropMeta,
+    colCounts,
+    numCols: columns.length,
+  };
+}
+
+// ─── Show Results ───────────────────────────────────────
+function showResults() {
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('queueSection').style.display = 'none';
+  const section = document.getElementById('resultsSection');
+  section.style.display = 'block';
+
+  // Aggregate stats
+  let totalPosts = 0, qaPass = 0, qaWarn = 0, qaFail = 0;
+  for (const r of sourceResults) {
+    totalPosts += r.blobs.length;
+    qaPass += r.validations.filter(v => v.status === 'pass').length;
+    qaWarn += r.validations.filter(v => v.status === 'warn').length;
+    qaFail += r.validations.filter(v => v.status === 'fail').length;
+  }
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-item">
+      <div class="stat-icon">📁</div>
+      <div class="stat-value">${sourceResults.length}</div>
+      <div class="stat-label">ไฟล์</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">📋</div>
+      <div class="stat-value">${totalPosts}</div>
+      <div class="stat-label">โพสต์ทั้งหมด</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon" style="color:#2E7D32">✓</div>
+      <div class="stat-value" style="color:#2E7D32">${qaPass}</div>
+      <div class="stat-label">ผ่าน QA</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon" style="color:#F57F17">⚠</div>
+      <div class="stat-value" style="color:#F57F17">${qaWarn}</div>
+      <div class="stat-label">ตรวจสอบ</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon" style="color:#C62828">✗</div>
+      <div class="stat-value" style="color:#C62828">${qaFail}</div>
+      <div class="stat-label">ไม่ผ่าน</div>
+    </div>
+  `;
+
+  document.getElementById('resultsTitle').textContent =
+    `ผลลัพธ์ — ${totalPosts} โพสต์ จาก ${sourceResults.length} ไฟล์`;
+
+  // Filter bar
+  buildFilterBar();
+
+  // Grid
+  activeFilter = 'all';
+  renderGrid();
+}
+
+function buildFilterBar() {
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = '';
+
+  if (sourceResults.length <= 1) return;
+
+  const label = document.createElement('span');
+  label.className = 'filter-label';
+  label.textContent = 'กรอง:';
+  bar.appendChild(label);
+
+  const select = document.createElement('select');
+  select.className = 'filter-select';
+  select.id = 'filterSelect';
+
+  const totalPosts = sourceResults.reduce((s, r) => s + r.blobs.length, 0);
+  const allOpt = document.createElement('option');
+  allOpt.value = 'all';
+  allOpt.textContent = `ทั้งหมด (${totalPosts} โพสต์)`;
+  select.appendChild(allOpt);
+
+  for (let i = 0; i < sourceResults.length; i++) {
+    const r = sourceResults[i];
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `#${i + 1} — ${r.fileName} (${r.blobs.length})`;
+    select.appendChild(opt);
+  }
+
+  select.onchange = () => {
+    activeFilter = select.value === 'all' ? 'all' : parseInt(select.value);
+    renderGrid();
+  };
+
+  bar.appendChild(select);
+}
+
+function renderGrid() {
+  const grid = document.getElementById('postsGrid');
+  grid.innerHTML = '';
+  filteredIndices = [];
+
+  const resultsToShow = activeFilter === 'all'
+    ? sourceResults.map((r, i) => ({ ...r, sourceIdx: i }))
+    : [{ ...sourceResults[activeFilter], sourceIdx: activeFilter }];
+
+  for (const result of resultsToShow) {
+    // Source file header (only in "all" mode with multiple files)
+    if (activeFilter === 'all' && sourceResults.length > 1) {
+      const srcHeader = document.createElement('div');
+      srcHeader.className = 'source-section-header';
+      const srcPass = result.validations.filter(v => v.status === 'pass').length;
+      const srcWarn = result.validations.filter(v => v.status === 'warn').length;
+      const srcFail = result.validations.filter(v => v.status === 'fail').length;
+      srcHeader.innerHTML = `
+        <div class="source-section-title">
+          <span>📁 #${result.sourceIdx + 1} ${result.fileName}</span>
+          <span style="font-size:13px;font-weight:500;color:#6A6E83">${result.blobs.length} โพสต์</span>
+        </div>
+        <div class="source-section-meta">
+          <span>${result.numCols} คอลัมน์</span>
+          <span style="color:#2E7D32">✓ ${srcPass}</span>
+          ${srcWarn ? `<span style="color:#F57F17">⚠ ${srcWarn}</span>` : ''}
+          ${srcFail ? `<span style="color:#C62828">✗ ${srcFail}</span>` : ''}
+        </div>
+      `;
+      grid.appendChild(srcHeader);
+    }
+
+    // Group by source column
+    const colGroups = {};
+    for (let i = 0; i < result.blobs.length; i++) {
+      const meta = result.cropMeta[i] || {};
+      const col = meta.srcCol != null ? meta.srcCol : 1;
+      if (!colGroups[col]) colGroups[col] = [];
+      colGroups[col].push(i);
+    }
+
+    const colKeys = Object.keys(colGroups).map(Number).sort((a, b) => a - b);
+
+    for (const col of colKeys) {
+      const indices = colGroups[col];
+      indices.sort((a, b) => {
+        const ma = result.cropMeta[a] || {}, mb = result.cropMeta[b] || {};
+        return (ma.srcPostIdx || 0) - (mb.srcPostIdx || 0);
+      });
+
+      const passInCol = indices.filter(i => (result.validations[i] || {}).status === 'pass').length;
+      const warnInCol = indices.filter(i => (result.validations[i] || {}).status === 'warn').length;
+      const failInCol = indices.filter(i => (result.validations[i] || {}).status === 'fail').length;
+
+      // Collapsible section wrapper
+      const sectionId = `col-section-${result.sourceIdx}-${col}`;
+      const section = document.createElement('div');
+      section.className = 'col-section';
+      section.id = sectionId;
+
+      // Clickable header
+      const header = document.createElement('div');
+      header.className = 'col-section-header';
+      header.onclick = () => {
+        section.classList.toggle('collapsed');
+      };
+      header.innerHTML = `
+        <span class="col-section-toggle">▼</span>
+        <span class="col-section-num">คอลัมน์ ${col}</span>
+        <span class="col-section-count">${indices.length} โพส</span>
+        <div class="col-section-qa">
+          <span style="color:#2E7D32">✓ ${passInCol}</span>
+          ${warnInCol ? `<span style="color:#F57F17">⚠ ${warnInCol}</span>` : ''}
+          ${failInCol ? `<span style="color:#C62828">✗ ${failInCol}</span>` : ''}
+        </div>
+      `;
+      section.appendChild(header);
+
+      // Body (card grid)
+      const body = document.createElement('div');
+      body.className = 'col-section-body';
+
+      for (const i of indices) {
+        const v = result.validations[i] || {};
+        const meta = result.cropMeta[i] || {};
+
+        const flatIdx = filteredIndices.length;
+        filteredIndices.push({ sourceIdx: result.sourceIdx, cropIdx: i });
+
+        const card = document.createElement('div');
+        card.className = 'post-card';
+        card.onclick = () => openLightbox(flatIdx);
+
+        const badgeClass = v.status === 'pass' ? 'qa-pass' : v.status === 'warn' ? 'qa-warn' : 'qa-fail';
+        const badgeIcon = v.status === 'pass' ? '✓' : v.status === 'warn' ? '⚠' : '✗';
+        const badgeLabel = v.status === 'pass' ? 'ผ่าน' : v.status === 'warn' ? 'ตรวจสอบ' : 'ไม่ผ่าน';
+        const issueText = v.issues && v.issues.length > 0 ? v.issues.join(' · ') : '';
+        const trimText = v.trimInfo || '';
+        const postNum = meta.srcPostIdx || '?';
+
+        card.innerHTML = `
+          <span class="qa-badge ${badgeClass}">${badgeIcon} ${badgeLabel}</span>
+          <span class="col-badge">#${postNum}</span>
+          <img src="${result.thumbs[i]}" loading="lazy" alt="${result.names[i]}">
+          <div class="post-overlay">
+            <span class="post-overlay-text">คลิกเพื่อดูรูปใหญ่</span>
+          </div>
+          <div class="post-label">
+            <span>${result.names[i]}</span>
+            <span class="dl-icon">⬇</span>
+          </div>
+          <div class="qa-details">
+            ${v.postHeight || 0}px · ${v.score || 0}/5
+            ${trimText ? ` · <span style="color:#7279FB">${trimText}</span>` : ''}
+            ${issueText ? `<br><span style="color:${v.status === 'fail' ? '#C62828' : '#F57F17'}">${issueText}</span>` : ''}
+          </div>
+        `;
+        body.appendChild(card);
+      }
+
+      section.appendChild(body);
+      grid.appendChild(section);
+    }
+  }
+}
+
+// ─── Lightbox ───────────────────────────────────────────
+function getLightboxItem(flatIdx) {
+  const entry = filteredIndices[flatIdx];
+  if (!entry) return null;
+  const r = sourceResults[entry.sourceIdx];
+  return { url: r.fullUrls[entry.cropIdx], name: r.names[entry.cropIdx], blob: r.blobs[entry.cropIdx] };
+}
+
+function updateLightboxInfo(flatIdx) {
+  const item = getLightboxItem(flatIdx);
+  if (!item) return;
+  document.getElementById('lightboxImg').src = item.url;
+  document.getElementById('lightboxName').textContent = item.name;
+  document.getElementById('lightboxCounter').textContent = `${flatIdx + 1} / ${filteredIndices.length}`;
+}
+
+function openLightbox(flatIdx) {
+  lightboxIdx = flatIdx;
+  updateLightboxInfo(flatIdx);
+  document.getElementById('lightbox').classList.add('active');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  lightboxIdx = -1;
+}
+
+function navLightbox(dir) {
+  if (lightboxIdx < 0 || filteredIndices.length === 0) return;
+  lightboxIdx = (lightboxIdx + dir + filteredIndices.length) % filteredIndices.length;
+  updateLightboxInfo(lightboxIdx);
+}
+
+function downloadLightboxCurrent() {
+  if (lightboxIdx < 0) return;
+  const item = getLightboxItem(lightboxIdx);
+  if (!item) return;
+  const url = URL.createObjectURL(item.blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = item.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('keydown', e => {
+  if (lightboxIdx < 0) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') navLightbox(-1);
+  if (e.key === 'ArrowRight') navLightbox(1);
+});
+
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+
+// ─── Downloads ──────────────────────────────────────────
+async function downloadAll() {
+  const btn = document.getElementById('downloadAllBtn');
+  btn.textContent = '⏳ กำลังสร้าง zip...';
+  btn.disabled = true;
+
+  const zip = new JSZip();
+
+  // Determine which results to include based on active filter
+  const resultsToZip = activeFilter === 'all'
+    ? sourceResults
+    : [sourceResults[activeFilter]];
+
+  for (const r of resultsToZip) {
+    // Create folder per source file
+    const folderName = r.fileName.replace(/\.[^.]+$/, '').substring(0, 50);
+    const folder = resultsToZip.length > 1 ? zip.folder(folderName) : zip;
+
+    for (let i = 0; i < r.blobs.length; i++) {
+      folder.file(r.names[i], r.blobs[i]);
+    }
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = activeFilter === 'all'
+    ? 'social-listening-crops.zip'
+    : `${resultsToZip[0].fileName.replace(/\.[^.]+$/, '')}-crops.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  btn.textContent = '⬇ ดาวน์โหลดทั้งหมด (.zip)';
+  btn.disabled = false;
+}
+
+// ─── Reset ──────────────────────────────────────────────
+function resetAll() {
+  // Revoke all object URLs to free memory
+  for (const r of sourceResults) {
+    for (const url of r.fullUrls) {
+      URL.revokeObjectURL(url);
+    }
+  }
+  sourceFiles = [];
+  sourceResults = [];
+  activeFilter = 'all';
+  filteredIndices = [];
+  lightboxIdx = -1;
+  isProcessing = false;
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('queueSection').style.display = 'none';
+  document.getElementById('dropzone').style.display = '';
+  document.getElementById('fileInput').value = '';
+}
+
+// ─── Utils ──────────────────────────────────────────────
+function canvasToBlob(canvas) {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+</script>
+
+<div class="site-footer">
+  <div class="mascot-half">
+    <img src="https://natpakans-stack.github.io/talk-to-figma-mcp/assets/aw-mascot.avif" alt="Aw mascot">
+  </div>
+</div>
+
+<div class="closing">
+  <h2>✂️ Built for the team</h2>
+  <p>เครื่องมือนี้สร้างขึ้นเพื่อให้ทีมกราฟิกครอปรูป Social Listening ได้ง่ายๆ ไม่ต้องลงโปรแกรม ไม่ต้องเปิด Terminal ทำงานในเบราว์เซอร์ ไม่อัปโหลดรูปไปที่ server ใดๆ</p>
+  <div class="stack-icons">
+    <span class="stack-icon">HTML</span>
+    <span class="stack-icon">CSS</span>
+    <span class="stack-icon">JavaScript</span>
+    <span class="stack-icon">Canvas API</span>
+    <span class="stack-icon">JSZip</span>
+  </div>
+</div>
+
+</body>
+</html>
