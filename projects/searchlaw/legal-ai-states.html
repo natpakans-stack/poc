@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal AI — UI States</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['IBM Plex Sans Thai Looped', 'sans-serif'],
+            heading: ['IBM Plex Sans Thai', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef7f0', 100: '#d5ecd9', 200: '#aedab7', 300: '#7cc28e',
+              400: '#4fa868', 500: '#2d8a4e', 600: '#1f6e3c', 700: '#1a5832',
+              800: '#174628', 900: '#133a21', 950: '#0a2113',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes pulse-dot {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+    .typing-dot { animation: pulse-dot 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton { animation: none; background: #f0f0f0; }
+      .typing-dot { animation: none; opacity: 0.6; }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-700 antialiased">
+
+  <div class="mx-auto max-w-5xl px-6 py-12 space-y-16">
+    <header>
+      <h1 class="text-2xl font-bold text-gray-900">Legal AI — UI States Reference</h1>
+      <p class="mt-2 text-sm text-gray-500">รวม states ทั้งหมดที่ต้อง implement — Empty, Loading, Error, Login</p>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- 1. EMPTY STATE — New Chat                    -->
+    <!-- ============================================ -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">1. Empty State — แชทใหม่ (ยังไม่มีข้อความ)</h2>
+      <p class="text-sm text-gray-500 mb-6">แสดงเมื่อผู้ใช้เปิดแชทใหม่ ช่วย guide ให้เริ่มถามคำถาม</p>
+
+      <div class="rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+        <!-- Simulated chat area -->
+        <div class="flex flex-col items-center justify-center py-20 px-6 text-center">
+          <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 ring-1 ring-brand-200 mb-6">
+            <svg class="h-8 w-8 text-brand-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">ถามคำถามเกี่ยวกับกฎหมาย</h3>
+          <p class="mt-2 text-sm text-gray-500 max-w-md">พิมพ์คำถามเป็นภาษาธรรมชาติ ระบบจะค้นหากฎหมาย มาตรา และคำพิพากษาที่เกี่ยวข้องให้อัตโนมัติ</p>
+
+          <!-- Suggestion cards -->
+          <div class="mt-8 grid gap-3 sm:grid-cols-2 max-w-lg w-full">
+            <button class="group rounded-xl bg-gray-50 p-4 text-left ring-1 ring-gray-200 hover:ring-brand-300 hover:bg-brand-50/50 transition">
+              <p class="text-sm font-medium text-gray-900 group-hover:text-brand-700">ใบอนุญาตเปิดร้านอาหาร</p>
+              <p class="mt-1 text-xs text-gray-400">พ.ร.บ. สาธารณสุข, พ.ร.บ. อาหาร</p>
+            </button>
+            <button class="group rounded-xl bg-gray-50 p-4 text-left ring-1 ring-gray-200 hover:ring-brand-300 hover:bg-brand-50/50 transition">
+              <p class="text-sm font-medium text-gray-900 group-hover:text-brand-700">สัญญาเช่าที่ดิน 30 ปี</p>
+              <p class="mt-1 text-xs text-gray-400">ป.พ.พ. ลักษณะเช่าทรัพย์</p>
+            </button>
+            <button class="group rounded-xl bg-gray-50 p-4 text-left ring-1 ring-gray-200 hover:ring-brand-300 hover:bg-brand-50/50 transition">
+              <p class="text-sm font-medium text-gray-900 group-hover:text-brand-700">ภาษีที่ดินโรงแรม 5 ดาว</p>
+              <p class="mt-1 text-xs text-gray-400">พ.ร.บ. ภาษีที่ดินและสิ่งปลูกสร้าง</p>
+            </button>
+            <button class="group rounded-xl bg-gray-50 p-4 text-left ring-1 ring-gray-200 hover:ring-brand-300 hover:bg-brand-50/50 transition">
+              <p class="text-sm font-medium text-gray-900 group-hover:text-brand-700">เลิกจ้างพนักงานถูกกฎหมาย</p>
+              <p class="mt-1 text-xs text-gray-400">พ.ร.บ. คุ้มครองแรงงาน</p>
+            </button>
+          </div>
+        </div>
+
+        <!-- Input area (same as chat page) -->
+        <div class="border-t border-gray-200 bg-white px-6 py-4">
+          <div class="mx-auto max-w-3xl">
+            <div class="flex items-end gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-gray-300 shadow-sm">
+              <label for="empty-input" class="sr-only">ถามคำถามเกี่ยวกับกฎหมาย</label>
+              <input id="empty-input" type="text" placeholder="ถามคำถามเกี่ยวกับกฎหมาย..." class="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none">
+              <button class="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed" aria-label="ส่งข้อความ" disabled>
+                <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- 2. LOADING STATE — AI Thinking               -->
+    <!-- ============================================ -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">2. Loading State — AI กำลังค้นหา</h2>
+      <p class="text-sm text-gray-500 mb-6">แสดงขณะ AI กำลังประมวลผลคำถามและค้นหากฎหมาย</p>
+
+      <div class="rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+        <div class="max-w-3xl mx-auto px-6 py-8 space-y-8">
+
+          <!-- User message -->
+          <div class="flex justify-end">
+            <div class="max-w-lg rounded-2xl rounded-tr-md bg-brand-600 px-5 py-3 shadow-sm">
+              <p class="text-sm text-white">จะเปิดซาวน่าในโรงแรม ต้องขอใบอนุญาตอะไรบ้าง?</p>
+            </div>
+          </div>
+
+          <!-- AI typing indicator -->
+          <div class="flex gap-3">
+            <div class="shrink-0 mt-1 flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-sm" role="img" aria-label="Legal AI">
+              <svg class="h-4 w-4 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+              </svg>
+            </div>
+            <div class="min-w-0 space-y-4 flex-1">
+              <!-- Typing dots -->
+              <div class="flex items-center gap-2 py-2">
+                <div class="flex gap-1" aria-label="กำลังค้นหากฎหมาย">
+                  <span class="typing-dot h-2 w-2 rounded-full bg-brand-400"></span>
+                  <span class="typing-dot h-2 w-2 rounded-full bg-brand-400"></span>
+                  <span class="typing-dot h-2 w-2 rounded-full bg-brand-400"></span>
+                </div>
+                <span class="text-xs text-gray-400">กำลังค้นหากฎหมายที่เกี่ยวข้อง...</span>
+              </div>
+
+              <!-- Skeleton cards (appear while loading) -->
+              <div class="rounded-xl bg-white p-4 ring-1 ring-gray-200 shadow-sm space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="skeleton h-8 w-8 shrink-0 rounded-lg"></div>
+                  <div class="flex-1 space-y-2">
+                    <div class="skeleton h-4 w-3/4"></div>
+                    <div class="skeleton h-3 w-full"></div>
+                    <div class="skeleton h-3 w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-xl bg-white p-4 ring-1 ring-gray-200 shadow-sm space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="skeleton h-8 w-8 shrink-0 rounded-lg"></div>
+                  <div class="flex-1 space-y-2">
+                    <div class="skeleton h-4 w-1/2"></div>
+                    <div class="skeleton h-3 w-full"></div>
+                    <div class="skeleton h-3 w-3/4"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- 3. ERROR STATES                              -->
+    <!-- ============================================ -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">3. Error States</h2>
+      <p class="text-sm text-gray-500 mb-6">แสดงเมื่อเกิดข้อผิดพลาดระหว่างการค้นหา</p>
+
+      <div class="space-y-6">
+        <!-- 3a. Network Error -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-700 mb-3">3a. ไม่สามารถเชื่อมต่อ (Network Error)</h3>
+          <div class="rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+            <div class="max-w-3xl mx-auto px-6 py-8 space-y-6">
+              <div class="flex justify-end">
+                <div class="max-w-lg rounded-2xl rounded-tr-md bg-brand-600 px-5 py-3 shadow-sm">
+                  <p class="text-sm text-white">ภาษีที่ดินสำหรับคอนโด</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3">
+                <div class="shrink-0 mt-1 flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 shadow-sm">
+                  <svg class="h-4 w-4 text-red-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <div class="rounded-xl bg-red-50 p-4 ring-1 ring-red-200">
+                    <p class="text-sm font-medium text-red-800">ไม่สามารถเชื่อมต่อได้</p>
+                    <p class="mt-1 text-xs text-red-600">ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ในขณะนี้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง</p>
+                    <button class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 ring-1 ring-red-200 hover:bg-red-50 transition shadow-sm">
+                      <svg class="h-3.5 w-3.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/>
+                      </svg>
+                      ลองอีกครั้ง
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3b. No Results -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-700 mb-3">3b. ไม่พบข้อมูล (No Results)</h3>
+          <div class="rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+            <div class="max-w-3xl mx-auto px-6 py-8 space-y-6">
+              <div class="flex justify-end">
+                <div class="max-w-lg rounded-2xl rounded-tr-md bg-brand-600 px-5 py-3 shadow-sm">
+                  <p class="text-sm text-white">กฎหมายการบินโดรนใน EU</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3">
+                <div class="shrink-0 mt-1 flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-sm" role="img" aria-label="Legal AI">
+                  <svg class="h-4 w-4 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <div class="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
+                    <p class="text-sm font-medium text-amber-800">ไม่พบกฎหมายที่เกี่ยวข้อง</p>
+                    <p class="mt-1 text-xs text-amber-700">ระบบยังไม่มีข้อมูลกฎหมายที่ตรงกับคำถามนี้ ปัจจุบันรองรับเฉพาะกฎหมายไทยเท่านั้น</p>
+                    <div class="mt-3 space-y-1">
+                      <p class="text-xs font-medium text-amber-800">ลองถามใหม่:</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        <button class="rounded-full bg-white px-2.5 py-1 text-xs text-amber-700 ring-1 ring-amber-200 hover:bg-amber-50 transition">กฎหมายการบินโดรนในไทย</button>
+                        <button class="rounded-full bg-white px-2.5 py-1 text-xs text-amber-700 ring-1 ring-amber-200 hover:bg-amber-50 transition">พ.ร.บ. การเดินอากาศ</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3c. Rate Limit -->
+        <div>
+          <h3 class="text-sm font-medium text-gray-700 mb-3">3c. ใช้งานเกินกำหนด (Rate Limit)</h3>
+          <div class="rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+            <div class="max-w-3xl mx-auto px-6 py-8">
+              <div class="rounded-xl bg-blue-50 p-4 ring-1 ring-blue-200">
+                <div class="flex items-start gap-3">
+                  <svg class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-blue-800">กรุณารอสักครู่</p>
+                    <p class="mt-1 text-xs text-blue-600">คุณส่งคำถามเร็วเกินไป กรุณารอ 30 วินาทีแล้วลองอีกครั้ง</p>
+                    <div class="mt-2 flex items-center gap-2">
+                      <div class="h-1.5 w-32 rounded-full bg-blue-200 overflow-hidden">
+                        <div class="h-full w-1/3 rounded-full bg-blue-500 transition-all duration-1000"></div>
+                      </div>
+                      <span class="text-xs text-blue-500 font-mono">0:20</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- 4. LOGIN PAGE                                -->
+    <!-- ============================================ -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">4. Login Page</h2>
+      <p class="text-sm text-gray-500 mb-6">หน้าเข้าสู่ระบบสำหรับทีมกฎหมาย (Internal Use)</p>
+
+      <div class="rounded-2xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+        <div class="flex min-h-[600px]">
+          <!-- Left side — branding -->
+          <div class="hidden md:flex flex-1 bg-gradient-to-br from-brand-600 to-brand-800 p-12 flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+                  <svg class="h-5 w-5 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+                  </svg>
+                </div>
+                <span class="text-lg font-bold text-white">Legal AI</span>
+              </div>
+              <h2 class="mt-12 text-3xl font-bold text-white leading-tight">
+                ค้นคว้ากฎหมาย<br>อย่างชาญฉลาด
+              </h2>
+              <p class="mt-4 text-sm text-brand-200 max-w-sm">ถามคำถามเป็นภาษาธรรมชาติ ค้นหากฎหมาย มาตรา และคำพิพากษาศาลฎีกาที่เกี่ยวข้องได้ทันที</p>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 text-brand-200 text-sm">
+                <svg class="h-4 w-4 text-brand-300" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                กฎหมาย 245 ฉบับ · 12,400 มาตรา
+              </div>
+              <div class="flex items-center gap-3 text-brand-200 text-sm">
+                <svg class="h-4 w-4 text-brand-300" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                คำพิพากษาศาลฎีกา 3,200 คำพิพากษา
+              </div>
+              <div class="flex items-center gap-3 text-brand-200 text-sm">
+                <svg class="h-4 w-4 text-brand-300" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                อ้างอิงแหล่งข้อมูลจริงเสมอ
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side — login form -->
+          <div class="flex flex-1 items-center justify-center p-8 md:p-12">
+            <div class="w-full max-w-sm">
+              <!-- Mobile logo -->
+              <div class="md:hidden flex items-center gap-3 mb-8">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600">
+                  <svg class="h-5 w-5 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+                  </svg>
+                </div>
+                <span class="text-lg font-bold text-gray-900">Legal AI</span>
+              </div>
+
+              <h3 class="text-xl font-bold text-gray-900">เข้าสู่ระบบ</h3>
+              <p class="mt-1 text-sm text-gray-500">สำหรับทีมกฎหมายภายในองค์กร</p>
+
+              <form class="mt-8 space-y-5">
+                <div>
+                  <label for="login-email" class="block text-sm font-medium text-gray-700">อีเมล</label>
+                  <input id="login-email" type="email" autocomplete="email" placeholder="name@company.com" required
+                    class="mt-1.5 block w-full rounded-lg border-0 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 ring-1 ring-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                </div>
+                <div>
+                  <div class="flex items-center justify-between">
+                    <label for="login-password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                    <a href="#" class="text-xs text-brand-600 hover:text-brand-700">ลืมรหัสผ่าน?</a>
+                  </div>
+                  <input id="login-password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน" required
+                    class="mt-1.5 block w-full rounded-lg border-0 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 ring-1 ring-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                </div>
+                <div class="flex items-center gap-2">
+                  <input id="remember" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                  <label for="remember" class="text-sm text-gray-600">จดจำการเข้าสู่ระบบ</label>
+                </div>
+                <button type="submit" class="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition shadow-sm">
+                  เข้าสู่ระบบ
+                </button>
+              </form>
+
+              <p class="mt-6 text-center text-xs text-gray-400">Internal Use Only — ติดต่อ IT เพื่อขอบัญชี</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- 5. EMPTY SIDEBAR — No History                -->
+    <!-- ============================================ -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">5. Empty Sidebar — ไม่มีประวัติแชท</h2>
+      <p class="text-sm text-gray-500 mb-6">แสดงเมื่อผู้ใช้ยังไม่เคยสร้างแชท</p>
+
+      <div class="w-60 rounded-2xl bg-gray-50 ring-1 ring-gray-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600">
+              <svg class="h-3.5 w-3.5 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-900">Legal AI</span>
+          </div>
+          <button class="w-full flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition shadow-sm">
+            <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            แชทใหม่
+          </button>
+        </div>
+        <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+          <svg class="h-8 w-8 text-gray-300" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+          </svg>
+          <p class="mt-3 text-xs text-gray-400">ยังไม่มีประวัติแชท</p>
+          <p class="mt-1 text-xs text-gray-300">กดปุ่ม "แชทใหม่" เพื่อเริ่มค้นคว้า</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

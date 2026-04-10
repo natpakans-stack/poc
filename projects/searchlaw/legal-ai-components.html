@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal AI — Component Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Brand */
+  --brand-50: #eef7f0;
+  --brand-100: #d5ecd9;
+  --brand-200: #aedab7;
+  --brand-300: #7cc28e;
+  --brand-400: #4fa868;
+  --brand-500: #2d8a4e;
+  --brand-600: #1f6e3c;
+  --brand-700: #1a5832;
+  --brand-800: #174628;
+  --brand-900: #133a21;
+
+  /* Neutrals */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* Semantic */
+  --red-50: #fef2f2;
+  --red-200: #fecaca;
+  --red-600: #dc2626;
+  --red-800: #991b1b;
+  --amber-50: #fffbeb;
+  --amber-200: #fde68a;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --blue-50: #eff6ff;
+  --blue-200: #bfdbfe;
+  --blue-600: #2563eb;
+  --blue-800: #1e40af;
+  --purple-50: #f5f3ff;
+  --purple-200: #ddd6fe;
+  --purple-700: #6d28d9;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --shadow-hover: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 60px rgba(45,138,78,0.08);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* Transition */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+}
+
+body {
+  font-family: 'IBM Plex Sans Thai Looped', 'IBM Plex Sans Thai', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--gray-700);
+  background: var(--gray-50);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === LAYOUT === */
+.container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* === HERO HEADER === */
+.hero {
+  background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-800) 60%, var(--brand-900) 100%);
+  color: #fff;
+  padding: 72px 0 56px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero .container { position: relative; z-index: 1; }
+.hero h1 { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 40px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+.hero .subtitle { font-size: 18px; font-weight: 400; opacity: 0.85; }
+.hero .meta { font-size: 14px; opacity: 0.6; margin-top: 12px; }
+
+/* === SECTION === */
+section { padding: 56px 0; }
+section + section { border-top: 1px solid var(--gray-200); }
+
+.section-header { margin-bottom: 32px; }
+.section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--brand-600);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 700;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+.section-title {
+  font-family: 'IBM Plex Sans Thai', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  display: inline;
+  vertical-align: middle;
+}
+.section-desc {
+  font-size: 15px;
+  color: var(--gray-500);
+  margin-top: 6px;
+  margin-left: 44px;
+}
+
+/* === COMPONENT GRID === */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+.comp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.comp-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+@media (max-width: 768px) {
+  .comp-grid-2, .comp-grid-3 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 28px; }
+}
+
+/* === COMPONENT CARD === */
+.comp-card {
+  background: #fff;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+}
+.comp-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+.comp-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.comp-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.comp-card-body.center { align-items: center; justify-content: center; min-height: 120px; }
+.comp-card-body.row { flex-direction: row; flex-wrap: wrap; }
+.comp-card-body.dark { background: var(--gray-800); }
+.comp-card-body.chat-bg { background: var(--gray-50); }
+
+/* === PREVIEW HELPERS === */
+.preview-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-400);
+  margin-bottom: 4px;
+  width: 100%;
+}
+.spacer { width: 100%; height: 1px; background: var(--gray-100); margin: 4px 0; }
+
+/* ======================================
+   ACTUAL COMPONENTS (copy-paste ready)
+   ====================================== */
+
+/* --- Buttons --- */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px;
+  background: var(--brand-600);
+  color: #fff;
+  font-size: 14px; font-weight: 600;
+  border: none; border-radius: var(--radius-lg);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.btn-primary:hover { background: var(--brand-700); }
+.btn-primary.sm { padding: 6px 12px; font-size: 12px; }
+.btn-primary.full { width: 100%; justify-content: center; }
+
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  background: transparent;
+  color: var(--gray-400);
+  border: none; border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.btn-icon:hover { background: var(--gray-100); color: var(--gray-700); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  color: var(--gray-500);
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.btn-ghost:hover { background: var(--gray-100); }
+
+.btn-citation {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 8px;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.btn-citation:hover { background: var(--brand-100); }
+
+.btn-retry {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  color: var(--red-800);
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--red-200);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-send {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--brand-600);
+  color: #fff;
+  border: none; border-radius: var(--radius-lg);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.btn-send:hover { background: var(--brand-700); }
+.btn-send.disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; }
+
+/* --- Badges --- */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px;
+  font-size: 12px; font-weight: 500;
+  border-radius: var(--radius-full);
+}
+.badge-beta { background: var(--brand-50); color: var(--brand-600); border: 1px solid var(--brand-200); }
+.badge-latest { background: var(--brand-100); color: var(--brand-700); }
+.badge-version { background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-200); padding: 4px 12px; font-weight: 600; border-radius: var(--radius-lg); }
+.badge-version.past { background: var(--gray-100); color: var(--gray-600); border-color: var(--gray-200); }
+
+.status-dot {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px;
+}
+.status-dot::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.active { color: var(--brand-600); }
+.status-dot.active::before { background: var(--brand-500); }
+.status-dot.planned { color: var(--amber-600); }
+.status-dot.planned::before { background: var(--amber-600); }
+
+.law-status {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 12px; font-weight: 500;
+  border-radius: var(--radius-sm);
+}
+.law-status.enforced { background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-200); }
+.law-status.review { background: var(--amber-50); color: var(--amber-700); border: 1px solid var(--amber-200); }
+.law-status.ref { background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-200); font-size: 12px; }
+
+.source-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+/* --- Tags --- */
+.tag {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 12px; font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-sm);
+}
+.tag-added { background: #eef7f0; color: #1a5832; border: 1px solid #aedab7; }
+.tag-improved { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+.tag-fixed { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+
+/* --- Chat Bubbles --- */
+.bubble-user {
+  max-width: 400px;
+  padding: 12px 20px;
+  background: var(--brand-600);
+  color: #fff;
+  font-size: 14px;
+  border-radius: 16px 4px 16px 16px;
+  box-shadow: var(--shadow-sm);
+  margin-left: auto;
+}
+
+.bubble-ai {
+  display: flex; gap: 12px;
+  max-width: 100%;
+}
+.bubble-ai-avatar {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  background: var(--brand-600);
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+.bubble-ai-avatar svg { width: 16px; height: 16px; color: #fff; }
+.bubble-ai-content {
+  font-size: 14px;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+.bubble-ai-content strong { color: var(--gray-900); }
+
+/* --- Typing indicator --- */
+.typing-dots { display: flex; gap: 4px; align-items: center; padding: 8px 0; }
+.typing-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--brand-400);
+  animation: pulse-dot 1.4s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* --- Skeleton --- */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* --- Citation Card --- */
+.citation-card {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+.citation-card:hover { border-color: rgba(45,138,78,0.4); background: rgba(45,138,78,0.03); }
+.citation-card .num {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-lg);
+  font-size: 12px; font-weight: 700;
+}
+.citation-card .num.n1 { background: var(--brand-50); border: 1px solid var(--brand-200); color: var(--brand-700); }
+.citation-card .num.n2 { background: var(--purple-50); border: 1px solid var(--purple-200); color: var(--purple-700); }
+.citation-card .num.n3 { background: var(--blue-50); border: 1px solid var(--blue-200); color: var(--blue-600); }
+
+/* --- Summary Box --- */
+.summary-box {
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+}
+.summary-box h4 {
+  font-size: 12px; font-weight: 600;
+  color: var(--brand-700);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.summary-box ol {
+  font-size: 12px;
+  color: var(--gray-700);
+  padding-left: 20px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.summary-box ol span { color: var(--gray-400); }
+
+/* --- Error Boxes --- */
+.error-box, .warning-box, .info-box {
+  border-radius: var(--radius-xl);
+  padding: 16px;
+}
+.error-box { background: var(--red-50); border: 1px solid var(--red-200); }
+.error-box h4 { font-size: 14px; font-weight: 500; color: var(--red-800); }
+.error-box p { font-size: 12px; color: var(--red-600); margin-top: 4px; }
+
+.warning-box { background: var(--amber-50); border: 1px solid var(--amber-200); }
+.warning-box h4 { font-size: 14px; font-weight: 500; color: var(--amber-700); }
+.warning-box p { font-size: 12px; color: var(--amber-600); margin-top: 4px; }
+
+.info-box { background: var(--blue-50); border: 1px solid var(--blue-200); }
+.info-box h4 { font-size: 14px; font-weight: 500; color: var(--blue-800); }
+.info-box p { font-size: 12px; color: var(--blue-600); margin-top: 4px; }
+
+/* --- Inputs --- */
+.input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+.input-wrap:focus-within { border-color: var(--brand-500); box-shadow: 0 0 0 2px rgba(45,138,78,0.15); }
+.input-wrap input {
+  flex: 1;
+  border: none; outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--gray-900);
+  background: transparent;
+}
+.input-wrap input::placeholder { color: var(--gray-400); }
+
+.input-login {
+  display: block; width: 100%;
+  padding: 10px 16px;
+  font-family: inherit; font-size: 14px;
+  color: var(--gray-900);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+.input-login:focus { border-color: var(--brand-500); background: #fff; box-shadow: 0 0 0 2px rgba(45,138,78,0.15); }
+.input-login::placeholder { color: var(--gray-400); }
+
+.input-label { display: block; font-size: 14px; font-weight: 500; color: var(--gray-700); margin-bottom: 6px; }
+
+/* --- History Item --- */
+.history-item {
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background 0.1s var(--ease-out);
+}
+.history-item:hover { background: var(--gray-50); }
+.history-item.active { background: var(--brand-50); border-left: 2px solid var(--brand-500); }
+.history-item .title { font-size: 12px; font-weight: 500; color: var(--gray-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-item.active .title { color: var(--gray-900); }
+.history-item .sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- Tabs --- */
+.tab-group { display: flex; gap: 4px; }
+.tab-item {
+  padding: 4px 10px;
+  font-size: 12px; font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none; background: transparent;
+  color: var(--gray-500);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.tab-item:hover { background: var(--gray-100); }
+.tab-item.active { background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-200); font-weight: 500; }
+
+/* --- Viewer Highlight --- */
+.viewer-section { font-size: 12px; color: var(--gray-500); line-height: 1.7; }
+.viewer-section .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-400); margin-bottom: 8px; }
+.viewer-section.highlighted {
+  background: rgba(45,138,78,0.08);
+  border-left: 3px solid var(--brand-500);
+  padding: 12px 12px 12px 12px;
+  border-radius: var(--radius-lg);
+}
+.viewer-section.highlighted .label { color: var(--brand-600); }
+.viewer-section.highlighted .ref-badge {
+  display: inline-block;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  color: var(--brand-700);
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  margin-left: 8px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* --- Court Decision --- */
+.court-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: var(--gray-50);
+  padding: 10px;
+  border-radius: var(--radius-lg);
+}
+.court-item .num {
+  flex-shrink: 0;
+  background: var(--purple-50);
+  border: 1px solid var(--purple-200);
+  color: var(--purple-700);
+  font-size: 12px; font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+.court-item p { font-size: 12px; color: var(--gray-500); line-height: 1.5; }
+
+/* --- Empty State --- */
+.empty-state { text-align: center; padding: 48px 24px; }
+.empty-state .icon { width: 64px; height: 64px; margin: 0 auto 16px; background: var(--brand-50); border: 1px solid var(--brand-200); border-radius: var(--radius-2xl); display: flex; align-items: center; justify-content: center; }
+.empty-state h3 { font-size: 18px; font-weight: 600; color: var(--gray-900); }
+.empty-state p { font-size: 14px; color: var(--gray-500); margin-top: 8px; }
+
+/* --- Suggestion Card --- */
+.suggestion-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+.suggestion-card:hover { border-color: var(--brand-300); background: rgba(45,138,78,0.03); }
+.suggestion-card .title { font-size: 14px; font-weight: 500; color: var(--gray-900); }
+.suggestion-card .sub { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+/* --- Disclaimer --- */
+.disclaimer {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--gray-400);
+}
+
+/* --- Avatar --- */
+.avatar {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-full);
+  font-size: 12px; font-weight: 600;
+}
+.avatar.team { background: var(--brand-100); color: var(--brand-700); }
+
+/* --- Stat Card --- */
+.stat-card {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-2xl);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.stat-card .number { font-size: 30px; font-weight: 700; color: var(--gray-900); }
+.stat-card .label { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+.stat-card .trend { font-size: 12px; color: var(--brand-600); margin-top: 12px; display: flex; align-items: center; gap: 4px; }
+
+/* SVG helper */
+svg { display: inline-block; vertical-align: middle; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== HERO ==================== -->
+<div class="hero">
+  <div class="container">
+    <h1>Legal AI — Component Library</h1>
+    <p class="subtitle">คลัง Components ทั้งหมดที่ใช้ในโปรเจกต์ Legal AI — ใช้เป็น single source of truth สำหรับดึง component ไปใช้</p>
+    <p class="meta">อัพเดทล่าสุด: 24 มีนาคม 2569 · IBM Plex Sans Thai · Pure CSS (no Tailwind)</p>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ==================== 1. BUTTONS ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">1</span>
+    <h2 class="section-title">Buttons</h2>
+    <p class="section-desc">ปุ่มทั้งหมดที่ใช้ใน product — Primary, Icon, Ghost, Citation, Send, Retry</p>
+  </div>
+
+  <div class="comp-grid">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Primary Button</span></div>
+      <div class="comp-card-body row">
+        <button class="btn-primary">
+          เริ่มค้นคว้า
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+        </button>
+        <button class="btn-primary sm">เริ่มค้นคว้า</button>
+        <button class="btn-primary">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+          แชทใหม่
+        </button>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Icon Button</span></div>
+      <div class="comp-card-body row">
+        <button class="btn-icon" aria-label="Bookmark">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
+        </button>
+        <button class="btn-icon" aria-label="Export">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        </button>
+        <button class="btn-icon" aria-label="Close">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <button class="btn-icon" aria-label="Menu">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Citation / Ghost / Retry</span></div>
+      <div class="comp-card-body row">
+        <button class="btn-citation">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+          มาตรา 4
+        </button>
+        <button class="btn-citation">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+          มาตรา 15
+        </button>
+        <button class="btn-ghost">ดูฉบับเต็ม →</button>
+        <button class="btn-retry">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>
+          ลองอีกครั้ง
+        </button>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Send Button</span></div>
+      <div class="comp-card-body row">
+        <div><p class="preview-label">Active</p>
+        <button class="btn-send" aria-label="Send">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+        </button></div>
+        <div><p class="preview-label">Disabled</p>
+        <button class="btn-send disabled" aria-label="Send" disabled>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+        </button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 2. BADGES & TAGS ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">2</span>
+    <h2 class="section-title">Badges & Tags</h2>
+    <p class="section-desc">Status indicators, version badges, release tags, law status, source badges</p>
+  </div>
+
+  <div class="comp-grid">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Badges</span></div>
+      <div class="comp-card-body row">
+        <span class="badge badge-beta">Beta</span>
+        <span class="badge badge-latest">Latest</span>
+        <span class="badge-version">v1.3</span>
+        <span class="badge-version past">v1.2</span>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Status Dots</span></div>
+      <div class="comp-card-body row">
+        <span class="status-dot active">Active</span>
+        <span class="status-dot planned">Planned</span>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Law Status</span></div>
+      <div class="comp-card-body row">
+        <span class="law-status enforced">บังคับใช้</span>
+        <span class="law-status review">ตรวจสอบ</span>
+        <span class="law-status ref">อ้างถึงในแชท</span>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Release Tags</span></div>
+      <div class="comp-card-body row">
+        <span class="tag tag-added">Added</span>
+        <span class="tag tag-improved">Improved</span>
+        <span class="tag tag-fixed">Fixed</span>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Source Badges</span></div>
+      <div class="comp-card-body row">
+        <span class="source-badge">พ.ร.บ. 180 ฉบับ</span>
+        <span class="source-badge">พ.ร.ก. 25 ฉบับ</span>
+        <span class="source-badge">กฎกระทรวง 40 ฉบับ</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 3. CHAT BUBBLES ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">3</span>
+    <h2 class="section-title">Chat Bubbles & States</h2>
+    <p class="section-desc">ข้อความ User, AI response, typing indicator, skeleton loading — ทุก state ที่เป็นไปได้</p>
+  </div>
+
+  <div class="comp-grid-2">
+    <!-- User bubble -->
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">User Message</span></div>
+      <div class="comp-card-body chat-bg">
+        <div class="bubble-user">จะเปิดซาวน่าในโรงแรม ต้องขอใบอนุญาตอะไรบ้าง?</div>
+      </div>
+    </div>
+
+    <!-- User bubble short -->
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">User Message — Short</span></div>
+      <div class="comp-card-body chat-bg">
+        <div class="bubble-user">ภาษีที่ดินสำหรับคอนโด</div>
+      </div>
+    </div>
+
+    <!-- AI text response -->
+    <div class="comp-card" style="grid-column: 1 / -1;">
+      <div class="comp-card-header"><span class="comp-card-label">AI Response — Text</span></div>
+      <div class="comp-card-body chat-bg">
+        <div class="bubble-ai">
+          <div class="bubble-ai-avatar">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          </div>
+          <div class="bubble-ai-content">
+            การเปิดซาวน่าในโรงแรมเกี่ยวข้องกับกฎหมาย <strong>3 ฉบับหลัก</strong> และต้องขอใบอนุญาตจากหลายหน่วยงาน:
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI typing -->
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">AI — Typing Indicator</span></div>
+      <div class="comp-card-body chat-bg">
+        <div class="bubble-ai">
+          <div class="bubble-ai-avatar">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          </div>
+          <div>
+            <div class="typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+            <span style="font-size:12px; color:var(--gray-400);">กำลังค้นหากฎหมายที่เกี่ยวข้อง...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI skeleton loading -->
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">AI — Skeleton Loading</span></div>
+      <div class="comp-card-body chat-bg">
+        <div style="width:100%; display:flex; gap:12px; background:#fff; border:1px solid var(--gray-200); border-radius:var(--radius-xl); padding:16px;">
+          <div class="skeleton" style="width:32px; height:32px; flex-shrink:0;"></div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div class="skeleton" style="height:14px; width:75%;"></div>
+            <div class="skeleton" style="height:12px; width:100%;"></div>
+            <div class="skeleton" style="height:12px; width:60%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="comp-card" style="grid-column: 1 / -1;">
+      <div class="comp-card-header"><span class="comp-card-label">AI — Disclaimer</span></div>
+      <div class="comp-card-body chat-bg">
+        <div class="disclaimer">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+          AI อาจตีความไม่ถูกต้อง โปรดตรวจสอบกับเนื้อกฎหมายฉบับจริง
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. CITATION & SUMMARY ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">4</span>
+    <h2 class="section-title">Citation Cards & Summary</h2>
+    <p class="section-desc">Card อ้างอิงกฎหมาย, คำพิพากษา, และกล่องสรุป</p>
+  </div>
+
+  <div class="comp-grid-2">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Citation Card #1 (Brand)</span></div>
+      <div class="comp-card-body">
+        <div class="citation-card" style="width:100%;">
+          <div style="display:flex; gap:12px;">
+            <div class="num n1">1</div>
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <strong style="font-size:14px; color:var(--gray-900);">พ.ร.บ. โรงแรม พ.ศ. 2547</strong>
+                <span class="law-status enforced">บังคับใช้</span>
+              </div>
+              <p style="font-size:12px; color:var(--gray-500); margin-top:6px; line-height:1.6;">ต้องได้รับ<strong style="color:var(--gray-700);">ใบอนุญาตประกอบธุรกิจโรงแรม</strong>ที่ระบุประเภทบริการซาวน่าด้วย</p>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;">
+                <button class="btn-citation"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg> มาตรา 4</button>
+                <button class="btn-citation"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg> มาตรา 15</button>
+                <button class="btn-ghost">ดูฉบับเต็ม →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Citation Card #2 (Purple)</span></div>
+      <div class="comp-card-body">
+        <div class="citation-card" style="width:100%;">
+          <div style="display:flex; gap:12px;">
+            <div class="num n2">2</div>
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <strong style="font-size:14px; color:var(--gray-900);">พ.ร.บ. สถานบริการ พ.ศ. 2509</strong>
+                <span class="law-status review">ตรวจสอบ</span>
+              </div>
+              <p style="font-size:12px; color:var(--gray-500); margin-top:6px; line-height:1.6;">ซาวน่า<strong style="color:var(--gray-700);">อาจเข้าข่ายสถานบริการ</strong>ตามมาตรา 3(4)</p>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;">
+                <button class="btn-citation"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg> มาตรา 3(4)</button>
+                <button class="btn-ghost">ดูฉบับเต็ม →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Court Decision</span></div>
+      <div class="comp-card-body">
+        <div class="court-item" style="width:100%;">
+          <span class="num">ฎ.1234/2565</span>
+          <p>ซาวน่าในโรงแรมที่ให้บริการเฉพาะแขกผู้เข้าพัก ไม่เข้าข่ายสถานบริการตาม พ.ร.บ. สถานบริการฯ</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Summary Box</span></div>
+      <div class="comp-card-body">
+        <div class="summary-box" style="width:100%;">
+          <h4>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            สรุปใบอนุญาตที่ต้องขอ
+          </h4>
+          <ol>
+            <li>ใบอนุญาตประกอบธุรกิจโรงแรม <span>— นายทะเบียนจังหวัด</span></li>
+            <li>ใบอนุญาตกิจการอันตรายต่อสุขภาพ <span>— เจ้าพนักงานท้องถิ่น</span></li>
+            <li>ตรวจสอบว่าเข้าข่ายสถานบริการหรือไม่ <span>— กรมการปกครอง</span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. ERROR & FEEDBACK ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">5</span>
+    <h2 class="section-title">Error & Feedback States</h2>
+    <p class="section-desc">Network error, No results, Rate limit</p>
+  </div>
+
+  <div class="comp-grid-3">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Network Error</span></div>
+      <div class="comp-card-body">
+        <div class="error-box" style="width:100%;">
+          <h4>ไม่สามารถเชื่อมต่อได้</h4>
+          <p>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง</p>
+          <div style="margin-top:12px;">
+            <button class="btn-retry">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>
+              ลองอีกครั้ง
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">No Results</span></div>
+      <div class="comp-card-body">
+        <div class="warning-box" style="width:100%;">
+          <h4>ไม่พบกฎหมายที่เกี่ยวข้อง</h4>
+          <p>ระบบยังไม่มีข้อมูลกฎหมายที่ตรงกับคำถามนี้</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Rate Limit</span></div>
+      <div class="comp-card-body">
+        <div class="info-box" style="width:100%;">
+          <h4>กรุณารอสักครู่</h4>
+          <p>คุณส่งคำถามเร็วเกินไป กรุณารอ 30 วินาที</p>
+          <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+            <div style="height:6px; width:120px; border-radius:3px; background:var(--blue-200); overflow:hidden;">
+              <div style="height:100%; width:33%; border-radius:3px; background:var(--blue-600);"></div>
+            </div>
+            <span style="font-size:12px; color:var(--blue-600); font-family:'IBM Plex Mono',monospace;">0:20</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 6. INPUTS ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">6</span>
+    <h2 class="section-title">Inputs</h2>
+    <p class="section-desc">Chat input, Search, Login form fields</p>
+  </div>
+
+  <div class="comp-grid-2">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Chat Input</span></div>
+      <div class="comp-card-body">
+        <div class="input-wrap" style="width:100%;">
+          <input type="text" placeholder="ถามคำถามเกี่ยวกับกฎหมาย...">
+          <button class="btn-send" aria-label="Send">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Sidebar Search</span></div>
+      <div class="comp-card-body">
+        <div class="input-wrap" style="width:100%;">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--gray-400)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+          <input type="search" placeholder="ค้นหาแชท...">
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Login — Email</span></div>
+      <div class="comp-card-body">
+        <label class="input-label" style="width:100%;">อีเมล</label>
+        <input class="input-login" type="email" placeholder="name@company.com" style="width:100%;">
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Login — Password</span></div>
+      <div class="comp-card-body">
+        <label class="input-label" style="width:100%;">รหัสผ่าน</label>
+        <input class="input-login" type="password" placeholder="รหัสผ่าน" style="width:100%;">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 7. SIDEBAR ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">7</span>
+    <h2 class="section-title">Sidebar Components</h2>
+    <p class="section-desc">History items, Avatar, Empty sidebar, Tabs</p>
+  </div>
+
+  <div class="comp-grid">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">History Items</span></div>
+      <div class="comp-card-body" style="background:var(--gray-50); gap:4px;">
+        <p class="preview-label">Active</p>
+        <div class="history-item active">
+          <p class="title">ใบอนุญาตซาวน่าในโรงแรม</p>
+          <p class="sub">พ.ร.บ. โรงแรม, สถานบริการ, สาธารณสุข</p>
+        </div>
+        <p class="preview-label" style="margin-top:8px;">Default</p>
+        <div class="history-item">
+          <p class="title">ภาษีที่ดิน รร. 5 ดาว</p>
+          <p class="sub">พ.ร.บ. ภาษีที่ดินและสิ่งปลูกสร้าง</p>
+        </div>
+        <div class="history-item">
+          <p class="title">สัญญาเช่าที่ดิน 30 ปี</p>
+          <p class="sub">ป.พ.พ. ลักษณะเช่าทรัพย์</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Team Avatar</span></div>
+      <div class="comp-card-body row">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="avatar team">ทน</div>
+          <div>
+            <p style="font-size:12px; font-weight:500; color:var(--gray-900);">ทีมกฎหมาย</p>
+            <p style="font-size:12px; color:var(--gray-400);">5 สมาชิก</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Law Tabs</span></div>
+      <div class="comp-card-body row">
+        <div class="tab-group">
+          <button class="tab-item active">พ.ร.บ. โรงแรม</button>
+          <button class="tab-item">พ.ร.บ. สถานบริการ</button>
+          <button class="tab-item">พ.ร.บ. สาธารณสุข</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 8. VIEWER ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">8</span>
+    <h2 class="section-title">Law Viewer Components</h2>
+    <p class="section-desc">มาตราปกติ vs มาตราที่ถูก highlight (อ้างถึงในแชท)</p>
+  </div>
+
+  <div class="comp-grid-2">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Section — Normal</span></div>
+      <div class="comp-card-body">
+        <div class="viewer-section" style="width:100%;">
+          <p class="label">มาตรา 3</p>
+          <p>ให้ยกเลิกพระราชบัญญัติโรงแรม พ.ศ. 2478</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Section — Highlighted (Referenced)</span></div>
+      <div class="comp-card-body">
+        <div class="viewer-section highlighted" style="width:100%;">
+          <p class="label">มาตรา 4 <span class="ref-badge">อ้างถึงในแชท</span></p>
+          <p style="color:var(--gray-700);">ในพระราชบัญญัตินี้</p>
+          <p style="color:var(--gray-700); margin-top:8px;"><strong style="color:var(--gray-900);">"โรงแรม"</strong> หมายความว่า สถานที่พักที่จัดตั้งขึ้นโดยมีวัตถุประสงค์ในทางธุรกิจ...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 9. EMPTY & SUGGESTION ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">9</span>
+    <h2 class="section-title">Empty States & Suggestions</h2>
+    <p class="section-desc">แสดงเมื่อยังไม่มีข้อมูลหรือเริ่มแชทใหม่</p>
+  </div>
+
+  <div class="comp-grid-2">
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Empty State — New Chat</span></div>
+      <div class="comp-card-body center" style="min-height:200px;">
+        <div class="empty-state">
+          <div class="icon">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--brand-600)" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          </div>
+          <h3>ถามคำถามเกี่ยวกับกฎหมาย</h3>
+          <p>พิมพ์คำถามเป็นภาษาธรรมชาติ ระบบจะค้นหาให้อัตโนมัติ</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><span class="comp-card-label">Suggestion Cards</span></div>
+      <div class="comp-card-body" style="gap:8px;">
+        <div class="suggestion-card" style="width:100%;">
+          <p class="title">ใบอนุญาตเปิดร้านอาหาร</p>
+          <p class="sub">พ.ร.บ. สาธารณสุข, พ.ร.บ. อาหาร</p>
+        </div>
+        <div class="suggestion-card" style="width:100%;">
+          <p class="title">สัญญาเช่าที่ดิน 30 ปี</p>
+          <p class="sub">ป.พ.พ. ลักษณะเช่าทรัพย์</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10. STAT CARD ==================== -->
+<section>
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2 class="section-title">Stat Cards</h2>
+    <p class="section-desc">แสดงตัวเลขสถิติบน Landing page</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px;">
+    <div class="stat-card">
+      <p class="number">245</p>
+      <p class="label">ฉบับกฎหมาย</p>
+      <p class="trend">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+        +12 ฉบับใหม่
+      </p>
+    </div>
+    <div class="stat-card">
+      <p class="number">12,400</p>
+      <p class="label">มาตรา</p>
+      <p class="trend">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+        +840 มาตรา
+      </p>
+    </div>
+    <div class="stat-card">
+      <p class="number">3,200</p>
+      <p class="label">คำพิพากษา</p>
+      <p class="trend">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+        +1,200 คำพิพากษา
+      </p>
+    </div>
+    <div class="stat-card">
+      <p class="number">5</p>
+      <p class="label">แหล่งข้อมูล</p>
+      <p class="trend"><span class="status-dot active" style="font-size:12px;">ทั้งหมดพร้อมใช้</span></p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+</body>
+</html>

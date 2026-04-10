@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal AI — ระบบค้นคว้ากฎหมายอัจฉริยะ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['IBM Plex Sans Thai Looped', 'sans-serif'],
+            heading: ['IBM Plex Sans Thai', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef7f0',
+              100: '#d5ecd9',
+              200: '#aedab7',
+              300: '#7cc28e',
+              400: '#4fa868',
+              500: '#2d8a4e',
+              600: '#1f6e3c',
+              700: '#1a5832',
+              800: '#174628',
+              900: '#133a21',
+              950: '#0a2113',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glow {
+      box-shadow: 0 0 60px rgba(45, 138, 78, 0.08);
+    }
+    .timeline-line {
+      background: linear-gradient(to bottom, #2d8a4e, #e5e7eb);
+    }
+    .stat-card {
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    .release-card {
+      transition: border-color 0.2s ease-out;
+    }
+    .release-card:hover {
+      border-color: rgba(45, 138, 78, 0.4);
+    }
+    .tag-added { background: #eef7f0; color: #1a5832; border: 1px solid #aedab7; }
+    .tag-improved { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+    .tag-fixed { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+    .source-badge { background: #f9fafb; border: 1px solid #e5e7eb; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-700 antialiased">
+
+  <!-- Skip to content -->
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">ข้ามไปยังเนื้อหาหลัก</a>
+
+  <!-- Nav -->
+  <nav class="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl" aria-label="Main navigation">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-14 sm:h-16 items-center justify-between">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+            <svg class="h-4 w-4 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+            </svg>
+          </div>
+          <span class="font-heading text-base font-semibold text-gray-900">Legal AI</span>
+          <span class="hidden sm:inline rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-600 ring-1 ring-brand-200">Beta</span>
+        </div>
+
+        <!-- Desktop nav -->
+        <div class="hidden sm:flex items-center gap-6">
+          <a href="#sources" class="text-sm text-gray-500 hover:text-gray-900 transition">แหล่งข้อมูล</a>
+          <a href="legal-ai-releases.html" class="text-sm text-gray-500 hover:text-gray-900 transition">Release Notes</a>
+          <a href="#" onclick="openLogin(event)" class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition shadow-sm">
+            เริ่มค้นคว้า
+            <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Mobile: CTA + hamburger -->
+        <div class="flex sm:hidden items-center gap-2">
+          <a href="#" onclick="openLogin(event)" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 transition shadow-sm">
+            เริ่มค้นคว้า
+          </a>
+          <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 transition" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="mobile-menu">
+            <svg class="h-5 w-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile dropdown menu -->
+      <div id="mobile-menu" class="hidden sm:hidden border-t border-gray-200 pb-3 pt-2 space-y-1">
+        <a href="#sources" class="block rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition">แหล่งข้อมูล</a>
+        <a href="legal-ai-releases.html" class="block rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition">Release Notes</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content">
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-brand-50/60 to-transparent"></div>
+    <div class="relative mx-auto max-w-7xl px-6 lg:px-8 pt-24 pb-16 text-center">
+      <div class="mx-auto max-w-3xl">
+        <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-1.5 text-sm text-brand-700 ring-1 ring-brand-200">
+          <span class="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+          ข้อมูลอัพเดทล่าสุด: 20 มี.ค. 2569
+        </div>
+        <h1 class="font-heading font-bold tracking-tight text-gray-900">
+          <span class="block text-3xl sm:text-5xl">ค้นคว้ากฎหมาย</span>
+          <span class="block mt-2 text-3xl sm:text-5xl text-brand-600">ด้วย AI อัจฉริยะ</span>
+        </h1>
+        <p class="mt-5 text-base sm:text-lg leading-7 sm:leading-8 text-gray-500 max-w-xl mx-auto">
+          ถามเป็นภาษาธรรมชาติ — ระบบค้นหากฎหมาย มาตรา และคำพิพากษาศาลฎีกาที่เกี่ยวข้องให้อัตโนมัติ
+        </p>
+
+        <!-- Search Preview -->
+        <div class="mt-10 mx-auto max-w-2xl">
+          <a href="#" onclick="openLogin(event)" class="glow block rounded-2xl bg-white ring-1 ring-gray-200 p-1.5 shadow-lg hover:ring-brand-300 hover:shadow-xl transition-all group">
+            <div class="flex items-center gap-3 rounded-xl bg-gray-50 px-5 py-4 group-hover:bg-brand-50/40 transition">
+              <svg class="h-5 w-5 text-brand-500 shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+              </svg>
+              <span id="typewriter" class="flex-1 text-sm text-gray-400 text-left"></span>
+              <span class="ml-auto shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white group-hover:bg-brand-700 transition shadow-sm">
+                ถาม AI
+              </span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="mx-auto max-w-7xl px-6 lg:px-8 pb-20">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div class="stat-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 transition-all duration-200 shadow-sm">
+        <p class="font-heading text-3xl font-bold text-gray-900">245</p>
+        <p class="mt-1 text-sm text-gray-500">ฉบับกฎหมาย</p>
+        <div class="mt-3 flex items-center gap-1 text-xs text-brand-600">
+          <svg class="h-3 w-3" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+          +12 ฉบับใหม่
+        </div>
+      </div>
+      <div class="stat-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 transition-all duration-200 shadow-sm">
+        <p class="font-heading text-3xl font-bold text-gray-900">12,400</p>
+        <p class="mt-1 text-sm text-gray-500">มาตรา</p>
+        <div class="mt-3 flex items-center gap-1 text-xs text-brand-600">
+          <svg class="h-3 w-3" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+          +840 มาตรา
+        </div>
+      </div>
+      <div class="stat-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 transition-all duration-200 shadow-sm">
+        <p class="font-heading text-3xl font-bold text-gray-900">3,200</p>
+        <p class="mt-1 text-sm text-gray-500">คำพิพากษาศาลฎีกา</p>
+        <div class="mt-3 flex items-center gap-1 text-xs text-brand-600">
+          <svg class="h-3 w-3" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+          +1,200 คำพิพากษา
+        </div>
+      </div>
+      <div class="stat-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 transition-all duration-200 shadow-sm">
+        <p class="font-heading text-3xl font-bold text-gray-900">5</p>
+        <p class="mt-1 text-sm text-gray-500">แหล่งข้อมูล</p>
+        <div class="mt-3 flex items-center gap-1 text-xs text-gray-500">
+          <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+          ทั้งหมดพร้อมใช้
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Sources -->
+  <section id="sources" class="mx-auto max-w-7xl px-6 lg:px-8 pb-20">
+    <div class="flex items-center gap-3 mb-8">
+      <h2 class="font-heading text-xl font-semibold text-gray-900">แหล่งข้อมูลที่รวบรวม</h2>
+      <span class="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-600 ring-1 ring-brand-200">5 แหล่ง</span>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Source 1 -->
+      <div class="group rounded-2xl bg-white p-6 ring-1 ring-gray-200 hover:ring-brand-300 transition-all shadow-sm">
+        <div class="flex items-start justify-between">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 ring-1 ring-brand-200">
+            <svg class="h-5 w-5 text-brand-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21"/>
+            </svg>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-brand-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+            Active
+          </span>
+        </div>
+        <h3 class="font-heading mt-4 text-sm font-semibold text-gray-900">สำนักงานคณะกรรมการกฤษฎีกา</h3>
+        <p class="mt-1 text-xs text-gray-500">ocs.go.th — พ.ร.บ. / พ.ร.ก. / กฎกระทรวง / รัฐธรรมนูญ / ประมวลกฎหมาย</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">พ.ร.บ. 180 ฉบับ</span>
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">พ.ร.ก. 25 ฉบับ</span>
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">กฎกระทรวง 40 ฉบับ</span>
+        </div>
+      </div>
+
+      <!-- Source 2 -->
+      <div class="group rounded-2xl bg-white p-6 ring-1 ring-gray-200 hover:ring-brand-300 transition-all shadow-sm">
+        <div class="flex items-start justify-between">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 ring-1 ring-purple-200">
+            <svg class="h-5 w-5 text-purple-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z"/>
+            </svg>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-brand-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+            Active
+          </span>
+        </div>
+        <h3 class="font-heading mt-4 text-sm font-semibold text-gray-900">ศาลฎีกา</h3>
+        <p class="mt-1 text-xs text-gray-500">deka.supremecourt.or.th — คำพิพากษาศาลฎีกา ทุกแผนก</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">แพ่ง 1,400 คดี</span>
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">อาญา 980 คดี</span>
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">แรงงาน 520 คดี</span>
+        </div>
+      </div>
+
+      <!-- Source 3 -->
+      <div class="group rounded-2xl bg-white p-6 ring-1 ring-gray-200 hover:ring-brand-300 transition-all shadow-sm">
+        <div class="flex items-start justify-between">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 ring-1 ring-blue-200">
+            <svg class="h-5 w-5 text-blue-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+            </svg>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-brand-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+            Active
+          </span>
+        </div>
+        <h3 class="font-heading mt-4 text-sm font-semibold text-gray-900">ราชกิจจานุเบกษา</h3>
+        <p class="mt-1 text-xs text-gray-500">ratchakitcha.soc.go.th — ประกาศ คำสั่ง ระเบียบ</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-600">ประกาศ 300 ฉบับ</span>
+        </div>
+      </div>
+
+      <!-- Source 4 -->
+      <div class="group rounded-2xl bg-white p-6 ring-1 ring-gray-200 hover:ring-brand-300 transition-all shadow-sm">
+        <div class="flex items-start justify-between">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-200">
+            <svg class="h-5 w-5 text-amber-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
+            </svg>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-amber-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+            Planned
+          </span>
+        </div>
+        <h3 class="font-heading mt-4 text-sm font-semibold text-gray-900">คณะกรรมการกฤษฎีกา (ความเห็น)</h3>
+        <p class="mt-1 text-xs text-gray-500">ความเห็นคณะกรรมการกฤษฎีกา — บันทึกตีความกฎหมาย</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-500">เร็วๆ นี้</span>
+        </div>
+      </div>
+
+      <!-- Source 5 -->
+      <div class="group rounded-2xl bg-white p-6 ring-1 ring-gray-200 hover:ring-brand-300 transition-all shadow-sm">
+        <div class="flex items-start justify-between">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 ring-1 ring-rose-200">
+            <svg class="h-5 w-5 text-rose-600" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342"/>
+            </svg>
+          </div>
+          <span class="flex items-center gap-1.5 text-xs text-amber-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+            Planned
+          </span>
+        </div>
+        <h3 class="font-heading mt-4 text-sm font-semibold text-gray-900">วิทยานิพนธ์ / บทความวิชาการ</h3>
+        <p class="mt-1 text-xs text-gray-500">บทความวิชาการด้านกฎหมายจากมหาวิทยาลัยชั้นนำ</p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="source-badge rounded-md px-2 py-0.5 text-xs text-gray-500">เร็วๆ นี้</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Release Notes -->
+  <section id="releases" class="mx-auto max-w-7xl px-6 lg:px-8 pb-24">
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-3">
+        <h2 class="font-heading text-xl font-semibold text-gray-900">อัพเดทล่าสุด</h2>
+        <span class="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700">v1.3</span>
+      </div>
+      <span class="text-sm text-gray-400">20 มี.ค. 2569</span>
+    </div>
+
+    <!-- Latest release — full detail -->
+    <div class="release-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 shadow-sm mb-6">
+      <ul class="space-y-3">
+        <li class="flex items-start gap-3">
+          <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+          <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">พ.ร.บ. การสาธารณสุข พ.ศ. 2535</strong> พร้อมกฎกระทรวงที่เกี่ยวข้อง 12 ฉบับ</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+          <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">คำพิพากษาศาลฎีกา แผนกคดีแรงงาน</strong> ปี 2566 จำนวน 520 คำพิพากษา</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="tag-improved mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Improved</span>
+          <span class="text-sm text-gray-600">ปรับปรุง cross-reference ระหว่าง พ.ร.บ. และกฎกระทรวง — ลิงก์อ้างอิงแม่นยำขึ้น</span>
+        </li>
+      </ul>
+      <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-400">
+        <span>รวม: 245 ฉบับ</span>
+        <span>•</span>
+        <span>12,400 มาตรา</span>
+        <span>•</span>
+        <span>3,200 คำพิพากษา</span>
+      </div>
+    </div>
+
+    <!-- Previous versions — compact list -->
+    <div class="rounded-2xl bg-gray-50 ring-1 ring-gray-200 divide-y divide-gray-200 overflow-hidden">
+      <div class="px-5 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 ring-1 ring-gray-200">v1.2</span>
+          <span class="text-sm text-gray-600">เพิ่มฎีกาแพ่ง 2566, ค้นหาด้วยเลขมาตรา</span>
+        </div>
+        <span class="text-xs text-gray-400 shrink-0 ml-4">15 มี.ค.</span>
+      </div>
+      <div class="px-5 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 ring-1 ring-gray-200">v1.1</span>
+          <span class="text-sm text-gray-600">เพิ่ม พ.ร.บ. โรงแรม/สถานบริการ/อาคาร, AI สรุปฎีกา</span>
+        </div>
+        <span class="text-xs text-gray-400 shrink-0 ml-4">1 มี.ค.</span>
+      </div>
+      <div class="px-5 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 ring-1 ring-gray-200">v1.0</span>
+          <span class="text-sm text-gray-600">เปิดตัว — รัฐธรรมนูญ, พ.ร.บ. 50 ฉบับ, ประมวลกฎหมาย</span>
+        </div>
+        <span class="text-xs text-gray-400 shrink-0 ml-4">15 ก.พ.</span>
+      </div>
+    </div>
+
+    <!-- View all link -->
+    <div class="mt-4 text-center">
+      <a href="legal-ai-releases.html" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-600 transition">
+        ดู Release Notes ทั้งหมด
+        <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 bg-gray-50">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-6 w-6 items-center justify-center rounded bg-brand-600">
+          <svg class="h-3 w-3 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+          </svg>
+        </div>
+        <span class="text-sm text-gray-500">Legal AI — Internal Use Only</span>
+      </div>
+      <p class="text-xs text-gray-400">แหล่งข้อมูล: สำนักงานคณะกรรมการกฤษฎีกา (ocs.go.th) · ศาลฎีกา · ราชกิจจานุเบกษา</p>
+    </div>
+  </footer>
+
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-label="เข้าสู่ระบบ">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeLogin()"></div>
+    <!-- Modal -->
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-xl ring-1 ring-gray-200 p-8 animate-[fadeSlideUp_0.3s_ease-out]">
+        <!-- Close -->
+        <button onclick="closeLogin()" class="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition" aria-label="ปิด">
+          <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mb-6">
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+            <svg class="h-4 w-4 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+            </svg>
+          </div>
+          <span class="font-heading text-base font-semibold text-gray-900">Legal AI</span>
+        </div>
+
+        <h2 class="font-heading text-xl font-bold text-gray-900">เข้าสู่ระบบ</h2>
+        <p class="mt-1 text-sm text-gray-500">สำหรับทีมกฎหมายภายในองค์กร</p>
+
+        <!-- Error message -->
+        <div id="login-error" class="hidden mt-4 rounded-lg bg-red-50 p-3 ring-1 ring-red-200">
+          <p id="login-error-msg" class="text-xs text-red-700 flex items-center gap-2">
+            <svg class="h-4 w-4 shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+            </svg>
+            <span></span>
+          </p>
+        </div>
+
+        <!-- Form -->
+        <form id="login-form" class="mt-6 space-y-4" onsubmit="handleLogin(event)">
+          <div>
+            <label for="overlay-email" class="block text-sm font-medium text-gray-700">อีเมล</label>
+            <input id="overlay-email" type="email" autocomplete="email" placeholder="name@company.com" required
+              class="mt-1.5 block w-full rounded-lg border-0 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 ring-1 ring-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <label for="overlay-password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+              <button type="button" onclick="handleForgotPassword()" class="text-xs text-brand-600 hover:text-brand-700 transition">ลืมรหัสผ่าน?</button>
+            </div>
+            <input id="overlay-password" type="password" autocomplete="current-password" placeholder="รหัสผ่าน" required
+              class="mt-1.5 block w-full rounded-lg border-0 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 ring-1 ring-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+          </div>
+          <button id="login-btn" type="submit" class="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 active:scale-[0.98] transition shadow-sm">
+            เข้าสู่ระบบ
+          </button>
+        </form>
+
+        <p class="mt-5 text-center text-xs text-gray-400">Internal Use Only — ติดต่อ IT เพื่อขอบัญชี</p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  <script>
+    // ===== Login Modal (works without Supabase too) =====
+    function openLogin(e) {
+      e.preventDefault();
+      document.getElementById('login-overlay').classList.remove('hidden');
+      document.getElementById('login-error').classList.add('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('overlay-email').focus(), 100);
+    }
+
+    function closeLogin() {
+      document.getElementById('login-overlay').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function showLoginError(msg) {
+      const el = document.getElementById('login-error');
+      el.classList.remove('hidden');
+      el.querySelector('span').textContent = msg;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLogin();
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    // ===== Supabase Auth =====
+    const SUPABASE_URL = 'https://xqmdyjjatkpmjzlqpffr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxbWR5amphdGtwbWp6bHFwZmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzU4NjAsImV4cCI6MjA4OTkxMTg2MH0.aUor2u1zo6Q7uzue17g8_UwW5EXYTpM834H7Wk4XQxs';
+
+    let _supabase = null;
+    try {
+      _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      console.warn('Supabase SDK not loaded, auth disabled');
+    }
+
+    // Check if already logged in
+    if (_supabase) {
+      (async () => {
+        try {
+          const { data: { session } } = await _supabase.auth.getSession();
+          if (session) {
+            document.querySelectorAll('[onclick="openLogin(event)"]').forEach(el => {
+              el.setAttribute('href', 'legal-ai-chat.html');
+              el.removeAttribute('onclick');
+            });
+          }
+        } catch (e) { /* ignore */ }
+      })();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const email = document.getElementById('overlay-email').value;
+      const password = document.getElementById('overlay-password').value;
+
+      if (!_supabase) {
+        // Fallback — no auth, go straight to chat
+        window.location.href = 'legal-ai-chat.html';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'กำลังเข้าสู่ระบบ...';
+      document.getElementById('login-error').classList.add('hidden');
+
+      try {
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          btn.disabled = false;
+          btn.textContent = 'เข้าสู่ระบบ';
+
+          if (error.message.includes('Invalid login')) {
+            showLoginError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+          } else if (error.message.includes('Email not confirmed')) {
+            showLoginError('กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ');
+          } else {
+            showLoginError(error.message || 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง');
+          }
+          return;
+        }
+
+        window.location.href = 'legal-ai-chat.html';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'เข้าสู่ระบบ';
+        showLoginError('ไม่สามารถเชื่อมต่อได้ กรุณาลองอีกครั้ง');
+      }
+    }
+
+    async function handleForgotPassword() {
+      const email = document.getElementById('overlay-email').value;
+      if (!email) {
+        showLoginError('กรุณากรอกอีเมลก่อน แล้วกด "ลืมรหัสผ่าน?"');
+        return;
+      }
+      if (!_supabase) return;
+      try {
+        const { error } = await _supabase.auth.resetPasswordForEmail(email);
+        if (error) {
+          showLoginError('ไม่สามารถส่งลิงก์รีเซ็ตได้ กรุณาลองอีกครั้ง');
+        } else {
+          document.getElementById('login-error').classList.add('hidden');
+          alert('ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ ' + email + ' แล้ว');
+        }
+      } catch (e) {
+        showLoginError('ไม่สามารถเชื่อมต่อได้');
+      }
+    }
+  </script>
+
+  <script>
+    (() => {
+      const el = document.getElementById('typewriter');
+      if (!el) return;
+
+      const lines = [
+        'จะเปิดซาวน่าในโรงแรม ต้องขอใบอนุญาตอะไรบ้าง?',
+        'ใบอนุญาตขายแอลกอฮอล์ในโรงแรม',
+        'กฎหมายคุ้มครองผู้บริโภค e-commerce',
+        'ภาษีที่ดินและสิ่งปลูกสร้าง สำหรับคอนโด',
+        'สัญญาเช่าที่ดิน 30 ปี ทำยังไง?',
+        'เลิกจ้างพนักงาน ต้องจ่ายชดเชยเท่าไร?',
+      ];
+
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let li = 0;
+
+      async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+      async function run() {
+        while (true) {
+          const text = lines[li];
+
+          if (reduced) {
+            el.textContent = text;
+            await sleep(3000);
+          } else {
+            // type
+            for (let i = 0; i <= text.length; i++) {
+              el.textContent = text.slice(0, i);
+              await sleep(50);
+            }
+            await sleep(2000);
+            // delete
+            for (let i = text.length; i >= 0; i--) {
+              el.textContent = text.slice(0, i);
+              await sleep(25);
+            }
+            await sleep(400);
+          }
+
+          li = (li + 1) % lines.length;
+        }
+      }
+
+      run();
+    })();
+  </script>
+
+</body>
+</html>

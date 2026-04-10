@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal AI — Release Notes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['IBM Plex Sans Thai Looped', 'sans-serif'],
+            heading: ['IBM Plex Sans Thai', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef7f0', 100: '#d5ecd9', 200: '#aedab7', 300: '#7cc28e',
+              400: '#4fa868', 500: '#2d8a4e', 600: '#1f6e3c', 700: '#1a5832',
+              800: '#174628', 900: '#133a21', 950: '#0a2113',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .tag-added { background: #eef7f0; color: #1a5832; border: 1px solid #aedab7; }
+    .tag-improved { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+    .tag-fixed { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+    .release-card { transition: border-color 0.2s ease-out; }
+    .release-card:hover { border-color: rgba(45, 138, 78, 0.3); }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-700 antialiased">
+
+  <!-- Nav -->
+  <nav class="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-14 items-center justify-between">
+        <a href="legal-ai-landing.html" class="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition">
+          <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+          </svg>
+          <span class="text-sm">กลับหน้าหลัก</span>
+        </a>
+        <div class="flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600">
+            <svg class="h-3.5 w-3.5 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+            </svg>
+          </div>
+          <span class="font-heading text-sm font-semibold text-gray-900">Legal AI</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-3xl px-4 sm:px-6 pt-12 pb-24">
+    <!-- Header -->
+    <div class="mb-12">
+      <h1 class="font-heading text-2xl sm:text-3xl font-bold text-gray-900">Release Notes</h1>
+      <p class="mt-2 text-sm text-gray-500">ประวัติการอัพเดทข้อมูลกฎหมายและฟีเจอร์ทั้งหมด</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="space-y-10">
+
+      <!-- v1.3 — Latest -->
+      <article class="release-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 shadow-sm">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <span class="rounded-lg bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-700 ring-1 ring-brand-200">v1.3</span>
+          <time class="text-sm text-gray-400">20 มีนาคม 2569</time>
+          <span class="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700">Latest</span>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">พ.ร.บ. การสาธารณสุข พ.ศ. 2535</strong> พร้อมกฎกระทรวงที่เกี่ยวข้อง 12 ฉบับ</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">คำพิพากษาศาลฎีกา แผนกคดีแรงงาน</strong> ปี 2566 จำนวน 520 คำพิพากษา</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-improved mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Improved</span>
+            <span class="text-sm text-gray-600">ปรับปรุง cross-reference ระหว่าง พ.ร.บ. และกฎกระทรวง — ลิงก์อ้างอิงแม่นยำขึ้น</span>
+          </li>
+        </ul>
+        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-400">
+          <span>รวม: 245 ฉบับ</span>
+          <span>•</span>
+          <span>12,400 มาตรา</span>
+          <span>•</span>
+          <span>3,200 คำพิพากษา</span>
+        </div>
+      </article>
+
+      <!-- v1.2 -->
+      <article class="release-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 shadow-sm">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <span class="rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600 ring-1 ring-gray-200">v1.2</span>
+          <time class="text-sm text-gray-400">15 มีนาคม 2569</time>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">คำพิพากษาศาลฎีกา ปี 2566</strong> แผนกคดีแพ่ง จำนวน 1,200 คำพิพากษา</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-improved mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Improved</span>
+            <span class="text-sm text-gray-600">ปรับปรุง search accuracy — รองรับการค้นหาด้วยเลขมาตราโดยตรง</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-fixed mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Fixed</span>
+            <span class="text-sm text-gray-600">แก้ไขปัญหาการแสดงผลมาตราที่มีตาราง</span>
+          </li>
+        </ul>
+      </article>
+
+      <!-- v1.1 -->
+      <article class="release-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 shadow-sm">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <span class="rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600 ring-1 ring-gray-200">v1.1</span>
+          <time class="text-sm text-gray-400">1 มีนาคม 2569</time>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">พ.ร.บ. โรงแรม พ.ศ. 2547</strong>, <strong class="text-gray-900">พ.ร.บ. สถานบริการ พ.ศ. 2509</strong>, <strong class="text-gray-900">พ.ร.บ. อาคาร พ.ศ. 2522</strong></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600">เพิ่ม <strong class="text-gray-900">คำพิพากษาศาลฎีกา ปี 2565</strong> จำนวน 800 คำพิพากษา</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-improved mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Improved</span>
+            <span class="text-sm text-gray-600">เพิ่ม AI สรุปคำพิพากษา — สรุปย่อ 3-5 ย่อหน้าอัตโนมัติ</span>
+          </li>
+        </ul>
+      </article>
+
+      <!-- v1.0 -->
+      <article class="release-card rounded-2xl bg-white p-6 ring-1 ring-gray-200 shadow-sm">
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <span class="rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600 ring-1 ring-gray-200">v1.0</span>
+          <time class="text-sm text-gray-400">15 กุมภาพันธ์ 2569</time>
+          <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500 ring-1 ring-gray-200">Initial Release</span>
+        </div>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600"><strong class="text-gray-900">รัฐธรรมนูญแห่งราชอาณาจักรไทย พ.ศ. 2560</strong></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600"><strong class="text-gray-900">พ.ร.บ. หลัก 50 ฉบับ</strong> — ครอบคลุมกฎหมายแพ่ง อาญา ธุรกิจ แรงงาน ภาษี</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600"><strong class="text-gray-900">ประมวลกฎหมายแพ่งและพาณิชย์</strong> + <strong class="text-gray-900">ประมวลกฎหมายอาญา</strong> ฉบับเต็ม</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="tag-added mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider">Added</span>
+            <span class="text-sm text-gray-600"><strong class="text-gray-900">คำพิพากษาศาลฎีกา ปี 2564</strong> จำนวน 700 คำพิพากษา</span>
+          </li>
+        </ul>
+        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-400">
+          <span>เริ่มต้น: 50 ฉบับ</span>
+          <span>•</span>
+          <span>6,200 มาตรา</span>
+          <span>•</span>
+          <span>700 คำพิพากษา</span>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+</body>
+</html>
