@@ -1,0 +1,146 @@
+// UGC Studio — Bun server that drives the Higgsfield CLI.
+// ponytail: shells out to the hf binary; async job + poll (gen takes minutes, idle-timeout can't hold the request).
+import { mkdir, writeFile } from "node:fs/promises";
+
+const HF = "/Users/natpakansirirat/.npm-global/lib/node_modules/@higgsfield/cli/vendor/hf";
+const ROOT = import.meta.dir;
+const JOBS = ROOT + "/jobs";
+await mkdir(JOBS, { recursive: true });
+
+async function hf(args: string[]) {
+  const p = Bun.spawn([HF, ...args], { stdout: "pipe", stderr: "pipe", env: process.env });
+  const [out, err] = await Promise.all([
+    new Response(p.stdout).text(),
+    new Response(p.stderr).text(),
+  ]);
+  await p.exited;
+  return { code: p.exitCode ?? 0, out: out.trim(), err: err.trim() };
+}
+
+// pull the first .mp4 url found anywhere in a parsed json blob
+function findMp4(x: any): string | null {
+  if (!x) return null;
+  if (typeof x === "string") return x.includes(".mp4") ? x : null;
+  if (Array.isArray(x)) { for (const v of x) { const r = findMp4(v); if (r) return r; } return null; }
+  if (typeof x === "object") { for (const v of Object.values(x)) { const r = findMp4(v); if (r) return r; } }
+  return null;
+}
+function findStatus(x: any): string | null {
+  if (Array.isArray(x)) return findStatus(x[0]);
+  if (x && typeof x === "object") return x.status ?? x.state ?? null;
+  return null;
+}
+
+const json = (o: any, status = 200) =>
+  new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
+
+Bun.serve({
+  port: 3001,
+  idleTimeout: 120, // create() uploads images then returns a job id fast; generation is polled separately
+  async fetch(req) {
+    const url = new URL(req.url);
+
+    if (url.pathname === "/") return new Response(Bun.file(ROOT + "/index.html"));
+
+    // list preset avatars for the picker
+    if (url.pathname === "/api/avatars") {
+      const r = await hf(["marketing-studio", "avatars", "list", "--json"]);
+      try { return json(JSON.parse(r.out)); } catch { return json({ error: r.err || "failed" }, 500); }
+    }
+
+    // kick off a generation, return job id immediately
+    if (url.pathname === "/api/generate" && req.method === "POST") {
+      try {
+        const form = await req.formData();
+        const script = String(form.get("script") || "").trim();
+        const avatarId = String(form.get("avatarId") || "");
+        const mode = String(form.get("mode") || "product_review");
+        const aspect = String(form.get("aspect") || "9:16");
+        const duration = String(form.get("duration") || "15");
+        const resolution = String(form.get("resolution") || "720p");
+        const images = form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+        const refVideo = form.get("refVideo");
+
+        if (!script) return json({ error: "กรุณาใส่สคริปต์" }, 400);
+        if (!avatarId) return json({ error: "กรุณาเลือก avatar" }, 400);
+        if (!images.length) return json({ error: "กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป" }, 400);
+
+        const jobDir = `${JOBS}/${crypto.randomUUID()}`;
+        await mkdir(jobDir, { recursive: true });
+
+        // save product images
+        const imgPaths: string[] = [];
+        for (const [i, f] of images.entries()) {
+          const path = `${jobDir}/img${i}_${f.name.replace(/[^\w.\-]/g, "_")}`;
+          await writeFile(path, Buffer.from(await f.arrayBuffer()));
+          imgPaths.push(path);
+        }
+
+        // avatars json file
+        const avatarsFile = `${jobDir}/avatars.json`;
+        await writeFile(avatarsFile, JSON.stringify([{ id: avatarId, type: "preset" }]));
+
+        const prompt =
+          `Vertical UGC live-selling clip. A presenter sits at a cozy livestream setup and shows the product to the camera, ` +
+          `foreground product, simple lifestyle background, energetic natural live-stream selling vibe. ` +
+          `The host says: "${script}"`;
+
+        const args = [
+          "generate", "create", "marketing_studio_video", "--json",
+          "--mode", mode,
+          "--avatars", `@${avatarsFile}`,
+          "--aspect_ratio", aspect,
+          "--duration", duration,
+          "--resolution", resolution,
+          "--generate_audio", "true",
+          "--prompt", prompt,
+        ];
+        for (const p of imgPaths) args.push("--image", p);
+
+        // optional reference video -> ad reference (best effort, never blocks core)
+        let refNote = "";
+        if (refVideo instanceof File && refVideo.size > 0) {
+          try {
+            const vpath = `${jobDir}/ref_${refVideo.name.replace(/[^\w.\-]/g, "_")}`;
+            await writeFile(vpath, Buffer.from(await refVideo.arrayBuffer()));
+            const up = await hf(["upload", "create", vpath, "--json"]);
+            const upId = JSON.parse(up.out)?.id;
+            if (upId) {
+              const adr = await hf(["marketing-studio", "ad-references", "create", "--video-input", upId, "--json"]);
+              const adId = JSON.parse(adr.out)?.id;
+              if (adId) { args.push("--ad_reference_id", adId); refNote = "ใช้ reference video แล้ว"; }
+              else refNote = "reference video สร้าง ad-reference ไม่สำเร็จ — ข้ามไป";
+            }
+          } catch (e) { refNote = "reference video ข้ามไป (" + (e as Error).message + ")"; }
+        }
+
+        const r = await hf(args);
+        if (r.code !== 0 && !r.out) return json({ error: r.err || "generate failed" }, 500);
+        let jobId: string | null = null;
+        try {
+          const parsed = JSON.parse(r.out);
+          jobId = Array.isArray(parsed) ? (parsed[0]?.id ?? parsed[0]) : (parsed?.id ?? parsed);
+        } catch { jobId = r.out.split(/\s+/).find((t) => /[0-9a-f-]{20,}/.test(t)) ?? null; }
+        if (!jobId) return json({ error: "ไม่พบ job id: " + (r.err || r.out) }, 500);
+        return json({ jobId, refNote });
+      } catch (e) {
+        return json({ error: (e as Error).message }, 500);
+      }
+    }
+
+    // poll a job's status
+    if (url.pathname === "/api/status") {
+      const id = url.searchParams.get("id");
+      if (!id) return json({ error: "no id" }, 400);
+      const r = await hf(["generate", "get", id, "--json"]);
+      try {
+        const parsed = JSON.parse(r.out);
+        return json({ status: findStatus(parsed) || "unknown", url: findMp4(parsed) });
+      } catch { return json({ status: "unknown", url: null, raw: r.out || r.err }); }
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+});
+
+console.log("UGC Studio → http://localhost:3001");

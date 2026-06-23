@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Commerce & SaaS - Realfect Template</title>
+
+  <!-- Fonts from Figma -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/line-seed-sans-th" rel="stylesheet">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#126C62',
+              light: '#BDD2D0',
+              dark: '#0e5a52'
+            },
+            secondary: '#866BF0',
+            accent: {
+              orange: '#E36D3D',
+              purple: '#866BF0'
+            },
+            gray: {
+              50: '#F7F8F9',
+              100: '#E7E9EE',
+              300: '#C7CDD6',
+              600: '#9EA5B1',
+              700: '#7A808A',
+              800: '#585C63',
+              900: '#35373B',
+              950: '#111214'
+            }
+          },
+          fontFamily: {
+            'thai': ['LINE Seed Sans TH', 'sans-serif'],
+            'heading': ['Outfit', 'sans-serif'],
+            'body': ['Montserrat', 'sans-serif']
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- AOS - Animate On Scroll Library -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="font-thai antialiased">
+  <!-- Top Announcement Bar -->
+  <div class="py-2" style="background: linear-gradient(90deg, #866BF0 0%, #EA7343 100%);">
+    <div class="container mx-auto px-6 flex items-center justify-center gap-4">
+      <span class="font-thai text-white text-sm font-bold leading-5">ซื้อตอนนี้ลดทันที 30%</span>
+      <a href="#" class="font-thai text-sm font-bold text-white bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition-colors leading-5">
+        ดูเพิ่มเติม
+      </a>
+    </div>
+  </div>
+
+  <!-- Header - Black Background ตาม Figma -->
+  <header class="bg-black sticky top-0 z-50 transition-all duration-300 border-b border-[#585C63]" id="header">
+    <div class="container mx-auto px-6 lg:px-14 h-[100px] flex items-center">
+      <div class="flex items-center justify-between w-full">
+        <a href="#" class="flex items-center">
+          <svg class="h-8 w-auto nav-logo" viewBox="0 0 208 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clip-path="url(#clip0_4003_39)">
+              <path class="nav-logo-light transition-colors duration-300" d="M0.656036 42.5069C0.255125 42.5069 0 42.2559 0 41.8615V6.75868C0 6.36427 0.255125 6.11328 0.656036 6.11328H11.8451C22.0774 6.11328 26.5148 10.5773 26.5148 18.8062C26.5148 23.2703 24.8018 27.0351 21.1207 29.3209L28.0273 41.718C28.2825 42.1662 28.082 42.5069 27.5718 42.5069H21.3759C21.0205 42.5069 20.7745 42.3545 20.6196 42.0587L14.6697 31.3468C13.7677 31.4454 12.8565 31.4991 11.8451 31.4991H6.80638V41.8615C6.80638 42.2559 6.55125 42.5069 6.15034 42.5069H0.656036ZM6.80638 12.3074V25.2961H11.5991C16.9385 25.2961 19.4624 23.3599 19.4624 18.7972C19.4624 14.2346 16.9385 12.2984 11.5991 12.2984H6.80638V12.3074Z" fill="#E8E8E8"/>
+              <path class="nav-logo-light transition-colors duration-300" d="M31.5537 29.6606C31.5537 21.8799 36.5378 16.3223 44.7564 16.3223C52.9751 16.3223 57.3578 22.1757 57.1027 30.9962C57.0571 31.4444 56.802 31.6416 56.4011 31.6416H38.5059C39.1072 35.1645 41.3305 37.2979 44.802 37.2979C47.4717 37.2979 49.3396 36.3029 50.5514 34.3756C50.7519 34.026 51.0526 33.9812 51.4079 34.0798L55.8908 35.6127C56.2918 35.765 56.4466 36.0609 56.2462 36.4553C53.9318 40.9641 49.5947 42.9989 44.7564 42.9989C36.5378 42.9989 31.5537 37.4503 31.5537 29.6606ZM38.6152 26.837H50.105C49.5036 23.8161 47.5355 22.0233 44.7109 22.0233C41.6312 22.0233 39.417 23.7623 38.6152 26.837Z" fill="#E8E8E8"/>
+              <path class="nav-logo-light transition-colors duration-300" d="M60.4375 29.6606C60.4375 21.7813 65.1755 16.3223 72.638 16.3223C76.2644 16.3223 79.2894 17.8103 81.1573 20.3381L81.3031 17.4607C81.3031 17.0125 81.6038 16.8153 82.0047 16.8153H86.7427C87.1436 16.8153 87.3988 17.0663 87.3988 17.4607V41.8516C87.3988 42.246 87.1436 42.497 86.7427 42.497H82.0047C81.6038 42.497 81.3031 42.2997 81.3031 41.8516L81.1573 38.9741C79.2894 41.502 76.2644 42.99 72.638 42.99C65.1755 42.99 60.4375 37.5399 60.4375 29.6516V29.6606ZM81.3031 29.6606C81.3031 25.2503 78.4329 22.1757 74.2507 22.1757C70.0685 22.1757 67.1983 25.2503 67.1983 29.6606C67.1983 34.0709 70.0685 37.1455 74.2507 37.1455C78.4329 37.1455 81.3031 34.0709 81.3031 29.6606Z" fill="#E8E8E8"/>
+              <path class="nav-logo-white transition-colors duration-300" d="M126.971 29.6606C126.971 21.7813 131.709 16.3223 139.171 16.3223C142.798 16.3223 145.823 17.8103 147.691 20.3381L147.836 17.4607C147.836 17.0125 148.137 16.8153 148.538 16.8153H153.276C153.677 16.8153 153.932 17.0663 153.932 17.4607V41.8516C153.932 42.246 153.677 42.497 153.276 42.497H148.538C148.137 42.497 147.836 42.2997 147.836 41.8516L147.691 38.9741C145.823 41.502 142.798 42.99 139.171 42.99C131.709 42.99 126.971 37.5399 126.971 29.6516V29.6606ZM147.836 29.6606C147.836 25.2503 144.966 22.1757 140.784 22.1757C136.602 22.1757 133.732 25.2503 133.732 29.6606C133.732 34.0709 136.602 37.1455 140.784 37.1455C144.966 37.1455 147.836 34.0709 147.836 29.6606Z" fill="white"/>
+              <path class="nav-logo-white transition-colors duration-300" d="M159.28 29.6606C159.28 21.7813 164.474 16.3223 172.638 16.3223C178.488 16.3223 182.57 18.7067 184.483 23.7623C184.638 24.1567 184.437 24.5063 184.027 24.6049L179.69 25.842C179.335 25.9406 179.034 25.7882 178.834 25.4476C177.677 23.2693 175.763 22.1757 173.039 22.1757C168.301 22.1757 166.032 25.5999 166.032 29.6606C166.032 33.7213 168.301 37.1455 173.039 37.1455C175.763 37.1455 177.777 36.0071 178.888 33.7213C179.089 33.3717 179.399 33.2282 179.745 33.3269L184.529 34.4653C184.929 34.5639 185.084 34.8597 184.929 35.2631C182.861 40.5697 178.433 42.9989 172.683 42.9989C164.419 42.9989 159.28 37.5489 159.28 29.6606Z" fill="white"/>
+              <path class="nav-logo-white transition-colors duration-300" d="M191.344 32.5933V22.5806H187.517C187.116 22.5806 186.861 22.3296 186.861 21.9352V17.4712C186.861 17.0768 187.116 16.8258 187.517 16.8258H191.344V9.93251C191.344 9.5381 191.599 9.28711 192 9.28711H197.239C197.64 9.28711 197.895 9.5381 197.895 9.93251V16.8258H204.091C204.492 16.8258 204.747 17.0768 204.747 17.4712V21.9352C204.747 22.3296 204.492 22.5806 204.091 22.5806H197.895V32.9967C197.895 35.7755 198.807 37.1649 200.82 37.1649C201.677 37.1649 202.278 36.8154 202.788 35.9279C202.989 35.5783 203.29 35.4349 203.69 35.6321L207.627 37.3711C208.028 37.5683 208.128 37.9179 207.827 38.4109C205.959 41.7814 203.089 43.0184 200.119 43.0184C194.47 43.0184 191.353 39.5494 191.353 32.6023L191.344 32.5933Z" fill="white"/>
+              <path d="M97.6494 14.172C97.6494 21.2535 90.4512 21.2535 90.4512 21.2535C90.4512 21.2535 97.6494 21.2535 97.6494 28.335V42.507H104.848V24.7942C104.848 21.2535 101.248 21.2535 101.248 21.2535C101.248 21.2535 104.848 21.2535 104.848 17.7127V0H97.6494V14.172Z" fill="#F15B2A"/>
+              <path d="M121.568 7.08151C125.167 7.08151 125.167 10.6223 125.167 10.6223H132.365C132.365 10.6223 132.365 0 121.568 0C110.771 0 110.771 10.6223 110.771 10.6223V17.7038C110.771 21.2445 114.37 21.2445 114.37 21.2445C114.37 21.2445 110.771 21.2445 110.771 24.7853V42.498H117.969V28.326C117.969 21.2445 125.167 21.2445 125.167 21.2445C125.167 21.2445 117.969 21.2445 117.969 14.163V10.6223C117.969 10.6223 117.969 7.08151 121.568 7.08151Z" fill="#F15B2A"/>
+            </g>
+            <defs>
+              <clipPath id="clip0_4003_39">
+                <rect width="208" height="43" fill="white"/>
+              </clipPath>
+            </defs>
+          </svg>
+        </a>
+        <nav class="hidden md:flex items-center gap-12">
+          <a href="#" class="font-thai text-base font-bold text-white leading-6 hover:text-white/80 transition-colors">Buyer</a>
+          <a href="#" class="font-thai text-base font-bold text-white leading-6 hover:text-white/80 transition-colors">Seller</a>
+          <a href="#" class="font-thai text-base font-bold text-white leading-6 hover:text-white/80 transition-colors">Affiliate</a>
+          <a href="#" class="font-thai text-base font-bold text-white leading-6 hover:text-white/80 transition-colors">Admin</a>
+        </nav>
+        <a href="#" class="header-btn hidden md:inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-white rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+          <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewBox="0 0 21 20" fill="none">
+              <path d="M20.8216 8.44856C20.8216 3.79022 16.1513 0 10.4112 0C4.67105 0 0 3.79022 0 8.44856C0 12.6248 3.70364 16.1227 8.70669 16.7843C9.04584 16.8574 9.50731 17.0083 9.62406 17.2974C9.72891 17.5603 9.69237 17.9725 9.65742 18.2386C9.65742 18.2386 9.5359 18.9733 9.5089 19.1298C9.46362 19.3927 9.30001 20.1591 10.4104 19.6913C11.5216 19.2235 16.4055 16.1608 18.5897 13.6462C20.0996 11.9926 20.8216 10.3127 20.8216 8.44856ZM6.33582 11.2205H4.26757C3.96654 11.2205 3.72191 10.9759 3.72191 10.6741V6.53677C3.72191 6.23575 3.96654 5.99111 4.26757 5.99111C4.56859 5.99111 4.81322 6.23575 4.81322 6.53677V10.1276H6.33582C6.63685 10.1276 6.88148 10.3723 6.88148 10.6733C6.88148 10.9751 6.63685 11.2205 6.33582 11.2205ZM8.47477 10.6741C8.47477 10.9751 8.23014 11.2205 7.92911 11.2205C7.62809 11.2205 7.38345 10.9759 7.38345 10.6741V6.53677C7.38345 6.23575 7.62809 5.99111 7.92911 5.99111C8.23014 5.99111 8.47477 6.23575 8.47477 6.53677V10.6741ZM13.4548 10.6741C13.4548 10.91 13.3055 11.1181 13.0815 11.1919C13.0251 11.211 12.9663 11.2205 12.9083 11.2205C12.7376 11.2205 12.5747 11.1387 12.4723 11.0021L10.3524 8.11497V10.6741C10.3524 10.9751 10.1078 11.2205 9.80595 11.2205C9.50492 11.2205 9.2595 10.9759 9.2595 10.6741V6.53677C9.2595 6.30167 9.40961 6.09357 9.6328 6.01891C9.68919 5.99985 9.74718 5.99111 9.80595 5.99111C9.97592 5.99111 10.1395 6.07292 10.242 6.20954L12.3627 9.09668V6.53677C12.3627 6.23575 12.6081 5.99111 12.9091 5.99111C13.2102 5.99111 13.4548 6.23575 13.4548 6.53677V10.6741ZM16.8018 8.05937C17.1028 8.05937 17.3483 8.304 17.3483 8.60582C17.3483 8.90685 17.1036 9.15148 16.8018 9.15148H15.2792V10.1284H16.8018C17.1028 10.1284 17.3483 10.3731 17.3483 10.6741C17.3483 10.9751 17.1028 11.2205 16.8018 11.2205H14.7335C14.4333 11.2205 14.1879 10.9759 14.1879 10.6741V8.60662V8.60503V6.53915V6.53757C14.1879 6.23654 14.4325 5.99191 14.7335 5.99191H16.8018C17.1028 5.99191 17.3483 6.23654 17.3483 6.53757C17.3483 6.83859 17.1036 7.08322 16.8018 7.08322H15.2792V8.06016L16.8018 8.05937Z" fill="white"/>
+            </svg>
+          </div>
+          <span class="font-bold text-[#141414]">ติดต่อเรา</span>
+        </a>
+        <button class="md:hidden flex flex-col gap-1.5 p-2" id="mobileMenuBtn">
+          <span class="w-6 h-0.5 bg-white transition-all"></span>
+          <span class="w-6 h-0.5 bg-white transition-all"></span>
+          <span class="w-6 h-0.5 bg-white transition-all"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section - Black Background ตาม Figma -->
+  <section class="relative py-24 lg:py-32 bg-black overflow-hidden">
+    <!-- Background Text (10% opacity) -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-heading text-[180px] md:text-[230px] font-semibold text-white/10 whitespace-nowrap pointer-events-none select-none tracking-[-6.9px]">
+      E-Commerce & SaaS
+    </div>
+
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <h1 class="font-heading text-4xl md:text-5xl lg:text-[60px] font-medium tracking-[-1.8px] text-white mb-6 leading-[1.17] hero-animate hero-animate-delay-1 hero-headline hero-headline-glow">
+          E-Commerce & SaaS <br>
+          <span class="bg-gradient-to-r from-[#866bf0] to-[#ea7343] bg-clip-text text-transparent hero-gradient-text">Realfect Template</span>
+        </h1>
+        <p class="text-base text-white/80 mb-8 leading-relaxed max-w-xl mx-auto hero-animate hero-animate-delay-2">
+          Realfact คือทีมที่เชี่ยวชาญด้าน SaaS และ Tech Startup<br>
+          เราใส่ใจทั้งโครงสร้าง ดีไซน์ และ Interaction<br>
+          เพื่อให้ใช้งานลื่นไหล และต่อยอดได้ง่ายตามความต้องการของคุณ
+        </p>
+        <!-- Button: ขอดู Demo -->
+        <a href="#" class="inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-white border border-[#a0a0a0] rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 hero-animate hero-animate-delay-3">
+          <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-white text-lg"></i></div>
+          <span class="font-bold text-[#141414]">ขอดู Demo</span>
+        </a>
+      </div>
+
+      <!-- Dashboard Preview with Floating Thumbnails -->
+      <div class="relative max-w-3xl mx-auto" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
+
+        <!-- Floating Score Review Card - Left Side -->
+        <div class="hidden lg:block absolute -left-32 top-1/4 z-20 animate-float" data-aos="fade-right" data-aos-delay="800">
+          <div class="bg-white rounded-xl shadow-lg p-3 w-[160px]">
+            <p class="text-2xl font-bold text-center text-gray-900">4.7</p>
+            <div class="flex justify-center gap-0.5 mb-1">
+              <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+              <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+              <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+              <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+              <i class="fa-solid fa-star text-yellow-400 text-xs"></i>
+            </div>
+            <p class="text-[10px] text-gray-500 text-center mb-2">(15 รีวิว)</p>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-[8px] text-gray-600 w-8">5 ดาว</span>
+                <div class="flex-1 h-1 bg-gray-200 rounded-full"><div class="h-full bg-yellow-400 rounded-full w-[85%]"></div></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[8px] text-gray-600 w-8">4 ดาว</span>
+                <div class="flex-1 h-1 bg-gray-200 rounded-full"><div class="h-full bg-yellow-400 rounded-full w-[60%]"></div></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[8px] text-gray-600 w-8">3 ดาว</span>
+                <div class="flex-1 h-1 bg-gray-200 rounded-full"><div class="h-full bg-yellow-400 rounded-full w-[20%]"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Store Card - Left Bottom -->
+        <div class="hidden lg:block absolute -left-24 bottom-8 z-20 animate-float" style="animation-delay: 1s;" data-aos="fade-right" data-aos-delay="1000">
+          <div class="bg-white rounded-xl shadow-lg p-3 w-[200px]">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-store text-green-600 text-sm"></i>
+              </div>
+              <div>
+                <span class="bg-orange-100 text-orange-600 text-[8px] px-1.5 py-0.5 rounded font-bold">สินค้าแนะนำ</span>
+                <p class="text-xs font-bold text-gray-900">ร้านดอยซา</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 text-[10px] text-gray-500">
+              <i class="fa-solid fa-star text-yellow-400"></i>
+              <span>4.7</span>
+              <span class="mx-1">|</span>
+              <span>สินค้า 2,500+</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Coupon Card - Right Bottom -->
+        <div class="hidden lg:block absolute -right-28 bottom-16 z-20 animate-float" style="animation-delay: 0.5s;" data-aos="fade-left" data-aos-delay="900">
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden flex w-[220px]">
+            <div class="bg-gray-50 p-3 flex items-center justify-center">
+              <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-ticket text-primary text-sm"></i>
+              </div>
+            </div>
+            <div class="p-2 border-l border-dashed border-primary/30">
+              <p class="font-bold text-sm text-gray-900">ลด 30 ฿</p>
+              <p class="text-[10px] text-gray-500">ยอดขั้นต่ำ 300 ฿</p>
+              <p class="text-[8px] text-gray-400">หมดอายุ : 03 ม.ค. 69</p>
+            </div>
+            <div class="bg-gray-50 p-2 flex items-center">
+              <span class="text-[10px] text-gray-400 font-bold">เก็บแล้ว</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Text - จากหน้าร้าน สู่การขายออนไลน์ -->
+        <div class="absolute -right-4 md:right-0 top-0 md:-top-4 transform rotate-[10deg] z-20 text-right" data-aos="fade-left" data-aos-delay="600">
+          <img src="images/hero/arrow-vector.svg" alt="" class="w-14 h-16 mb-1 ml-auto">
+          <p class="text-base font-bold leading-relaxed">
+            <span class="text-[#e36d3d]">จากหน้าร้าน</span><br>
+            <span class="text-white">สู่การขายออนไลน์ 24 ชม.</span>
+          </p>
+        </div>
+
+        <!-- Laptop Frame with Dashboard -->
+        <div class="relative bg-gradient-to-b from-gray-700 to-gray-800 rounded-[18px] p-1 shadow-2xl">
+          <div class="bg-white rounded-[14px] overflow-hidden">
+            <img src="images/hero/dashboard-preview.png" alt="Dashboard Preview" class="w-full">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trusted By Section -->
+  <section class="py-12 border-y border-gray-100 bg-white">
+    <div class="container mx-auto px-6">
+      <p class="text-center text-sm text-gray-500 mb-8">ได้รับความไว้วางใจจากบริษัทชั้นนำ</p>
+      <!-- ขนาดแนะนำ: 120x40 px ต่อ logo -->
+      <div class="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+        <img src="images/logos/company-1.png" alt="Company 1" class="h-8">
+        <img src="images/logos/company-2.png" alt="Company 2" class="h-8">
+        <img src="images/logos/company-3.png" alt="Company 3" class="h-8">
+        <img src="images/logos/company-4.png" alt="Company 4" class="h-8">
+        <img src="images/logos/company-5.png" alt="Company 5" class="h-8">
+      </div>
+    </div>
+  </section>
+
+  <!-- Ecommerce Pages Section - ตาม Figma (3 columns grid) -->
+  <section class="py-24 bg-white relative overflow-hidden">
+    <!-- Background Gradient Circles -->
+    <div class="absolute -left-64 top-32 w-[1128px] h-[1128px] bg-gradient-radial from-primary/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -right-32 bottom-0 w-[915px] h-[915px] bg-gradient-radial from-secondary/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="container mx-auto px-6 lg:px-14 relative z-10">
+      <div class="text-center mb-16" data-aos="fade-up">
+        <h2 class="font-heading text-3xl md:text-[40px] font-medium tracking-[-1.2px] text-[#161519]">
+          <span class="bg-gradient-to-r from-[#866bf0] to-[#ea7343] bg-clip-text text-transparent">Ecommerce</span> pages
+        </h2>
+      </div>
+
+      <!-- 3 Column Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+        <!-- Row 1 -->
+        <div class="group" data-aos="fade-up" data-aos-delay="0">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/login.png" alt="Login" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">เข้าสู่ระบบ/สมัครสมาชิก</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/home.png" alt="Home" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">หน้าแรก</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/product-list.png" alt="Product List" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">รายการสินค้า</p>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="group" data-aos="fade-up" data-aos-delay="0">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/product-detail.png" alt="Product Detail" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">รายละเอียดสินค้า</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/cart.png" alt="Cart" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">รถเข็นสินค้า</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/coupon.png" alt="Coupon" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">คูปองร้านค้า/แพลตฟอร์ม</p>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="group" data-aos="fade-up" data-aos-delay="0">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/checkout.png" alt="Checkout" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">ยืนยันคำสั่งซื้อ</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/orders.png" alt="Orders" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">คำสั่งซื้อของฉัน</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/pages/profile.png" alt="Profile" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">โปรไฟล์ผู้ใช้</p>
+        </div>
+      </div>
+
+      <!-- CTA Button -->
+      <div class="text-center mt-12" data-aos="fade-up">
+        <a href="#" class="inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-[#141414] rounded-full hover:bg-gray-800 hover:shadow-lg transition-all duration-300">
+          <div class="w-[35px] h-[35px] bg-white rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-[#06c755] text-lg"></i></div>
+          <span class="font-bold text-white">สนใจสั่งซื้อ</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customize Section - ตาม Figma -->
+  <section class="py-[74px] bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-8 lg:gap-12" data-aos="fade-up">
+        <!-- Card 1: Customize -->
+        <div class="bg-[#e7e9ee] rounded-[20px] p-10 lg:p-14">
+          <div class="mb-8">
+            <div class="w-[86px] h-[86px] bg-[#efedfb] rounded-2xl flex items-center justify-center">
+              <i class="fa-solid fa-sliders text-4xl text-[#866bf0]"></i>
+            </div>
+          </div>
+          <h2 class="font-thai text-3xl lg:text-[35px] font-bold text-black mb-6 leading-[1.3] capitalize">
+            เราพร้อม customizie<br>เพื่อลูกค้าของคุณ
+          </h2>
+          <p class="text-[#535353] text-[17px] leading-[28px] mb-12">
+            เราเชี่ยวชาญด้าน E-commerce โดยเฉพาะ<br>
+            คุณสามารถเริ่มต้นได้ทันทีด้วยโครงสร้างและ Components ที่เราวางมาให้พร้อมใช้งาน<br>
+            ซึ่งออกแบบจากประสบการณ์ E-commerce จริง และรองรับการเติบโตของธุรกิจ
+          </p>
+          <a href="#" class="inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-[#141414] rounded-full hover:bg-gray-800 transition-all duration-300">
+            <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-white text-lg"></i></div>
+            <span class="font-bold text-white">ติดต่อทีมงาน</span>
+          </a>
+        </div>
+
+        <!-- Card 2: Asset Library -->
+        <div class="bg-white rounded-[20px] shadow-lg p-8 lg:p-10 flex flex-col">
+          <div class="text-center mb-6">
+            <h3 class="font-thai text-2xl font-bold text-black mb-2">เรามี Asset พร้อมใช้งาน</h3>
+            <p class="text-xl text-black">รวบรวมไว้ครบถ้วนในที่เดียว นับหนึ่งได้เลย!</p>
+          </div>
+          <a href="#" class="inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-white border border-[#a0a0a0] rounded-full mx-auto mb-6 hover:shadow-lg transition-all duration-300">
+            <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-white text-lg"></i></div>
+            <span class="font-bold text-[#141414]">ขอดู Demo</span>
+          </a>
+          <!-- Image cropped to show only top half -->
+          <div class="flex-1 h-[250px] overflow-hidden rounded-[20px]">
+            <img src="images/asset-preview.png" alt="Asset Library Preview" class="w-full object-cover object-top">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Web & App Section - ตาม Figma -->
+  <section class="py-12 bg-white overflow-hidden">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <!-- Phone Mockup -->
+        <div class="relative" data-aos="fade-right" data-aos-duration="800">
+          <img src="images/mobile/phone-mockup.png" alt="Mobile App Mockup" class="w-full max-w-[640px]">
+        </div>
+
+        <!-- Content -->
+        <div data-aos="fade-left" data-aos-duration="800">
+          <span class="inline-block bg-secondary text-white text-lg font-medium px-[15px] py-2 rounded-full mb-6 capitalize">รองรับทุกแพลตฟอร์ม</span>
+          <h2 class="font-thai text-3xl md:text-4xl lg:text-[48px] font-bold text-[#141414] mb-6 leading-[1.2]">
+            สร้างประสบการณ์<br>
+            การซื้อขาย<br>
+            ได้ทั้ง <span class="text-[#e36d3d]">Web</span> และ <span class="text-[#e36d3d]">APP</span>
+          </h2>
+          <p class="text-xl text-[#676767] mb-8 leading-relaxed">
+            ไม่ใช่แค่เว็บไซต์ที่รองรับทุกหน้าจอ แต่เรายังพัฒนา<br>
+            App Platform ที่พร้อมใช้งานจริงรองรับการเติบโตของธุรกิจในทุกช่องทาง
+          </p>
+          <div class="flex flex-wrap gap-6 items-center">
+            <a href="#" class="inline-flex items-center gap-2.5 pl-2 pr-6 py-[15px] bg-black rounded-full hover:bg-gray-800 transition-all duration-300">
+              <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-white text-lg"></i></div>
+              <span class="font-heading font-medium text-lg text-white capitalize">Get Started</span>
+            </a>
+            <a href="#" class="inline-flex items-center gap-3 text-black hover:text-gray-600 transition-colors">
+              <div class="w-[45px] h-[45px] rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-play text-sm"></i>
+              </div>
+              <span class="font-bold">ดูตัวอย่าง</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seller Dashboard Management Section - Rectangle 16645 ตาม Figma -->
+  <section class="relative py-24 bg-[#f7f7f9] overflow-hidden">
+    <!-- Background Gradient Circles -->
+    <div class="absolute -left-64 top-0 w-[1336px] h-[1373px] bg-gradient-radial from-purple-100/50 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute right-0 -top-32 w-[1058px] h-[1058px] bg-gradient-radial from-orange-100/30 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="container mx-auto px-6 lg:px-14">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <!-- Content -->
+        <div class="relative z-10" data-aos="fade-right" data-aos-duration="800">
+          <span class="inline-block bg-secondary text-white text-lg font-medium px-[15px] py-2 rounded-full mb-6 capitalize">รองรับทุกแพลตฟอร์ม</span>
+          <h2 class="font-thai text-3xl md:text-4xl lg:text-[48px] font-bold text-[#141414] mb-6 leading-[1.4]">
+            จัดการการขายได้ครบ<br>
+            ผ่าน <span class="text-[#e36d3d]">Seller Dashboard</span>
+          </h2>
+          <p class="text-xl text-[#676767] mb-10 leading-relaxed">
+            ดูภาพรวมยอดขาย วิเคราะห์ข้อมูล และจัดการร้านค้า<br>
+            ผ่าน Seller Dashboard ที่ใช้งานง่าย<br>
+            ทำงานร่วมกับ Web และ App ได้อย่างไร้รอยต่อ
+          </p>
+          <div class="flex flex-wrap gap-6 items-center">
+            <a href="#" class="inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-[#141414] rounded-full hover:bg-gray-800 transition-all duration-300">
+              <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-white text-lg"></i></div>
+              <span class="font-bold text-white">ติดต่อทีมงาน</span>
+            </a>
+            <a href="#" class="inline-flex items-center gap-3 text-black hover:text-gray-600 transition-colors">
+              <div class="w-[45px] h-[45px] rounded-full bg-white shadow-md flex items-center justify-center">
+                <i class="fa-solid fa-play text-sm"></i>
+              </div>
+              <span class="font-bold">ดูตัวอย่าง</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Dashboard Mockups - Tilted Laptops -->
+        <div class="relative h-[500px] lg:h-[600px]" data-aos="fade-left" data-aos-duration="1000">
+          <!-- Back Laptop (top-right, smaller) -->
+          <div class="absolute top-0 right-0 w-[85%] transform -rotate-[25deg] origin-center z-10">
+            <div class="bg-[#3d3d3d] rounded-[20px] p-1 shadow-xl">
+              <!-- Browser bar -->
+              <div class="bg-[#2b2b2b] rounded-t-[16px] h-5 flex items-center px-3 gap-1.5">
+                <span class="w-2 h-2 bg-[#494949] rounded-full"></span>
+                <span class="w-2 h-2 bg-[#494949] rounded-full"></span>
+                <span class="w-2 h-2 bg-[#494949] rounded-full"></span>
+              </div>
+              <!-- Screen -->
+              <div class="bg-white overflow-hidden">
+                <img src="images/seller/dashboard-screen-2.png" alt="Seller Dashboard" class="w-full">
+              </div>
+            </div>
+          </div>
+
+          <!-- Front Laptop (bottom-left, larger, overlapping) -->
+          <div class="absolute bottom-0 left-0 w-[90%] transform -rotate-[25deg] origin-center z-20">
+            <div class="bg-[#3d3d3d] rounded-[20px] p-1 shadow-2xl">
+              <!-- Browser bar -->
+              <div class="bg-[#2b2b2b] rounded-t-[16px] h-6 flex items-center px-4 gap-2">
+                <span class="w-2.5 h-2.5 bg-[#494949] rounded-full"></span>
+                <span class="w-2.5 h-2.5 bg-[#494949] rounded-full"></span>
+                <span class="w-2.5 h-2.5 bg-[#494949] rounded-full"></span>
+                <div class="flex-1 mx-8">
+                  <div class="bg-[#414141] rounded-full h-3 max-w-[200px] mx-auto"></div>
+                </div>
+              </div>
+              <!-- Screen -->
+              <div class="bg-white overflow-hidden">
+                <img src="images/seller/dashboard-screen-1.png" alt="Seller Dashboard Analytics" class="w-full">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seller Dashboard Pages Section - ตาม Figma -->
+  <section class="py-[120px] px-14 bg-gray-50">
+    <div class="container mx-auto">
+      <div class="text-center mb-12" data-aos="fade-up">
+        <h2 class="font-heading text-[40px] font-medium tracking-[-1.2px] text-[#161519]">
+          <span class="bg-gradient-to-r from-[#866bf0] to-[#ea7343] bg-clip-text text-transparent">Seller Dashboard</span> pages
+        </h2>
+      </div>
+
+      <!-- 3 Column Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+        <!-- Row 1 -->
+        <div class="group" data-aos="fade-up" data-aos-delay="0">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/dashboard.png" alt="Dashboard" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">แผงควบคุม</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/orders.png" alt="Orders" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">จัดการคำสั่งซื้อ</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/order-detail.png" alt="Order Detail" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">รายละเอียดคำสั่งซื้อ</p>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="group" data-aos="fade-up" data-aos-delay="0">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/products.png" alt="Products" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">สินค้า</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/coupon.png" alt="Coupon" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">คูปอง</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/review.png" alt="Review" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">รีวิว</p>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="group" data-aos="fade-up" data-aos-delay="0">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/wallet.png" alt="Wallet" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">กระเป๋าตัง</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/settings.png" alt="Settings" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">ตั้งค่า</p>
+        </div>
+
+        <div class="group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative bg-white rounded-xl shadow-lg overflow-hidden mb-4 hover:shadow-2xl transition-all duration-500">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-10">
+              <span class="w-1.5 h-1.5 bg-[#fa3c3c] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#ffde33] rounded-full"></span>
+              <span class="w-1.5 h-1.5 bg-[#40bd06] rounded-full"></span>
+            </div>
+            <img src="images/seller/print-label.png" alt="Print Label" class="w-full aspect-[370/322] object-cover object-top group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <p class="text-center text-xl text-[#141414]">พิมพ์ใบปะหน้า</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Affiliate Section - ตาม Figma -->
+  <section class="py-24 bg-white overflow-hidden">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <!-- Content -->
+        <div data-aos="fade-right" data-aos-duration="800">
+          <span class="inline-block border border-[#e36d3d] text-[#e36d3d] text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-full mb-6">Affiliate</span>
+          <h2 class="font-thai text-3xl md:text-4xl lg:text-[48px] font-bold text-[#141414] mb-6 leading-[1.4]">
+            เติบโตไปด้วยกัน<br>
+            ผ่านระบบ <span class="text-[#e36d3d]">Affiliate</span>
+          </h2>
+          <p class="text-xl text-[#676767] mb-10 leading-relaxed">
+            สร้างรายได้ผ่านเครือข่าย Affiliate<br>
+            พร้อม Dashboard สำหรับติดตามผลงานและรายได้แบบเรียลไทม์
+          </p>
+
+          <!-- Feature Cards -->
+          <div class="grid sm:grid-cols-2 gap-6">
+            <div class="bg-white rounded-[10px] p-6 shadow-md">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-[37px] h-[37px] bg-[#efedfb] rounded-full flex items-center justify-center">
+                  <i class="fa-solid fa-users text-[#866bf0]"></i>
+                </div>
+                <h3 class="font-thai font-bold text-xl text-[#060815]">ระบบช่วยวิเคราะห์</h3>
+              </div>
+              <p class="text-[#6b6b6b] text-base leading-relaxed">
+                ใช้ข้อมูลวิเคราะห์ประสิทธิภาพการลิงก์ Affiliate รู้ทันทีว่าสินค้าตัวไหนเวิร์ค
+              </p>
+            </div>
+
+            <div class="bg-white rounded-[10px] p-6 shadow-md">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-[37px] h-[37px] bg-[#efedfb] rounded-full flex items-center justify-center">
+                  <i class="fa-solid fa-globe text-[#866bf0]"></i>
+                </div>
+                <h3 class="font-thai font-bold text-xl text-[#060815]">ใช้ได้ทุกแพลตฟอร์ม</h3>
+              </div>
+              <p class="text-[#6b6b6b] text-base leading-relaxed">
+                ตรวจสอบข้อมูลรายได้ผ่านทุกแพลตฟอร์ม พร้อมใช้งานเสมอ
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Preview -->
+        <div class="relative" data-aos="fade-left" data-aos-duration="800">
+          <!-- Purple wave background -->
+          <div class="absolute right-0 top-[76px] w-[494px] h-[475px]">
+            <svg viewBox="0 0 494 475" fill="none" class="w-full h-full">
+              <path d="M494 0C494 0 494 237.5 247 237.5C0 237.5 0 475 0 475H494V0Z" fill="#E0D9FB"/>
+            </svg>
+          </div>
+
+          <!-- Dashboard cards -->
+          <div class="relative z-10">
+            <!-- Main dashboard card -->
+            <div class="bg-white rounded-[10px] shadow-lg p-6 max-w-[400px] ml-auto">
+              <!-- Window dots -->
+              <div class="flex gap-1.5 mb-4">
+                <span class="w-3 h-3 bg-red-400 rounded-full"></span>
+                <span class="w-3 h-3 bg-yellow-400 rounded-full"></span>
+                <span class="w-3 h-3 bg-green-400 rounded-full"></span>
+              </div>
+
+              <!-- Stats cards row -->
+              <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-[#eeeaff] rounded-[10px] p-4">
+                  <p class="text-sm text-[#676767] mb-1">ค่าคอมโดยประมาณ</p>
+                  <p class="text-2xl font-heading font-medium text-[#060815]">52.8K</p>
+                </div>
+                <div class="bg-[#ffe6dc] rounded-[10px] p-4">
+                  <p class="text-sm text-[#676767] mb-1">ยอดเข้าชม/เดือน</p>
+                  <p class="text-2xl font-heading font-medium text-[#060815]">48.9K</p>
+                </div>
+              </div>
+
+              <!-- Report card -->
+              <div class="bg-white rounded-[10px] shadow-md p-4">
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <p class="text-sm text-[#676767]">รายงานผลประกอบการ</p>
+                    <p class="text-2xl font-heading font-medium text-[#060815]">75.9K</p>
+                    <p class="text-sm"><span class="text-[#e36d3d] font-bold">+58.6%</span> เทียบกับปีที่แล้ว</p>
+                  </div>
+                  <span class="text-sm text-[#676767] font-bold">30 วัน</span>
+                </div>
+                <a href="#" class="inline-flex items-center gap-2 bg-[#e36d3d] text-white text-sm font-bold px-4 py-2 rounded-full mt-2">
+                  เริ่มต้นใช้งาน
+                  <i class="fa-solid fa-arrow-right"></i>
+                </a>
+              </div>
+            </div>
+
+            <!-- Income card floating -->
+            <div class="absolute top-0 right-0 bg-white rounded-[10px] shadow-lg p-4 w-[264px]">
+              <div class="flex items-center gap-3">
+                <div class="w-[52px] h-[52px] bg-[#efedfb] rounded-full flex items-center justify-center">
+                  <i class="fa-solid fa-chart-pie text-xl text-[#866bf0]"></i>
+                </div>
+                <div>
+                  <p class="font-bold text-[#131313]">รายได้</p>
+                  <p class="text-[#2ed06f] font-semibold">250K</p>
+                </div>
+              </div>
+              <div class="mt-3 h-2 bg-[#f3f3f3] rounded-full overflow-hidden">
+                <div class="h-full bg-[#e36d3d] rounded-full" style="width: 78%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section - ตาม Figma -->
+  <section class="relative h-[664px] flex items-center justify-center overflow-hidden" style="background: linear-gradient(180deg, rgba(0, 0, 0, 0.89) 4.96%, rgba(0, 0, 0, 0.691) 20.84%, rgba(0, 0, 0, 0) 43.42%, rgba(0, 0, 0, 0.82) 68.68%, rgb(0, 0, 0) 87.9%);">
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-[650px] mx-auto" data-aos="fade-up" data-aos-duration="800">
+        <h2 class="font-thai text-3xl md:text-[40px] font-bold text-white mb-8 leading-[1.2]">
+          อยากปรึกษาเรื่องเว็บขายของ<br>หรือโซลูชันอื่น ๆ ไหม
+        </h2>
+        <a href="#" class="inline-flex items-center gap-2.5 pl-2.5 pr-5 py-1.5 bg-white border border-[#a0a0a0] rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+          <div class="w-[35px] h-[35px] bg-[#06c755] rounded-full flex items-center justify-center shrink-0"><i class="fa-brands fa-line text-white text-lg"></i></div>
+          <span class="font-bold text-[#141414]">ขอดู Demo</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-950 text-white pt-20 pb-8">
+    <div class="container mx-auto px-6">
+      <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+        <div class="lg:col-span-2" data-aos="fade-up">
+          <a href="#" class="inline-block mb-6">
+            <span class="font-heading text-2xl font-bold text-white">Realfect</span>
+          </a>
+          <p class="text-gray-400 mb-6 max-w-sm leading-relaxed">
+            สร้างร้านค้าออนไลน์ที่สมบูรณ์แบบด้วย Template ที่ออกแบบมาเพื่อความสำเร็จของคุณ
+          </p>
+          <div class="flex gap-4">
+            <a href="#" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-colors">
+              <i class="fa-brands fa-facebook-f text-lg"></i>
+            </a>
+            <a href="#" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-colors">
+              <i class="fa-brands fa-x-twitter text-lg"></i>
+            </a>
+            <a href="#" class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-colors">
+              <i class="fa-brands fa-instagram text-lg"></i>
+            </a>
+          </div>
+        </div>
+
+        <div data-aos="fade-up" data-aos-delay="100">
+          <h4 class="font-body text-sm font-semibold uppercase tracking-wider mb-6">Product</h4>
+          <ul class="space-y-4">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Documentation</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Changelog</a></li>
+          </ul>
+        </div>
+
+        <div data-aos="fade-up" data-aos-delay="200">
+          <h4 class="font-body text-sm font-semibold uppercase tracking-wider mb-6">Company</h4>
+          <ul class="space-y-4">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">About</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Press</a></li>
+          </ul>
+        </div>
+
+        <div data-aos="fade-up" data-aos-delay="300">
+          <h4 class="font-body text-sm font-semibold uppercase tracking-wider mb-6">Support</h4>
+          <ul class="space-y-4">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Status</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-gray-500 text-sm">&copy; 2024 Realfect. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Privacy Policy</a>
+          <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Terms of Service</a>
+          <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AOS Library -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <!-- Custom Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>

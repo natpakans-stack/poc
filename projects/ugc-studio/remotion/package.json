@@ -1,0 +1,20 @@
+{
+  "name": "remotion-ugc",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render UgcVideo out/video.mp4",
+    "still": "remotion still UgcVideo out/frame.png --frame=60"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.482",
+    "@remotion/google-fonts": "4.0.482",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.482"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "typescript": "5.7.2"
+  }
+}

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เมนูยอดนิยม · ร้านอาหารคุณปุ้ม</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #2d6a4f;
+      --green2: #40916c;
+      --green3: #52b788;
+      --green4: #74c69d;
+      --green5: #95d5b2;
+      --cream: #fefae0;
+      --gold: #d4a017;
+      --bg: #f8faf9;
+    }
+    body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: #1b1b1b; padding: 32px 16px; }
+    .page { max-width: 960px; margin: 0 auto; }
+
+    /* HEADER */
+    .header { margin-bottom: 40px; }
+    .header-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--green); color: #fff;
+      font-size: 12px; font-weight: 600; letter-spacing: 1px;
+      padding: 4px 12px; border-radius: 100px; margin-bottom: 12px;
+    }
+    .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
+    .header p { color: #6b7280; font-size: 15px; }
+
+    /* GRID LAYOUT */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .card.wide { grid-column: span 2; }
+    .card-title { font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .card-heading { font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; }
+
+    /* HORIZONTAL BAR CHART */
+    .bar-list { display: flex; flex-direction: column; gap: 14px; }
+    .bar-row { display: flex; flex-direction: column; gap: 6px; }
+    .bar-meta { display: flex; justify-content: space-between; font-size: 14px; }
+    .bar-name { font-weight: 500; }
+    .bar-count { color: #6b7280; font-size: 13px; }
+    .bar-track { background: #f3f4f6; border-radius: 100px; height: 10px; overflow: hidden; }
+    .bar-fill {
+      height: 100%; border-radius: 100px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* DONUT CHART */
+    .donut-wrap { display: flex; align-items: center; gap: 24px; }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .legend-label { flex: 1; }
+    .legend-val { font-weight: 600; color: #374151; }
+    .legend-pct { font-size: 12px; color: #9ca3af; }
+
+    /* POPULAR TIMES */
+    .times-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
+    .time-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .time-bar {
+      width: 100%; border-radius: 6px 6px 0 0;
+      transition: height 1s cubic-bezier(.4,0,.2,1);
+    }
+    .time-label { font-size: 11px; color: #9ca3af; }
+    .time-val { font-size: 11px; font-weight: 600; color: #374151; }
+    .days-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+    .day-btn {
+      padding: 5px 12px; border-radius: 100px; border: 1.5px solid #e5e7eb;
+      font-size: 12px; font-weight: 500; cursor: pointer; background: #fff;
+      font-family: 'Sarabun', sans-serif; transition: all 0.15s;
+    }
+    .day-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+    /* RATING SUMMARY */
+    .rating-big { font-size: 3.5rem; font-weight: 700; color: var(--green); line-height: 1; }
+    .stars { color: var(--gold); font-size: 1.2rem; letter-spacing: 2px; }
+    .rating-sub { color: #6b7280; font-size: 13px; margin-top: 4px; margin-bottom: 20px; }
+    .rating-bars { display: flex; flex-direction: column; gap: 8px; }
+    .rating-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .rating-star { width: 20px; text-align: right; color: #374151; font-weight: 600; }
+    .rating-track { flex: 1; background: #f3f4f6; border-radius: 100px; height: 8px; overflow: hidden; }
+    .rating-fill { height: 100%; border-radius: 100px; background: var(--gold); }
+    .rating-count { width: 28px; color: #9ca3af; text-align: right; }
+
+    /* PRICE TAG */
+    .price-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--cream); border: 1.5px solid var(--gold);
+      color: #92400e; padding: 6px 14px; border-radius: 100px;
+      font-weight: 600; font-size: 15px; margin-bottom: 16px;
+    }
+    .menu-items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .menu-pill {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f8faf9; border-radius: 10px; padding: 10px 14px; font-size: 13px;
+    }
+    .menu-pill-name { font-weight: 500; }
+    .menu-pill-tag {
+      background: var(--green); color: #fff;
+      font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 100px;
+    }
+
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+      .card.wide { grid-column: span 1; }
+      .donut-wrap { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-tag">📊 Data from Google Maps · Apify</div>
+    <h1>เมนูและข้อมูลร้านอาหารคุณปุ้ม</h1>
+    <p>วิเคราะห์จากรีวิว 370 รายการ · อัปเดต มิถุนายน 2569</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- BAR CHART: เมนูยอดนิยม -->
+    <div class="card wide">
+      <div class="card-title">จากรีวิวลูกค้า</div>
+      <div class="card-heading">เมนูที่ถูกพูดถึงมากที่สุด</div>
+      <div class="bar-list" id="menuBars"></div>
+    </div>
+
+    <!-- DONUT: สัดส่วนเมนูหลัก -->
+    <div class="card">
+      <div class="card-title">สัดส่วน</div>
+      <div class="card-heading">หมวดหมู่อาหาร</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" width="120" height="120" viewBox="0 0 120 120" id="donutSvg"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- RATING -->
+    <div class="card">
+      <div class="card-title">Google Maps Rating</div>
+      <div class="card-heading">คะแนนรีวิว</div>
+      <div class="rating-big">4.5</div>
+      <div class="stars">★★★★½</div>
+      <div class="rating-sub">จาก 370 รีวิว</div>
+      <div class="rating-bars" id="ratingBars"></div>
+    </div>
+
+    <!-- POPULAR TIMES -->
+    <div class="card wide">
+      <div class="card-title">ข้อมูลการเข้าร้าน</div>
+      <div class="card-heading">ช่วงเวลายอดนิยม</div>
+      <div class="days-tabs" id="daysTabs"></div>
+      <div class="times-chart" id="timesChart"></div>
+    </div>
+
+    <!-- MENU ITEMS + PRICE -->
+    <div class="card wide">
+      <div class="card-title">รายการเมนู</div>
+      <div class="card-heading">อาหารในร้าน</div>
+      <div class="price-badge">💰 ราคา ฿1–200 / คน · จานขนมจีน 40 บาท · หมูทอด 50 บาท/ขีด</div>
+      <div class="menu-items-grid" id="menuGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const MENU = [
+  { name: 'ขนมจีน', count: 106, emoji: '🍜' },
+  { name: 'ไก่ทอด', count: 37, emoji: '🍗' },
+  { name: 'ข้าวยำ', count: 28, emoji: '🥗' },
+  { name: 'หมูทอด', count: 18, emoji: '🥩' },
+  { name: 'แกงเขียวหวาน', count: 17, emoji: '🍛' },
+  { name: 'น้ำพริก', count: 16, emoji: '🌶️' },
+  { name: 'ไตปลา', count: 13, emoji: '🐟' },
+  { name: 'น้ำยากะทิ', count: 7, emoji: '🥥' },
+  { name: 'เครื่องเคียง', count: 5, emoji: '🥬' },
+];
+
+const COLORS = ['#2d6a4f','#40916c','#52b788','#74c69d','#95d5b2','#b7e4c7','#d8f3dc','#1b4332','#081c15'];
+
+const RATING_DIST = [
+  { star: 5, count: 233 },
+  { star: 4, count: 102 },
+  { star: 3, count: 23 },
+  { star: 2, count: 6 },
+  { star: 1, count: 6 },
+];
+
+const POPULAR_TIMES = {
+  'อา': [0,35,70,100,98,70,37,0,0,0,0,0,0,0,0,0,0,0],
+  'จ': [0,30,61,80,79,55,31,0,0,0,0,0,0,0,0,0,0,0],
+  'อ': [0,24,48,68,66,47,27,0,0,0,0,0,0,0,0,0,0,0],
+  'พ': [0,23,50,67,63,40,21,0,0,0,0,0,0,0,0,0,0,0],
+  'พฤ': [0,20,42,60,60,45,26,0,0,0,0,0,0,0,0,0,0,0],
+  'ศ': [0,24,53,75,70,48,27,0,0,0,0,0,0,0,0,0,0,0],
+  'ส': [0,33,60,82,81,62,37,0,0,0,0,0,0,0,0,0,0,0],
+};
+const HOURS = ['5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22'];
+
+const MENU_ITEMS = [
+  { name: 'ขนมจีนน้ำยากะทิ', tag: 'ยอดนิยม', price: '40 ฿' },
+  { name: 'ไก่ทอด', tag: 'แนะนำ', price: '50 ฿/ขีด' },
+  { name: 'หมูทอด 3 ชั้น', tag: 'แนะนำ', price: '50 ฿/ขีด' },
+  { name: 'ข้าวยำปักษ์ใต้', tag: 'มีให้', price: '' },
+  { name: 'น้ำยาแกงไตปลา', tag: 'ฟรีราด', price: '' },
+  { name: 'น้ำยาน้ำพริก', tag: 'ฟรีราด', price: '' },
+  { name: 'ผักสด / ผักดอง', tag: 'ฟรี', price: '' },
+  { name: 'ทอดมัน', tag: 'มีให้', price: '' },
+  { name: 'แกงเขียวหวาน', tag: 'มีให้', price: '' },
+  { name: 'กาแฟ', tag: 'เครื่องดื่ม', price: '' },
+];
+
+// BAR CHART
+const maxCount = MENU[0].count;
+const barList = document.getElementById('menuBars');
+MENU.forEach((m, i) => {
+  const pct = (m.count / maxCount * 100).toFixed(1);
+  barList.innerHTML += `
+    <div class="bar-row">
+      <div class="bar-meta">
+        <span class="bar-name">${m.emoji} ${m.name}</span>
+        <span class="bar-count">${m.count} รีวิว</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0%;background:${COLORS[i]}" data-w="${pct}%"></div>
+      </div>
+    </div>`;
+});
+
+// DONUT CHART
+const donutData = [
+  { label: 'ขนมจีน', val: 106, color: COLORS[0] },
+  { label: 'ไก่ทอด', val: 37, color: COLORS[1] },
+  { label: 'ข้าวยำ', val: 28, color: COLORS[2] },
+  { label: 'หมูทอด', val: 18, color: COLORS[3] },
+  { label: 'อื่นๆ', val: 53, color: COLORS[4] },
+];
+const total = donutData.reduce((s, d) => s + d.val, 0);
+const svg = document.getElementById('donutSvg');
+const cx = 60, cy = 60, r = 46, inner = 28;
+let startAngle = -Math.PI / 2;
+donutData.forEach(d => {
+  const angle = (d.val / total) * Math.PI * 2;
+  const endAngle = startAngle + angle;
+  const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+  const x2 = cx + r * Math.cos(endAngle), y2 = cy + r * Math.sin(endAngle);
+  const ix1 = cx + inner * Math.cos(startAngle), iy1 = cy + inner * Math.sin(startAngle);
+  const ix2 = cx + inner * Math.cos(endAngle), iy2 = cy + inner * Math.sin(endAngle);
+  const large = angle > Math.PI ? 1 : 0;
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', `M${ix1},${iy1} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${ix2},${iy2} A${inner},${inner} 0 ${large},0 ${ix1},${iy1} Z`);
+  path.setAttribute('fill', d.color);
+  svg.appendChild(path);
+  startAngle = endAngle;
+});
+const legend = document.getElementById('donutLegend');
+donutData.forEach(d => {
+  const pct = (d.val / total * 100).toFixed(0);
+  legend.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div><span class="legend-label">${d.label}</span><span class="legend-val">${d.val}</span><span class="legend-pct">${pct}%</span></div>`;
+});
+
+// RATING BARS
+const maxRating = 233;
+const rb = document.getElementById('ratingBars');
+RATING_DIST.forEach(r => {
+  const w = (r.count / maxRating * 100).toFixed(1);
+  rb.innerHTML += `<div class="rating-row"><span class="rating-star">${r.star}</span><div class="rating-track"><div class="rating-fill" style="width:${w}%"></div></div><span class="rating-count">${r.count}</span></div>`;
+});
+
+// POPULAR TIMES
+let activeDay = 'อา';
+const tabs = document.getElementById('daysTabs');
+const chart = document.getElementById('timesChart');
+Object.keys(POPULAR_TIMES).forEach(day => {
+  const btn = document.createElement('button');
+  btn.className = 'day-btn' + (day === activeDay ? ' active' : '');
+  btn.textContent = day;
+  btn.onclick = () => {
+    activeDay = day;
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTimes();
+  };
+  tabs.appendChild(btn);
+});
+
+function renderTimes() {
+  const data = POPULAR_TIMES[activeDay];
+  const active = data.slice(1, 7); // hours 6-11
+  const maxVal = Math.max(...active);
+  chart.innerHTML = '';
+  active.forEach((val, i) => {
+    const h = maxVal > 0 ? (val / maxVal * 90) : 0;
+    const isPeak = val === maxVal;
+    chart.innerHTML += `
+      <div class="time-col">
+        <div class="time-val">${val}%</div>
+        <div class="time-bar" style="height:${h}px;background:${isPeak ? '#2d6a4f' : '#95d5b2'}"></div>
+        <div class="time-label">${HOURS[i+1]}น.</div>
+      </div>`;
+  });
+}
+renderTimes();
+
+// MENU GRID
+const mg = document.getElementById('menuGrid');
+MENU_ITEMS.forEach(item => {
+  mg.innerHTML += `
+    <div class="menu-pill">
+      <span class="menu-pill-name">${item.name}${item.price ? ` <span style="color:#9ca3af;font-size:12px;">${item.price}</span>` : ''}</span>
+      <span class="menu-pill-tag">${item.tag}</span>
+    </div>`;
+});
+
+// ANIMATE bars on load
+setTimeout(() => {
+  document.querySelectorAll('.bar-fill[data-w]').forEach(el => {
+    el.style.width = el.dataset.w;
+  });
+}, 100);
+</script>
+</body>
+</html>
