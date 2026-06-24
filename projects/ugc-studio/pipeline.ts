@@ -193,8 +193,26 @@ function findMediaUrl(x: any, ext: RegExp): string | null {
 const jobId = (parsed: any): string | null =>
   (Array.isArray(parsed) ? parsed[0]?.id : parsed?.id) ?? null;
 
+// Higgsfield jobs are flaky externals (transient "Cannot reach …/agents/jobs", 429, 5xx).
+// Retry with backoff so one blip doesn't kill the whole render. ponytail: 3 tries is plenty for a POC.
+async function withRetry<T>(label: string, fn: () => Promise<T>, tries = 3): Promise<T> {
+  let lastErr: any;
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    try { return await fn(); }
+    catch (e) {
+      lastErr = e;
+      const msg = ((e as any)?.stderr?.toString?.() || (e as Error)?.message || String(e)).split("\n").filter(Boolean).pop();
+      if (attempt < tries) {
+        console.warn(`[retry ${label}] attempt ${attempt}/${tries} failed: ${msg} — retrying in ${3 * attempt}s`);
+        await Bun.sleep(3000 * attempt);
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function uploadImage(path: string): Promise<string> {
-  const r = await $`${HF} upload create ${path} --json`.quiet();
+  const r = await withRetry("upload", () => $`${HF} upload create ${path} --json`.quiet());
   const id = JSON.parse(r.stdout.toString())?.id;
   if (!id) throw new Error(`upload รูปไม่สำเร็จ: ${r.stderr.toString() || r.stdout.toString()}`);
   return id;
@@ -203,7 +221,7 @@ async function uploadImage(path: string): Promise<string> {
 // gen รูปมุม → คืน job id (ใช้เป็น start image ของ seedance ได้เลย ไม่ต้อง upload ซ้ำ)
 async function genAngleImage(imageId: string, type: string, i: number): Promise<string> {
   const prompt = SHOT_PROMPT[type] ?? SHOT_PROMPT.product_closeup;
-  const r = await $`${HF} generate create nano_banana_2 --prompt ${prompt} --image ${imageId} --aspect_ratio 9:16 --wait --wait-timeout 5m --wait-interval 5s --json`.quiet();
+  const r = await withRetry(`nano_banana#${i}`, () => $`${HF} generate create nano_banana_2 --prompt ${prompt} --image ${imageId} --aspect_ratio 9:16 --wait --wait-timeout 5m --wait-interval 5s --json`.quiet());
   const id = jobId(JSON.parse(r.stdout.toString()));
   if (!id) throw new Error(`nano_banana ไม่คืน job id สำหรับช็อต ${i} (${type})`);
   return id;
@@ -212,7 +230,7 @@ async function genAngleImage(imageId: string, type: string, i: number): Promise<
 // gen คลิปจากรูปมุม (seedance i2v) → download เป็น clip{i}.mp4 คืนชื่อไฟล์
 async function genShotClip(startImageRef: string, type: string, i: number): Promise<string> {
   const prompt = MOTION_PROMPT[type] ?? MOTION_PROMPT.product_closeup;
-  const r = await $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio 9:16 --duration 4 --resolution 720p --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet();
+  const r = await withRetry(`seedance#${i}`, () => $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio 9:16 --duration 4 --resolution 720p --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet());
   const url = findMediaUrl(JSON.parse(r.stdout.toString()), /\.mp4/);
   if (!url) throw new Error(`seedance ไม่คืน mp4 สำหรับช็อต ${i} (${type})`);
   const name = `clip${i}.mp4`;

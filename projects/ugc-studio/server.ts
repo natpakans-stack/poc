@@ -101,7 +101,15 @@ Bun.serve({
           // fire-and-forget; client polls /api/status?id=…&kind=pipeline
           runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName })
             .then(() => pipeJobs.set(id, { status: "completed", url: `/out/${outName}` }))
-            .catch((e) => pipeJobs.set(id, { status: "failed", url: null, error: String((e as Error)?.message || e) }));
+            .catch((e) => {
+              const stderr = (e as any)?.stderr?.toString?.() ?? "";
+              console.error(`[pipeline ${id}] exit=${(e as any)?.exitCode} ${(e as Error)?.message}\n${stderr}`);
+              const raw = stderr.split("\n").filter(Boolean).pop() || String((e as Error)?.message || e);
+              const msg = /cannot reach|higgsfield|ECONN|ETIMEDOUT|timeout|429|50\d/i.test(raw + " " + ((e as Error)?.message ?? ""))
+                ? "เชื่อมต่อ Higgsfield ไม่สำเร็จ (บริการไม่พร้อม/credit หมด/โดน rate limit) — ลองใหม่อีกครั้ง"
+                : raw.slice(0, 300);
+              pipeJobs.set(id, { status: "failed", url: null, error: msg });
+            });
           return json({ jobId: id, kind: "pipeline" });
         }
 
