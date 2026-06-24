@@ -2,12 +2,6 @@ import { Dropdown } from "../components/Dropdown";
 import type { Template } from "../lib/api";
 
 export type Settings = { mode: string; aspect: string; duration: string; resolution: string };
-
-const TEMPLATES: { value: Template; ic: string; t: string; d: string }[] = [
-  { value: "avatar", ic: "🧑‍💼", t: "Avatar พูด", d: "คนพูด sync ปาก" },
-  { value: "full", ic: "🎬", t: "Full pipeline", d: "คน+b-roll+SFX" },
-  { value: "no_person", ic: "📦", t: "ไม่เห็นคน", d: "สินค้า/มือ" },
-];
 export type GenState = {
   phase: "idle" | "sending" | "processing" | "done" | "error";
   videoUrl: string | null;
@@ -15,12 +9,11 @@ export type GenState = {
   statusErr: boolean;
 };
 
-const MODES = [
-  { value: "product_review", label: "Product Review" },
-  { value: "ugc", label: "UGC" },
-  { value: "ugc_unboxing", label: "Unboxing" },
-  { value: "product_showcase", label: "Showcase" },
-  { value: "tv_spot", label: "TV Spot" },
+// single axis: structure (+ implied style) in one dropdown — replaces the old ทรง-cards + Higgsfield "โหมด"
+const TEMPLATE_OPTS: { value: Template; label: string }[] = [
+  { value: "avatar", label: "🧑‍💼 Avatar พูด — คนพูด sync ปาก" },
+  { value: "full", label: "🎬 Full pipeline — คน + b-roll + SFX" },
+  { value: "no_person", label: "📦 ไม่เห็นคน — โชว์สินค้า / มือ" },
 ];
 const ASPECTS = [
   { value: "9:16", label: "9:16 (แนวตั้ง)" },
@@ -66,28 +59,16 @@ export function OutputColumn({ settings, setSettings, template, setTemplate, gen
 
   return (
     <>
-      <span className="tpl-label">ทรงคลิป</span>
-      <div className="tpl-grid">
-        {TEMPLATES.map((t) => (
-          <div key={t.value} className={`tpl${template === t.value ? " sel" : ""}`} onClick={() => setTemplate(t.value)}>
-            <div className="ic">{t.ic}</div>
-            <div className="t">{t.t}</div>
-            <div className="d">{t.d}</div>
-          </div>
-        ))}
+      <div className="ctl" style={{ marginBottom: 14 }}>
+        <label>ทรงคลิป</label>
+        <Dropdown options={TEMPLATE_OPTS} value={template} onChange={(v) => setTemplate(v as Template)} />
       </div>
 
       <div className="row">
         <div className="ctl">
-          <label>โหมด</label>
-          <Dropdown options={MODES} value={settings.mode} onChange={(v) => set({ mode: v })} />
-        </div>
-        <div className="ctl">
           <label>สัดส่วน</label>
           <Dropdown options={ASPECTS} value={settings.aspect} onChange={(v) => set({ aspect: v })} />
         </div>
-      </div>
-      <div className="row" style={{ marginTop: 12 }}>
         <div className="ctl">
           <label>ความยาว (วิ)</label>
           <input
@@ -95,10 +76,10 @@ export function OutputColumn({ settings, setSettings, template, setTemplate, gen
             onChange={(e) => set({ duration: e.target.value })}
           />
         </div>
-        <div className="ctl">
-          <label>ความละเอียด</label>
-          <Dropdown options={RESOLUTIONS} value={settings.resolution} onChange={(v) => set({ resolution: v })} />
-        </div>
+      </div>
+      <div className="ctl" style={{ marginTop: 12 }}>
+        <label>ความละเอียด</label>
+        <Dropdown options={RESOLUTIONS} value={settings.resolution} onChange={(v) => set({ resolution: v })} />
       </div>
 
       <button className="gen" disabled={busy} onClick={onGenerate}>สร้างวิดีโอ</button>
