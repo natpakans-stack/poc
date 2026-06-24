@@ -46,12 +46,12 @@ export async function getStatus(id: string, kind?: Kind): Promise<{ status: stri
   return r.json();
 }
 
-// draft a Thai live-selling script from a short brief (OpenAI)
-export async function draftScript(brief: string): Promise<string> {
+// draft a full Thai live-selling voiceover from a brief, sized to the clip length (OpenAI)
+export async function draftScript(brief: string, durationSec = 15): Promise<string> {
   const res = await fetch("/api/script", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ brief }),
+    body: JSON.stringify({ brief, duration: durationSec }),
   });
   const data = await res.json();
   if (!res.ok || data.error) throw new Error(data.error || "ร่างสคริปต์ไม่สำเร็จ");

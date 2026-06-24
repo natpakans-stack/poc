@@ -2,7 +2,7 @@
 // ponytail: shells out to the hf binary; async job + poll (gen takes minutes, idle-timeout can't hold the request).
 import { mkdir, writeFile } from "node:fs/promises";
 import index from "./index.html";
-import { generateScript, runFromPlan } from "./pipeline";
+import { draftFullScript, runFromPlan } from "./pipeline";
 
 const HF = "/Users/natpakansirirat/.npm-global/lib/node_modules/@higgsfield/cli/vendor/hf";
 const ROOT = import.meta.dir;
@@ -160,10 +160,10 @@ Bun.serve({
     // draft a Thai live-selling script from a short brief (OpenAI via pipeline.generateScript)
     if (url.pathname === "/api/script" && req.method === "POST") {
       try {
-        const { brief } = await req.json();
+        const { brief, duration } = await req.json();
         if (!brief || !String(brief).trim()) return json({ error: "กรุณาใส่ brief" }, 400);
-        const s = await generateScript(String(brief).trim());
-        return json({ script: [s.hook, ...s.lines].filter(Boolean).join(" "), hook: s.hook, lines: s.lines });
+        const script = await draftFullScript(String(brief).trim(), parseInt(duration, 10) || 15);
+        return json({ script });
       } catch (e) { return json({ error: (e as Error).message }, 500); }
     }
 

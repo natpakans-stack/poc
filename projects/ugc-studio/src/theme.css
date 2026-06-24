@@ -106,10 +106,10 @@ select:focus,input[type=number]:focus{outline:none;border-color:var(--accent)}
 .dd-opt:hover{background:var(--panel)}
 .dd-opt.sel{background:var(--accent);color:var(--accent-ink);font-weight:600}
 
-/* script: AI helper toggle (keeps the transcript editor the single hero) */
-.ai-toggle{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;color:var(--accent);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:background .15s,border-color .15s}
-.ai-toggle:hover{background:rgba(200,255,61,.05);border-color:var(--accent)}
-.ai-toggle .chev{margin-left:auto;color:var(--muted);font-size:11px;transition:transform .2s}
+/* script: AI helper toggle — compact lime pill, right-aligned (transcript stays hero) */
+.ai-toggle{align-self:flex-end;display:inline-flex;align-items:center;gap:7px;background:rgba(200,255,61,.09);border:1px solid rgba(200,255,61,.30);border-radius:9px;padding:8px 14px;color:var(--accent);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:background .15s,border-color .15s}
+.ai-toggle:hover{background:rgba(200,255,61,.16);border-color:var(--accent)}
+.ai-toggle .chev{color:var(--accent);font-size:10px;opacity:.85;transition:transform .2s}
 .ai-toggle.open .chev{transform:rotate(180deg)}
 
 /* script brief + AI draft */

@@ -19,7 +19,7 @@ export function ScriptColumn({ script, setScript, targetSec }: {
     setErr("");
     setDrafting(true);
     try {
-      setScript(await draftScript(brief.trim()));
+      setScript(await draftScript(brief.trim(), targetSec));
       setAiOpen(false); // พับ helper ทันที → เห็น transcript เต็มๆ
     } catch (e) {
       setErr((e as Error).message);

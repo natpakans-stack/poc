@@ -52,6 +52,37 @@ export async function generateScript(brief: string, model = "gpt-4o"): Promise<S
   return script;
 }
 
+// Draft a FULL spoken voiceover for the UI (elaborate the brief, don't summarize).
+// Returns the exact words the presenter will say, sized to the clip length.
+export async function draftFullScript(brief: string, durationSec = 15, model = "gpt-4o"): Promise<string> {
+  const sec = Math.max(8, Math.min(60, Math.round(durationSec)));
+  const chars = sec * 8; // ไทยพูด ~8 ตัวอักษร/วินาที
+  const system = `คุณเป็นนักเขียนสคริปต์ขายของ live-selling ภาษาไทยที่ขายเก่งมาก
+หน้าที่: เขียน "บทพูด (voiceover)" ฉบับเต็มที่พรีเซนเตอร์จะพูดจริงในคลิปแนวตั้งยาว ~${sec} วินาที
+กฎ:
+- ขยายความจาก brief ให้ "ละเอียดและเห็นภาพ" — เล่าจุดเด่นทีละอย่างแบบบรรยายให้นึกออก ห้ามย่อ ห้ามตัดเป็น bullet
+- โครงสร้าง: hook สะดุดหู → เล่าจุดเด่น/ประโยชน์ทีละข้อแบบเห็นภาพ → ปิดด้วย CTA เร่งให้ตัดสินใจ
+- ภาษาพูดเป็นกันเอง เหมือนพรีเซนเตอร์พูดขายสดให้คนดูฟัง ลื่นต่อเนื่อง
+- ความยาวต้อง "พูดจบพอดี" ใน ~${sec} วินาที = ประมาณ ${chars} ตัวอักษร (ยอมคลาดได้ ±15%) — ละเอียดแต่ห้ามยาวจนพูดไม่ทันในเวลา และห้ามสั้นจนโล่ง
+ตอบกลับเป็น "บทพูดล้วนๆ" เป็นข้อความต่อเนื่องอ่านออกเสียงได้เลย — ไม่มีหัวข้อ ไม่มี bullet ไม่มีเครื่องหมายคำพูดครอบ ไม่มี JSON`;
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key("OPENAI_API_KEY")}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: `ความยาวคลิป ~${sec} วินาที\n\nbrief / รายละเอียดสินค้า:\n${brief}` },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const text = (data.choices?.[0]?.message?.content ?? "").trim().replace(/^["“]|["”]$/g, "");
+  if (!text) throw new Error("OpenAI returned empty script");
+  return text;
+}
+
 // ── 2. Voice + char-level timestamps ─────────────────────────────────────────
 type Alignment = {
   characters: string[];
