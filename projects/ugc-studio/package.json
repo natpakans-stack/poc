@@ -1,0 +1,16 @@
+{
+  "name": "ugc-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot --env-file=../.env server.ts"
+  },
+  "dependencies": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
+  }
+}

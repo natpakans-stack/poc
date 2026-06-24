@@ -6,15 +6,21 @@ const FPS = 30;
 
 // Demo props — replaced at render time by the pipeline (--props). AURA serum live-selling sample.
 const demoProps: UgcVideoProps = {
-  videoSrc: "demo.mp4",
-  videoDurationInSeconds: 15.09,
-  hook: "ฉ่ำวาวใน 7 วัน ✨",
+  durationInSeconds: 11.76,
+  hook: "เซรั่มหน้าใส แค่ทาก็ออร่า!",
+  sfx: true,
+  clips: [
+    { src: "demo.mp4", startFromMs: 0, startMs: 0, endMs: 4300 },
+    { src: "clip0.mp4", startMs: 4300, endMs: 6000 },
+    { src: "demo.mp4", startFromMs: 11000, startMs: 6000, endMs: 9700, transition: true },
+    { src: "clip3.mp4", startMs: 9700, endMs: 11760, transition: true },
+  ],
   captions: [
-    { text: "ผิวโทรมๆ แบบนี้ ฟื้นได้ใน 7 วัน", startMs: 0, endMs: 3000 },
-    { text: "AURA เซรั่มเข้มข้น ซึมไว ไม่เหนียวเหนอะ", startMs: 3000, endMs: 6200 },
-    { text: "วิตามินซี + ไฮยา ฉ่ำวาวตั้งแต่หยดแรก", startMs: 6200, endMs: 9500 },
-    { text: "ลดเลือนจุดด่างดำ หน้าใสขึ้นเห็นชัด", startMs: 9500, endMs: 12500 },
-    { text: "วันนี้ลด 50% เฉพาะไลฟ์ รีบกดสั่งเลย!", startMs: 12500, endMs: 15090 },
+    { text: "หน้าใสออร่า", startMs: 0, endMs: 2080 },
+    { text: "ทาแล้วออร่า", startMs: 2240, endMs: 5320 },
+    { text: "ซึมไวมาก", startMs: 5387, endMs: 7280 },
+    { text: "ลดจุดด่างดำ", startMs: 7400, endMs: 9680 },
+    { text: "ราคาพิเศษ", startMs: 9740, endMs: 11760 },
   ],
 };
 
@@ -28,7 +34,7 @@ export const RemotionRoot: React.FC = () => {
       height={1920}
       defaultProps={demoProps}
       calculateMetadata={({ props }) => ({
-        durationInFrames: Math.round(props.videoDurationInSeconds * FPS),
+        durationInFrames: Math.round(props.durationInSeconds * FPS),
       })}
     />
   );

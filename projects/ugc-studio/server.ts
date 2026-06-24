@@ -1,11 +1,19 @@
-// UGC Studio — Bun server that drives the Higgsfield CLI.
+// UGC Studio — Bun server that drives the Higgsfield CLI + full Remotion pipeline.
 // ponytail: shells out to the hf binary; async job + poll (gen takes minutes, idle-timeout can't hold the request).
 import { mkdir, writeFile } from "node:fs/promises";
+import index from "./index.html";
+import { generateScript, runFromPlan } from "./pipeline";
 
 const HF = "/Users/natpakansirirat/.npm-global/lib/node_modules/@higgsfield/cli/vendor/hf";
 const ROOT = import.meta.dir;
+const REMOTION_DIR = ROOT + "/remotion";
 const JOBS = ROOT + "/jobs";
 await mkdir(JOBS, { recursive: true });
+
+// in-memory status for background pipeline renders (full / no-person templates)
+const pipeJobs = new Map<string, { status: string; url: string | null; error?: string }>();
+let studio: ReturnType<typeof Bun.spawn> | null = null; // single shared Remotion Studio process
+const STUDIO_PORT = 3010; // fixed so the Edit button always opens the right tab (3000/3001 may be taken)
 
 async function hf(args: string[]) {
   const p = Bun.spawn([HF, ...args], { stdout: "pipe", stderr: "pipe", env: process.env });
@@ -37,10 +45,15 @@ const json = (o: any, status = 200) =>
 Bun.serve({
   port: 3001,
   idleTimeout: 120, // create() uploads images then returns a job id fast; generation is polled separately
+  development: { hmr: true, console: true },
+  routes: { "/": index }, // Bun bundles src/main.tsx referenced by index.html
   async fetch(req) {
     const url = new URL(req.url);
 
-    if (url.pathname === "/") return new Response(Bun.file(ROOT + "/index.html"));
+    // serve rendered pipeline output (remotion/out/*.mp4)
+    if (url.pathname.startsWith("/out/")) {
+      return new Response(Bun.file(REMOTION_DIR + "/out/" + url.pathname.slice(5)));
+    }
 
     // list preset avatars for the picker
     if (url.pathname === "/api/avatars") {
@@ -74,6 +87,22 @@ Bun.serve({
           const path = `${jobDir}/img${i}_${f.name.replace(/[^\w.\-]/g, "_")}`;
           await writeFile(path, Buffer.from(await f.arrayBuffer()));
           imgPaths.push(path);
+        }
+
+        // ── template routing ──
+        // "full" / "no_person" → run the Remotion pipeline as a background job (minutes); poll with kind=pipeline.
+        // "avatar" (default)   → Higgsfield single-shot below (presenter speaks, lip-synced).
+        const template = String(form.get("template") || "avatar");
+        if (template === "full" || template === "no_person") {
+          const id = crypto.randomUUID();
+          const outName = `web_${id}.mp4`;
+          pipeJobs.set(id, { status: "processing", url: null });
+          const totalDurationS = Math.max(8, Math.min(30, parseInt(duration, 10) || 15));
+          // fire-and-forget; client polls /api/status?id=…&kind=pipeline
+          runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName })
+            .then(() => pipeJobs.set(id, { status: "completed", url: `/out/${outName}` }))
+            .catch((e) => pipeJobs.set(id, { status: "failed", url: null, error: String((e as Error)?.message || e) }));
+          return json({ jobId: id, kind: "pipeline" });
         }
 
         // avatars json file
@@ -122,16 +151,38 @@ Bun.serve({
           jobId = Array.isArray(parsed) ? (parsed[0]?.id ?? parsed[0]) : (parsed?.id ?? parsed);
         } catch { jobId = r.out.split(/\s+/).find((t) => /[0-9a-f-]{20,}/.test(t)) ?? null; }
         if (!jobId) return json({ error: "ไม่พบ job id: " + (r.err || r.out) }, 500);
-        return json({ jobId, refNote });
+        return json({ jobId, refNote, kind: "hf" });
       } catch (e) {
         return json({ error: (e as Error).message }, 500);
       }
     }
 
-    // poll a job's status
+    // draft a Thai live-selling script from a short brief (OpenAI via pipeline.generateScript)
+    if (url.pathname === "/api/script" && req.method === "POST") {
+      try {
+        const { brief } = await req.json();
+        if (!brief || !String(brief).trim()) return json({ error: "กรุณาใส่ brief" }, 400);
+        const s = await generateScript(String(brief).trim());
+        return json({ script: [s.hook, ...s.lines].filter(Boolean).join(" "), hook: s.hook, lines: s.lines });
+      } catch (e) { return json({ error: (e as Error).message }, 500); }
+    }
+
+    // launch Remotion Studio (timeline + props edit) on a fixed port — browser can't spawn it, server must
+    if (url.pathname === "/api/edit" && req.method === "POST") {
+      try {
+        if (!studio) studio = Bun.spawn(["bunx", "remotion", "studio", "--port", String(STUDIO_PORT)], { cwd: REMOTION_DIR, stdout: "ignore", stderr: "ignore", env: process.env });
+        return json({ url: `http://localhost:${STUDIO_PORT}` });
+      } catch (e) { return json({ error: (e as Error).message }, 500); }
+    }
+
+    // poll a job's status (kind=pipeline → background render; default → Higgsfield)
     if (url.pathname === "/api/status") {
       const id = url.searchParams.get("id");
       if (!id) return json({ error: "no id" }, 400);
+      if (url.searchParams.get("kind") === "pipeline") {
+        const j = pipeJobs.get(id);
+        return j ? json({ status: j.status, url: j.url, error: j.error }) : json({ status: "unknown", url: null });
+      }
       const r = await hf(["generate", "get", id, "--json"]);
       try {
         const parsed = JSON.parse(r.out);

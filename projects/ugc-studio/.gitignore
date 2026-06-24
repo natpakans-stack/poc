@@ -1,0 +1,12 @@
+node_modules
+
+# uploaded user files + per-job state
+jobs/
+
+# generated pipeline artifacts (regenerable, large — keep out of git)
+remotion/out/
+remotion/props.json
+remotion/plan.json
+remotion/public/clip*.mp4
+remotion/public/shot*.png
+remotion/public/voice.mp3
