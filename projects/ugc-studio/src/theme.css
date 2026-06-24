@@ -106,6 +106,12 @@ select:focus,input[type=number]:focus{outline:none;border-color:var(--accent)}
 .dd-opt:hover{background:var(--panel)}
 .dd-opt.sel{background:var(--accent);color:var(--accent-ink);font-weight:600}
 
+/* script: AI helper toggle (keeps the transcript editor the single hero) */
+.ai-toggle{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;color:var(--accent);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:background .15s,border-color .15s}
+.ai-toggle:hover{background:rgba(200,255,61,.05);border-color:var(--accent)}
+.ai-toggle .chev{margin-left:auto;color:var(--muted);font-size:11px;transition:transform .2s}
+.ai-toggle.open .chev{transform:rotate(180deg)}
+
 /* script brief + AI draft */
 .brief{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:14px}
 .brief textarea{width:100%;min-height:50px;resize:vertical;background:transparent;border:none;color:var(--text);font-family:var(--font);font-size:13px;line-height:1.55}
