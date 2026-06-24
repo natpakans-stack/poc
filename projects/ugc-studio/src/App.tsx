@@ -53,7 +53,7 @@ export default function App() {
     let tries = 0;
     const base = refNote ? refNote + " · " : "";
     const slow = kind === "pipeline";
-    setGen({ phase: "processing", videoUrl: null, statusText: base + (slow ? "กำลังประกอบคลิป (pipeline)… (~3–5 นาที)" : "กำลังสร้างวิดีโอ… (ปกติ 5–15 นาที)"), statusErr: false });
+    setGen({ phase: "processing", videoUrl: null, statusText: base + (slow ? "กำลังประกอบคลิป (pipeline)… (~3–5 นาที)" : "กำลังสร้างวิดีโอ… (ปกติ 5–15 นาที)"), statusErr: false, kind });
     const iv = setInterval(async () => {
       tries++;
       try {
@@ -61,13 +61,19 @@ export default function App() {
         if (d.status === "failed") { clearInterval(iv); return fail("สร้างไม่สำเร็จ: " + ((d as any).error || "pipeline error")); }
         if (d.url) {
           clearInterval(iv);
-          setGen({ phase: "done", videoUrl: d.url, statusText: "✅ เสร็จแล้ว · " + d.url, statusErr: false });
+          setGen({ phase: "done", videoUrl: d.url, statusText: "✅ เสร็จแล้ว · " + d.url, statusErr: false, kind });
+          if (kind === "pipeline") openStudio(); // import generated clips+voice into Remotion, new tab
         } else {
           setGen((g) => ({ ...g, statusText: `${base}กำลังสร้างวิดีโอ… สถานะ: ${d.status || "processing"} (${tries * 5} วิ)` }));
         }
       } catch { /* keep polling */ }
       if (tries > 240) { clearInterval(iv); fail("หมดเวลารอ — ลองเช็คใหม่ภายหลัง"); }
     }, 5000);
+  }
+
+  // open Remotion Studio (the generated composition) in a new tab; popup-block falls back to the Edit button
+  async function openStudio() {
+    try { window.open(await openEditor(), "_blank"); } catch { /* user can click the Edit button */ }
   }
 
   return (

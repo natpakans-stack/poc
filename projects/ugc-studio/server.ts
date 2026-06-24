@@ -1,6 +1,7 @@
 // UGC Studio — Bun server that drives the Higgsfield CLI + full Remotion pipeline.
 // ponytail: shells out to the hf binary; async job + poll (gen takes minutes, idle-timeout can't hold the request).
 import { mkdir, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import index from "./index.html";
 import { draftFullScript, runFromPlan } from "./pipeline";
 
@@ -9,11 +10,19 @@ const ROOT = import.meta.dir;
 const REMOTION_DIR = ROOT + "/remotion";
 const JOBS = ROOT + "/jobs";
 await mkdir(JOBS, { recursive: true });
+// Root.tsx imports props.json — keep a valid file so the Remotion bundle never breaks (empty until first gen)
+if (!existsSync(REMOTION_DIR + "/props.json")) await writeFile(REMOTION_DIR + "/props.json", "{}");
 
 // in-memory status for background pipeline renders (full / no-person templates)
 const pipeJobs = new Map<string, { status: string; url: string | null; error?: string }>();
 let studio: ReturnType<typeof Bun.spawn> | null = null; // single shared Remotion Studio process
 const STUDIO_PORT = 3010; // fixed so the Edit button always opens the right tab (3000/3001 may be taken)
+
+// spawn Remotion Studio once (boots in the background; reads the latest props.json)
+function ensureStudio(): string {
+  if (!studio) studio = Bun.spawn(["bunx", "remotion", "studio", "--port", String(STUDIO_PORT)], { cwd: REMOTION_DIR, stdout: "ignore", stderr: "ignore", env: process.env });
+  return `http://localhost:${STUDIO_PORT}`;
+}
 
 async function hf(args: string[]) {
   const p = Bun.spawn([HF, ...args], { stdout: "pipe", stderr: "pipe", env: process.env });
@@ -98,6 +107,7 @@ Bun.serve({
           const outName = `web_${id}.mp4`;
           pipeJobs.set(id, { status: "processing", url: null });
           const totalDurationS = Math.max(8, Math.min(60, parseInt(duration, 10) || 15));
+          ensureStudio(); // pre-warm Remotion Studio while the render runs so the Edit tab opens instantly
           // fire-and-forget; client polls /api/status?id=…&kind=pipeline
           runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName, aspect, resolution })
             .then(() => pipeJobs.set(id, { status: "completed", url: `/out/${outName}` }))
@@ -177,10 +187,8 @@ Bun.serve({
 
     // launch Remotion Studio (timeline + props edit) on a fixed port — browser can't spawn it, server must
     if (url.pathname === "/api/edit" && req.method === "POST") {
-      try {
-        if (!studio) studio = Bun.spawn(["bunx", "remotion", "studio", "--port", String(STUDIO_PORT)], { cwd: REMOTION_DIR, stdout: "ignore", stderr: "ignore", env: process.env });
-        return json({ url: `http://localhost:${STUDIO_PORT}` });
-      } catch (e) { return json({ error: (e as Error).message }, 500); }
+      try { return json({ url: ensureStudio() }); }
+      catch (e) { return json({ error: (e as Error).message }, 500); }
     }
 
     // poll a job's status (kind=pipeline → background render; default → Higgsfield)

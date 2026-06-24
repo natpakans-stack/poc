@@ -7,6 +7,7 @@ export type GenState = {
   videoUrl: string | null;
   statusText: string;
   statusErr: boolean;
+  kind?: "hf" | "pipeline"; // pipeline outputs are Remotion compositions → editable in Studio
 };
 
 // single axis: structure (+ implied style) in one dropdown — replaces the old ทรง-cards + Higgsfield "โหมด"
@@ -86,8 +87,8 @@ export function OutputColumn({ settings, setSettings, template, setTemplate, gen
 
       <div className="stage"><Stage gen={gen} /></div>
       <div className={`status${gen.statusErr ? " err" : ""}`}>{gen.statusText}</div>
-      {gen.phase === "done" && (
-        <button className="edit-btn" onClick={onEdit}>✎ แก้บน Remotion timeline</button>
+      {gen.phase === "done" && gen.kind === "pipeline" && (
+        <button className="edit-btn" onClick={onEdit}>🎬 เปิดใน Remotion — ปรับจังหวะคลิป + เสียง</button>
       )}
     </>
   );
