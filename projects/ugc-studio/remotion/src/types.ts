@@ -26,4 +26,6 @@ export type UgcVideoProps = {
   hook: string;
   durationInSeconds: number;
   sfx?: boolean; // pop on keyword + whoosh on transitions
+  width?: number; // canvas size from the chosen aspect+resolution (default 1080×1920)
+  height?: number;
 };

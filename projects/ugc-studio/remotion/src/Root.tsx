@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { UgcVideo } from "./UgcVideo";
 import type { UgcVideoProps } from "./types";
+import generated from "../props.json"; // overwritten by each pipeline render; {} until first gen
 
 const FPS = 30;
 
@@ -24,6 +25,10 @@ const demoProps: UgcVideoProps = {
   ],
 };
 
+// use the last generated composition if present, else the demo sample
+const hasGen = generated && Array.isArray((generated as any).clips) && (generated as any).clips.length > 0;
+const defaultProps: UgcVideoProps = hasGen ? (generated as unknown as UgcVideoProps) : demoProps;
+
 export const RemotionRoot: React.FC = () => {
   return (
     <Composition
@@ -32,9 +37,11 @@ export const RemotionRoot: React.FC = () => {
       fps={FPS}
       width={1080}
       height={1920}
-      defaultProps={demoProps}
+      defaultProps={defaultProps}
       calculateMetadata={({ props }) => ({
         durationInFrames: Math.round(props.durationInSeconds * FPS),
+        width: props.width ?? 1080,
+        height: props.height ?? 1920,
       })}
     />
   );

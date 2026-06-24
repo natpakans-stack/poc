@@ -72,7 +72,7 @@ export function OutputColumn({ settings, setSettings, template, setTemplate, gen
         <div className="ctl">
           <label>ความยาว (วิ)</label>
           <input
-            type="number" value={settings.duration} min={5} max={30}
+            type="number" value={settings.duration} min={5} max={60}
             onChange={(e) => set({ duration: e.target.value })}
           />
         </div>

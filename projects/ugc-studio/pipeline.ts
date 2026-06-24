@@ -218,19 +218,28 @@ async function uploadImage(path: string): Promise<string> {
   return id;
 }
 
+// canvas size from the chosen aspect + resolution (short side = the resolution number)
+export function dims(aspect = "9:16", resolution = "720p"): { width: number; height: number; aspect: string; seedanceRes: string } {
+  const short = resolution === "1080p" ? 1080 : resolution === "480p" ? 480 : 720;
+  const wh = aspect === "1:1" ? { width: short, height: short }
+    : aspect === "16:9" ? { width: Math.round((short * 16) / 9), height: short }
+    : { width: short, height: Math.round((short * 16) / 9) }; // 9:16 default
+  return { ...wh, aspect, seedanceRes: short >= 1080 ? "1080p" : "720p" }; // seedance supports 720p/1080p
+}
+
 // gen รูปมุม → คืน job id (ใช้เป็น start image ของ seedance ได้เลย ไม่ต้อง upload ซ้ำ)
-async function genAngleImage(imageId: string, type: string, i: number): Promise<string> {
+async function genAngleImage(imageId: string, type: string, i: number, aspect: string): Promise<string> {
   const prompt = SHOT_PROMPT[type] ?? SHOT_PROMPT.product_closeup;
-  const r = await withRetry(`nano_banana#${i}`, () => $`${HF} generate create nano_banana_2 --prompt ${prompt} --image ${imageId} --aspect_ratio 9:16 --wait --wait-timeout 5m --wait-interval 5s --json`.quiet());
+  const r = await withRetry(`nano_banana#${i}`, () => $`${HF} generate create nano_banana_2 --prompt ${prompt} --image ${imageId} --aspect_ratio ${aspect} --wait --wait-timeout 5m --wait-interval 5s --json`.quiet());
   const id = jobId(JSON.parse(r.stdout.toString()));
   if (!id) throw new Error(`nano_banana ไม่คืน job id สำหรับช็อต ${i} (${type})`);
   return id;
 }
 
 // gen คลิปจากรูปมุม (seedance i2v) → download เป็น clip{i}.mp4 คืนชื่อไฟล์
-async function genShotClip(startImageRef: string, type: string, i: number): Promise<string> {
+async function genShotClip(startImageRef: string, type: string, i: number, aspect: string, resolution: string): Promise<string> {
   const prompt = MOTION_PROMPT[type] ?? MOTION_PROMPT.product_closeup;
-  const r = await withRetry(`seedance#${i}`, () => $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio 9:16 --duration 4 --resolution 720p --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet());
+  const r = await withRetry(`seedance#${i}`, () => $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio ${aspect} --duration 4 --resolution ${resolution} --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet());
   const url = findMediaUrl(JSON.parse(r.stdout.toString()), /\.mp4/);
   if (!url) throw new Error(`seedance ไม่คืน mp4 สำหรับช็อต ${i} (${type})`);
   const name = `clip${i}.mp4`;
@@ -272,9 +281,12 @@ export async function runFromPlan(
     voiceId?: string;
     outName?: string;
     noPerson?: boolean; // "ไม่เห็นคน" template — แผนช็อตเลี่ยง presenter_talk
+    aspect?: string; // 9:16 / 1:1 / 16:9
+    resolution?: string; // 480p / 720p / 1080p
   } = {},
 ): Promise<{ plan: ShotPlan; out: string }> {
   const productImage = opts.productImage ?? "ugc-review/assets/product.png";
+  const canvas = dims(opts.aspect, opts.resolution);
 
   const plan = await planShots(brief, { totalDurationS: opts.totalDurationS, noPerson: opts.noPerson });
   await Bun.write(REMOTION_DIR + "/plan.json", JSON.stringify(plan, null, 2)); // เก็บสคริปต์เต็มไว้ดูภายหลัง
@@ -286,8 +298,8 @@ export async function runFromPlan(
   const [clipFiles, voice] = await Promise.all([
     Promise.all(
       plan.shots.map(async (s, i) => {
-        const angleId = await genAngleImage(imageId, s.type, i);
-        return genShotClip(angleId, s.type, i);
+        const angleId = await genAngleImage(imageId, s.type, i, canvas.aspect);
+        return genShotClip(angleId, s.type, i, canvas.aspect, canvas.seedanceRes);
       }),
     ),
     synthesizeVoice(linesToTtsText(lines), opts.voiceId),
@@ -311,7 +323,7 @@ export async function runFromPlan(
   }));
 
   const out = await renderVideo(
-    { clips: timeline, captions, audioSrc: "voice.mp3", hook: plan.hook, durationInSeconds: durationMs / 1000, sfx: true },
+    { clips: timeline, captions, audioSrc: "voice.mp3", hook: plan.hook, durationInSeconds: durationMs / 1000, sfx: true, width: canvas.width, height: canvas.height },
     opts.outName,
   );
   return { plan, out };

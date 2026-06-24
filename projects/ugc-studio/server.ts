@@ -97,9 +97,9 @@ Bun.serve({
           const id = crypto.randomUUID();
           const outName = `web_${id}.mp4`;
           pipeJobs.set(id, { status: "processing", url: null });
-          const totalDurationS = Math.max(8, Math.min(30, parseInt(duration, 10) || 15));
+          const totalDurationS = Math.max(8, Math.min(60, parseInt(duration, 10) || 15));
           // fire-and-forget; client polls /api/status?id=…&kind=pipeline
-          runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName })
+          runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName, aspect, resolution })
             .then(() => pipeJobs.set(id, { status: "completed", url: `/out/${outName}` }))
             .catch((e) => {
               const stderr = (e as any)?.stderr?.toString?.() ?? "";
