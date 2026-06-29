@@ -12,6 +12,9 @@ export async function fetchAvatars(): Promise<Avatar[]> {
 export type Template = "avatar" | "full" | "no_person";
 export type Kind = "hf" | "pipeline";
 
+// per-scene prompts from the storyboard — drive the render (Gap 4) instead of being copy-only
+export type GenScene = { scene_name: string; speaker: string; dialogue: string; image_prompt: string; video_prompt: string };
+
 export type GenParams = {
   images: File[];
   refVideo: File | null;
@@ -22,6 +25,7 @@ export type GenParams = {
   aspect: string;
   duration: string;
   resolution: string;
+  scenes?: GenScene[]; // optional — present when a storyboard was used
 };
 
 export async function startGenerate(p: GenParams): Promise<{ jobId: string; refNote?: string; kind: Kind }> {
@@ -35,6 +39,7 @@ export async function startGenerate(p: GenParams): Promise<{ jobId: string; refN
   fd.append("aspect", p.aspect);
   fd.append("duration", p.duration);
   fd.append("resolution", p.resolution);
+  if (p.scenes?.length) fd.append("scenes", JSON.stringify(p.scenes));
   const res = await fetch("/api/generate", { method: "POST", body: fd });
   const data = await res.json();
   if (!res.ok || data.error) throw new Error(data.error || "เกิดข้อผิดพลาด");

@@ -17,6 +17,7 @@ export type StoryboardOptions = {
   platformMode: PlatformMode;
   includeTextOverlay: boolean;
   glassSkin: boolean;
+  noPerson?: boolean;        // template "ไม่เห็นคน" → image/video prompts must be product-only (no model/face)
 };
 
 export type Scene = {
@@ -58,6 +59,19 @@ export function buildMessages(o: StoryboardOptions): { system: string; user: str
   let user: string;
   if (o.promptMode === "review") {
     user = `สินค้า: ${o.object} / ${head}`;
+    if (o.noPerson) {
+      user += `
+
+⛔ โหมด "ไม่เห็นคน": ทุก Image Prompt และ Video Prompt ต้องแสดง **เฉพาะตัวสินค้า** เท่านั้น — product close-up, สินค้าวางบนพื้นผิว/โต๊ะ, สินค้าหมุน, หรือ "มือ" หยิบ/สวมใส่สินค้า (เห็นแค่มือ). ❌ ห้ามมีใบหน้า/นางแบบ/นายแบบ/คนเต็มตัว/พรีเซนเตอร์ในเฟรมเด็ดขาด! ห้ามเขียน "The model walks/stands/poses/smiles". Speaker ยังเป็นเสียงพากย์นอกจอได้.`;
+    }
+    // gpt-4o จะขี้เกียจเขียนแค่ 2 ซีนแล้วบอก "replicate for the rest" — บังคับให้เขียนครบทุกซีนจริง
+    user += `
+
+⚠️ กฎบังคับ (ละเมิดไม่ได้!):
+1. เขียน SCENE block ให้ครบทั้ง ${o.sceneCount} ฉาก (Scene ${sceneList}) แบบเต็มทุกซีน — แต่ละซีนต้องมี Speaker + Dialogue + Action + GEN IMAGE + GEN VIDEO ครบ
+2. ⛔ ห้ามเขียนแค่บางซีนแล้วสั่งให้ทำซ้ำเด็ดขาด! ห้ามใช้คำว่า "Replicate", "similar structure", "ทำซ้ำ", "เช่นเดิม", "(ต่อ...)", "Scene X to Scene Y" หรือ placeholder ใดๆ แทนซีนจริง — ทุกซีนต้องเขียนออกมาเต็ม
+3. Output ต้องมี "=== SCENE ===" ครบ ${o.sceneCount} บล็อกเป๊ะ Dialogue แต่ละซีนต้องต่างกัน
+4. ⛔ เจนครบ Scene สุดท้ายแล้วหยุดทันที ห้ามมี DIRECTOR'S TIPS หรือคำอธิบายเพิ่ม`;
   } else {
     user = styleNums ? `${o.object} / ${styleNums} / ${head}` : `${o.object} / ${head}`;
     // กฎบังคับ (ห้าม N/A / ต้องมี OVERVIEW / หยุดหลัง scene สุดท้าย) — ตรงกับ original
@@ -81,7 +95,7 @@ export function buildMessages(o: StoryboardOptions): { system: string; user: str
     stylePersonalities,
     visual.prompt,
     o.platformMode,
-    o.includeTextOverlay,
+    false, // baked text OFF permanently — image stays clean, Remotion owns all on-video text (controllable font/position)
     o.glassSkin,
   );
   return { system, user };
@@ -90,8 +104,13 @@ export function buildMessages(o: StoryboardOptions): { system: string; user: str
 // parse raw model text → structured scenes (re-export of the ported parser, typed)
 export function parseStoryboard(rawText: string): StoryboardResult {
   const r = parseGeminiResponse(rawText) as any;
+  // drop malformed scenes the model left as the literal template placeholder ("[บทพูด...]") + strip stray "===" dividers
+  const clean = (s: string) => (s ?? "").replace(/=+/g, "").trim();
+  const scenes = ((r.scenes ?? []) as Scene[])
+    .filter((s) => { const d = (s.dialogue ?? "").trim(); return d && !d.startsWith("["); })
+    .map((s, i) => ({ ...s, scene_number: i + 1, scene_name: clean(s.scene_name), tag: i === 0 ? "HOOK" : s.tag }));
   return {
-    scenes: r.scenes ?? [],
+    scenes,
     caption: r.caption ?? "",
     hashtags: r.hashtags ?? "",
     storyboardOverview: r.storyboardOverview ?? "",

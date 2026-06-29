@@ -5,14 +5,16 @@ import { SourceColumn } from "./columns/SourceColumn";
 import { ScriptColumn } from "./columns/ScriptColumn";
 import { OutputColumn, type Settings, type GenState } from "./columns/OutputColumn";
 import { StoryboardStep } from "./storyboard/StoryboardStep";
-import { startGenerate, getStatus, openEditor, type Avatar, type Template, type Kind } from "./lib/api";
+import { startGenerate, getStatus, openEditor, type Avatar, type Template, type Kind, type StoryboardResult } from "./lib/api";
 
 const DEFAULT_SCRIPT =
   "สวัสดีค่าทุกคน วันนี้มารีวิวเซรั่มวิตามินซี AURA ทาแล้วหน้าใสขึ้นออร่า ซึมไว ไม่เหนียว ลดจุดด่างดำ วันนี้ลดพิเศษเฉพาะไลฟ์ กดสั่งเลยน้า";
 
 export default function App() {
-  // initial flow: storyboard step → studio (the 3 columns)
+  // hybrid flow: "ตั้งโจทย์" brief (wizard) → studio (the 3 columns)
   const [stage, setStage] = useState<"storyboard" | "studio">("storyboard");
+  // storyboard result kept (not discarded) — per-scene image/video prompts feed the pipeline later
+  const [storyboard, setStoryboard] = useState<StoryboardResult | null>(null);
   // source
   const [images, setImages] = useState<File[]>([]);
   const [refVideo, setRefVideo] = useState<File | null>(null);
@@ -30,12 +32,12 @@ export default function App() {
 
   async function onGenerate() {
     if (!images.length) return fail("กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป");
-    if (!avatarId) return fail("กรุณาเลือก avatar");
+    if (template === "avatar" && !avatarId) return fail("กรุณาเลือก avatar"); // full/no_person สร้างคนจาก prompt ไม่ต้องใช้ avatar
     if (!script.trim()) return fail("กรุณาใส่สคริปต์");
 
     setGen({ phase: "sending", videoUrl: null, statusText: "กำลังอัปโหลดรูปและส่งงานสร้างวิดีโอ…", statusErr: false });
     try {
-      const { jobId, refNote, kind } = await startGenerate({ images, refVideo, script: script.trim(), avatarId, template, ...settings });
+      const { jobId, refNote, kind } = await startGenerate({ images, refVideo, script: script.trim(), avatarId, template, ...settings, scenes: storyboard?.scenes });
       poll(jobId, kind, refNote);
     } catch (e) {
       fail((e as Error).message);
@@ -84,20 +86,37 @@ export default function App() {
       <div className="top">
         <span className="logo">U</span>
         <h1>UGC Studio</h1>
-        {stage === "studio" && <button className="back-btn" onClick={() => setStage("storyboard")}>← Storyboard</button>}
-        <span className="sub">{stage === "storyboard" ? "Storyboard Generator · Viral Intelligence" : "powered by Higgsfield · Marketing Studio"}</span>
+        <nav className="crumbs">
+          <button className={stage === "storyboard" ? "on" : ""} onClick={() => setStage("storyboard")}>1 · ตั้งโจทย์{stage === "studio" ? " ✓" : ""}</button>
+          <span className="sep">›</span>
+          <button className={stage === "studio" ? "on" : ""} disabled={stage === "storyboard"}>2 · สตูดิโอ</button>
+        </nav>
+        <span className="sub">{stage === "storyboard" ? "ตั้งโจทย์ + Storyboard · Viral Intelligence" : "powered by Higgsfield · Marketing Studio"}</span>
       </div>
 
       {stage === "storyboard" ? (
-        <StoryboardStep onUse={(s) => { setScript(s); setStage("studio"); }} onSkip={() => setStage("studio")} />
+        <StoryboardStep
+          images={images} setImages={setImages}
+          template={template} setTemplate={setTemplate}
+          onUse={(s, result) => {
+            // storyboard wins on length: target = the actual VO length, same estimator as §2 (chars/8) → no false "เกิน"
+            const est = Math.max(5, Math.round(s.length / 8));
+            setScript(s); setStoryboard(result);
+            setSettings((v) => ({ ...v, duration: String(est) }));
+            setStage("studio");
+          }}
+          onSkip={(totalSec) => { setSettings((v) => ({ ...v, duration: String(totalSec) })); setStage("studio"); }}
+        />
       ) : (
       <main>
         <Column index={1} title="Source" variant="source">
           <SourceColumn
-            images={images} setImages={setImages}
-            refVideo={refVideo} setRefVideo={setRefVideo}
+            images={images}
             avatarId={avatarId} setAvatarId={setAvatarId}
             onZoom={setZoom}
+            template={template}
+            personaHint={storyboard?.scenes?.[0]?.speaker}
+            onBack={() => setStage("storyboard")}
           />
         </Column>
 
@@ -108,8 +127,10 @@ export default function App() {
         <Column index={3} title="Output" variant="output">
           <OutputColumn
             settings={settings} setSettings={setSettings}
-            template={template} setTemplate={setTemplate}
+            template={template}
+            sceneCount={storyboard?.scenes.length}
             gen={gen} onGenerate={onGenerate} onEdit={onEdit}
+            onBack={() => setStage("storyboard")}
           />
         </Column>
       </main>

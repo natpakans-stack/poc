@@ -83,10 +83,13 @@ Bun.serve({
         const resolution = String(form.get("resolution") || "720p");
         const images = form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
         const refVideo = form.get("refVideo");
+        // storyboard scenes (optional) — their per-scene prompts drive the render instead of generic ones
+        let scenes: { scene_name: string; speaker: string; dialogue: string; action: string; image_prompt: string; video_prompt: string }[] | null = null;
+        try { const raw = form.get("scenes"); if (raw) scenes = JSON.parse(String(raw)); } catch { scenes = null; }
 
         if (!script) return json({ error: "กรุณาใส่สคริปต์" }, 400);
-        if (!avatarId) return json({ error: "กรุณาเลือก avatar" }, 400);
         if (!images.length) return json({ error: "กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป" }, 400);
+        // avatar is required only by the avatar template (checked after routing — full/no_person generate the person)
 
         const jobDir = `${JOBS}/${crypto.randomUUID()}`;
         await mkdir(jobDir, { recursive: true });
@@ -110,7 +113,7 @@ Bun.serve({
           const totalDurationS = Math.max(8, Math.min(60, parseInt(duration, 10) || 15));
           ensureStudio(); // pre-warm Remotion Studio while the render runs so the Edit tab opens instantly
           // fire-and-forget; client polls /api/status?id=…&kind=pipeline
-          runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName, aspect, resolution })
+          runFromPlan(script, { productImage: imgPaths[0], totalDurationS, noPerson: template === "no_person", outName, aspect, resolution, scenes: scenes ?? undefined })
             .then(() => pipeJobs.set(id, { status: "completed", url: `/out/${outName}` }))
             .catch((e) => {
               const stderr = (e as any)?.stderr?.toString?.() ?? "";
@@ -124,14 +127,22 @@ Bun.serve({
           return json({ jobId: id, kind: "pipeline" });
         }
 
+        // ── avatar template only past this point ──
+        if (!avatarId) return json({ error: "กรุณาเลือก avatar" }, 400);
         // avatars json file
         const avatarsFile = `${jobDir}/avatars.json`;
         await writeFile(avatarsFile, JSON.stringify([{ id: avatarId, type: "preset" }]));
 
-        const prompt =
-          `Vertical UGC live-selling clip. A presenter sits at a cozy livestream setup and shows the product to the camera, ` +
-          `foreground product, simple lifestyle background, energetic natural live-stream selling vibe. ` +
-          `The host says: "${script}"`;
+        // storyboard present → carry its persona + scene vibe into the prompt (avatar path used a generic prompt before)
+        const persona = scenes?.[0]?.speaker?.trim();
+        const vibe = scenes?.map((s) => s.action).filter(Boolean).slice(0, 4).join("; ");
+        const prompt = scenes?.length
+          ? `Vertical UGC live-selling clip${persona ? ` presented by ${persona}` : ""}. A presenter shows the product to the camera at a cozy livestream setup, ` +
+            `foreground product, simple lifestyle background, energetic natural live-stream selling vibe.${vibe ? ` Scene beats: ${vibe}.` : ""} ` +
+            `The host says: "${script}"`
+          : `Vertical UGC live-selling clip. A presenter sits at a cozy livestream setup and shows the product to the camera, ` +
+            `foreground product, simple lifestyle background, energetic natural live-stream selling vibe. ` +
+            `The host says: "${script}"`;
 
         const args = [
           "generate", "create", "marketing_studio_video", "--json",

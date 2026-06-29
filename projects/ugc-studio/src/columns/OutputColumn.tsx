@@ -46,40 +46,35 @@ function Stage({ gen }: { gen: GenState }) {
   return <div className="ph">กรอกข้อมูล แล้วกด “สร้างวิดีโอ”<br />วิดีโอจะแสดงที่นี่</div>;
 }
 
-export function OutputColumn({ settings, setSettings, template, setTemplate, gen, onGenerate, onEdit }: {
+export function OutputColumn({ settings, template, setSettings, sceneCount, gen, onGenerate, onEdit, onBack }: {
   settings: Settings;
   setSettings: (s: Settings) => void;
   template: Template;
-  setTemplate: (t: Template) => void;
+  sceneCount?: number; // from the kept storyboard result — proof it's not discarded
   gen: GenState;
   onGenerate: () => void;
   onEdit: () => void;
+  onBack: () => void; // baked-in settings change only by going back to ตั้งโจทย์
 }) {
   const set = (patch: Partial<Settings>) => setSettings({ ...settings, ...patch });
   const busy = gen.phase === "sending" || gen.phase === "processing";
+  const templateLabel = TEMPLATE_OPTS.find((t) => t.value === template)?.label ?? template;
+  const aspectLabel = ASPECTS.find((a) => a.value === settings.aspect)?.label ?? settings.aspect;
 
   return (
     <>
-      <div className="ctl" style={{ marginBottom: 14 }}>
-        <label>ทรงคลิป</label>
-        <Dropdown options={TEMPLATE_OPTS} value={template} onChange={(v) => setTemplate(v as Template)} />
+      {/* baked at ตั้งโจทย์ → locked recap (editing here would desync the generated prompts) */}
+      <div className="recap">
+        <div className="recap-h"><span>ตั้งไว้ที่ “ตั้งโจทย์”</span><button className="link-btn" onClick={onBack}>← แก้</button></div>
+        <div className="recap-row"><span>รูปแบบคลิป</span><b>{templateLabel}</b></div>
+        <div className="recap-row"><span>สัดส่วน</span><b>{aspectLabel}</b></div>
+        <div className="recap-row"><span>ความยาว</span><b>{settings.duration} วิ <i>{sceneCount ? "≈ จากบท" : "จาก platform×ฉาก"}</i></b></div>
+        {!!sceneCount && <div className="recap-row"><span>Storyboard</span><b>{sceneCount} ฉาก → pipeline</b></div>}
       </div>
 
-      <div className="row">
-        <div className="ctl">
-          <label>สัดส่วน</label>
-          <Dropdown options={ASPECTS} value={settings.aspect} onChange={(v) => set({ aspect: v })} />
-        </div>
-        <div className="ctl">
-          <label>ความยาว (วิ)</label>
-          <input
-            type="number" value={settings.duration} min={5} max={60}
-            onChange={(e) => set({ duration: e.target.value })}
-          />
-        </div>
-      </div>
-      <div className="ctl" style={{ marginTop: 12 }}>
-        <label>ความละเอียด</label>
+      {/* render-only knob — doesn't touch the prompts, safe to set here */}
+      <div className="ctl" style={{ marginTop: 14 }}>
+        <label>ความละเอียด <span className="ctl-note">ตั้งได้ที่นี่ — ไม่กระทบ prompt</span></label>
         <Dropdown options={RESOLUTIONS} value={settings.resolution} onChange={(v) => set({ resolution: v })} />
       </div>
 

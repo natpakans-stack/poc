@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>UGC Studio — Journey ใหม่ (wireframe)</title>
+<style>
+  :root{--bg:#0e0e11;--panel:#17171c;--panel2:#1f1f26;--line:#2a2a33;--text:#ececf1;--muted:#8b8b96;--accent:#c8ff3d;--ink:#1a1a1a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Thai",-apple-system,system-ui,sans-serif;padding:28px;line-height:1.5}
+  h1{font-size:20px;margin:0 0 4px}
+  .lead{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .flow{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
+  .arrow{display:flex;align-items:center;color:var(--accent);font-size:26px;font-weight:700}
+  .panel{flex:1 1 380px;min-width:340px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .panel.studio{flex:1 1 520px}
+  .ph{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--panel2)}
+  .ph .dot{width:22px;height:22px;border-radius:7px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:12px}
+  .ph b{font-size:14px}
+  .ph .crumb{margin-left:auto;font-size:11px;color:var(--muted)}
+  .ph .crumb .on{color:var(--accent);font-weight:600}
+  .pb{padding:16px}
+  .grp{margin-bottom:12px}
+  .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+  .box{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;background:var(--bg);margin-bottom:7px}
+  .box.accent{border-color:var(--accent);background:rgba(200,255,61,.08)}
+  .box small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+  .seg{display:flex;gap:6px}.seg .box{flex:1;text-align:center;margin:0}
+  .tag{display:inline-block;font-size:10px;background:var(--accent);color:var(--ink);border-radius:5px;padding:1px 6px;font-weight:700;margin-left:6px;vertical-align:middle}
+  .cta{background:var(--accent);color:var(--ink);text-align:center;font-weight:700;border-radius:10px;padding:11px;font-size:13px;margin-top:4px}
+  .skip{text-align:center;color:var(--muted);font-size:12px;padding:7px}
+  .cols{display:flex}
+  .cols .c{flex:1;border-right:1px solid var(--line);padding:13px}
+  .cols .c:last-child{border-right:none}
+  .cols .cn{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:9px}
+  .ro{background:var(--panel2);border:1px dashed var(--line);color:var(--muted)}
+  .note{font-size:11px;color:var(--accent);margin-top:8px}
+  .moved{font-size:10px;color:var(--accent);font-weight:600}
+  footer{margin-top:24px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+  footer code{background:var(--panel2);padding:1px 6px;border-radius:5px;color:var(--text)}
+</style>
+</head>
+<body>
+  <h1>UGC Studio — Journey ใหม่ <span class="tag">wireframe</span></h1>
+  <p class="lead">Hybrid: wizard "ตั้งโจทย์" นำ → studio ลึก · decision ที่ล็อกขั้นถัดไป (ทรง · ความยาว · สินค้า) ถูกดึงมาหน้าสุด</p>
+
+  <div class="flow">
+    <!-- ENTRY -->
+    <div class="panel">
+      <div class="ph"><span class="dot">1</span><b>ตั้งโจทย์ (Brief)</b><span class="crumb"><span class="on">1·ตั้งโจทย์</span> › 2·สตูดิโอ</span></div>
+      <div class="pb">
+        <div class="grp"><div class="lbl">รูปแบบคลิป <span class="moved">⟵ ย้ายจาก §3</span></div>
+          <div class="seg"><div class="box accent">🧑‍💼 Avatar พูด</div><div class="box">🎬 Full</div><div class="box">📦 ไม่เห็นคน</div></div>
+        </div>
+        <div class="grp"><div class="lbl">ชื่อสินค้า / หัวข้อ</div><div class="box">เซรั่มวิตามินซี AURA</div></div>
+        <div class="grp"><div class="lbl">รูปสินค้า <span class="moved">⟵ ย้ายมาก่อน storyboard เห็นของจริง</span></div>
+          <div class="box" style="text-align:center;color:var(--muted)">＋ ลากวางรูป (หลายมุม)</div>
+        </div>
+        <div class="grp"><div class="lbl">ความยาว</div>
+          <div class="seg"><div class="box">Platform: 🌊 Flow 8วิ</div><div class="box">ฉาก: 8</div></div>
+          <div class="box accent" style="margin-top:7px">⏱ ความยาวรวม ≈ <b>64 วิ</b><small>8 วิ × 8 ฉาก — ใช้เป็นเป้าบทในสตูดิโอ (source of truth)</small></div>
+        </div>
+        <div class="grp"><div class="lbl">Mood · Visual · บุคลิก</div><div class="box" style="color:var(--muted)">dropdowns + style pills</div></div>
+        <div class="cta">💎 สร้าง Storyboard →</div>
+        <div class="skip">ข้ามขั้นตอนนี้ — พิมพ์สคริปต์เอง →</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- STUDIO -->
+    <div class="panel studio">
+      <div class="ph"><span class="dot">2</span><b>สตูดิโอ</b><span class="crumb">1·ตั้งโจทย์ ✓ › <span class="on">2·สตูดิโอ</span></span></div>
+      <div class="cols">
+        <div class="c">
+          <div class="cn">§1 Source</div>
+          <div class="box">รูปสินค้า <small>มาแล้วจากขั้น 1 · แก้ได้</small></div>
+          <div class="box">เลือก Avatar</div>
+        </div>
+        <div class="c">
+          <div class="cn">§2 Script</div>
+          <div class="box accent">บทจาก storyboard<small>รวม dialogue ทุก scene</small></div>
+          <div class="box">ไทม์ไลน์รายวิ</div>
+          <div class="note">target = 64 วิ (ไม่เด้ง ⚠️เกิน มั่วอีก)</div>
+        </div>
+        <div class="c">
+          <div class="cn">§3 Output</div>
+          <div class="box">รูปแบบคลิป <small>เลือกแล้ว · แก้ได้</small></div>
+          <div class="box ro">ความยาว: 64 วิ <small>derived · read-only</small></div>
+          <div class="box">สัดส่วน · ความละเอียด</div>
+          <div class="cta" style="margin-top:8px">สร้างวิดีโอ</div>
+          <div class="note">📋 storyboard 8 ฉาก พร้อมเข้า pipeline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    แก้แล้ว: Gap 1 (รูปมาก่อน) · 2 (ความยาวมาก่อน) · 3 (ตัวตั้งเดียว) · 5 (ทรงมาหน้า) · 7 (breadcrumb) ·
+    เก็บ result ไม่ทิ้ง (Gap 4 บางส่วน). &nbsp; เวอร์ชันจริงรันได้ที่ <code>localhost:3001</code> — ไฟล์นี้เป็นแค่ flow ให้ดู/แชร์โดยไม่ต้องรันแอป
+  </footer>
+</body>
+</html>

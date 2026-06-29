@@ -118,31 +118,21 @@ export const UgcVideo: React.FC<UgcVideoProps> = ({ clips, captions, audioSrc, h
             ))
         : null}
 
-      {/* Hook — top · white cloud bubble + magenta puffy text */}
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 150, paddingInline: 56, opacity: hookOpacity }}>
-        <div
-          style={{
-            ...bubble("#ffffff", -2),
-            transform: `scale(${hookScale * hookExitScale}) translateY(${hookFloat}px) rotate(-2deg)`,
-            maxWidth: 900,
-          }}
-        >
-          <div style={sticker(82, "#ff2d77", 8)}>{hook}</div>
-        </div>
-      </AbsoluteFill>
-
-      {/* Keyword — bottom third · colored bubble + white puffy text (color cycles) */}
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 360, paddingInline: 70 }}>
+      {/* Keyword only — pinned low so it never covers the product/face · smaller bubble (color cycles) */}
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 130, paddingInline: 90 }}>
         {cap ? (
           <div
             key={capIdx}
             style={{
               ...bubble(KW_COLORS[capIdx % KW_COLORS.length], -2),
+              padding: "5px 24px",
+              borderWidth: 5,
+              borderRadius: 32,
               transform: `scale(${0.9 + kwPop * 0.1}) rotate(-2deg)`,
               opacity: kwPop,
             }}
           >
-            <div style={sticker(74, "#ffffff", 7)}>{cap.text}</div>
+            <div style={sticker(44, "#ffffff", 5)}>{cap.text}</div>
           </div>
         ) : null}
       </AbsoluteFill>

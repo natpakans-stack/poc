@@ -228,8 +228,8 @@ export function dims(aspect = "9:16", resolution = "720p"): { width: number; hei
 }
 
 // gen รูปมุม → คืน job id (ใช้เป็น start image ของ seedance ได้เลย ไม่ต้อง upload ซ้ำ)
-async function genAngleImage(imageId: string, type: string, i: number, aspect: string): Promise<string> {
-  const prompt = SHOT_PROMPT[type] ?? SHOT_PROMPT.product_closeup;
+async function genAngleImage(imageId: string, type: string, i: number, aspect: string, override?: string): Promise<string> {
+  const prompt = (override && override.trim()) || SHOT_PROMPT[type] || SHOT_PROMPT.product_closeup;
   const r = await withRetry(`nano_banana#${i}`, () => $`${HF} generate create nano_banana_2 --prompt ${prompt} --image ${imageId} --aspect_ratio ${aspect} --wait --wait-timeout 5m --wait-interval 5s --json`.quiet());
   const id = jobId(JSON.parse(r.stdout.toString()));
   if (!id) throw new Error(`nano_banana ไม่คืน job id สำหรับช็อต ${i} (${type})`);
@@ -237,8 +237,8 @@ async function genAngleImage(imageId: string, type: string, i: number, aspect: s
 }
 
 // gen คลิปจากรูปมุม (seedance i2v) → download เป็น clip{i}.mp4 คืนชื่อไฟล์
-async function genShotClip(startImageRef: string, type: string, i: number, aspect: string, resolution: string): Promise<string> {
-  const prompt = MOTION_PROMPT[type] ?? MOTION_PROMPT.product_closeup;
+async function genShotClip(startImageRef: string, type: string, i: number, aspect: string, resolution: string, override?: string): Promise<string> {
+  const prompt = (override && override.trim()) || MOTION_PROMPT[type] || MOTION_PROMPT.product_closeup;
   const r = await withRetry(`seedance#${i}`, () => $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio ${aspect} --duration 4 --resolution ${resolution} --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet());
   const url = findMediaUrl(JSON.parse(r.stdout.toString()), /\.mp4/);
   if (!url) throw new Error(`seedance ไม่คืน mp4 สำหรับช็อต ${i} (${type})`);
@@ -283,12 +283,28 @@ export async function runFromPlan(
     noPerson?: boolean; // "ไม่เห็นคน" template — แผนช็อตเลี่ยง presenter_talk
     aspect?: string; // 9:16 / 1:1 / 16:9
     resolution?: string; // 480p / 720p / 1080p
+    scenes?: { scene_name: string; dialogue: string; image_prompt: string; video_prompt: string }[]; // storyboard → drives shots + per-shot prompts
   } = {},
 ): Promise<{ plan: ShotPlan; out: string }> {
   const productImage = opts.productImage ?? "ugc-review/assets/product.png";
   const canvas = dims(opts.aspect, opts.resolution);
 
-  const plan = await planShots(brief, { totalDurationS: opts.totalDurationS, noPerson: opts.noPerson });
+  // storyboard present → each scene IS a shot (line=dialogue, prompts = the scene's own image/video prompt).
+  // absent → fall back to the LLM shot planner. imgPrompt/vidPrompt ride along on the shot for the gen step.
+  const plan: ShotPlan = opts.scenes?.length
+    ? {
+        hook: (opts.scenes[0].scene_name || opts.scenes[0].dialogue || "").trim() || "เริ่มคลิป",
+        totalDurationS: opts.totalDurationS ?? opts.scenes.length * 8,
+        shots: opts.scenes.map((sc, i) => ({
+          type: (opts.noPerson ? "product_closeup" : "presenter_talk") as any,
+          durationS: Math.max(3, Math.round((opts.totalDurationS ?? opts.scenes!.length * 8) / opts.scenes!.length)),
+          line: sc.dialogue || sc.scene_name || `ฉาก ${i + 1}`,
+          keyword: (sc.scene_name || `ฉาก ${i + 1}`).split(/\s+/).slice(0, 4).join(" "),
+          imgPrompt: sc.image_prompt,
+          vidPrompt: sc.video_prompt,
+        })) as any,
+      }
+    : await planShots(brief, { totalDurationS: opts.totalDurationS, noPerson: opts.noPerson });
   await Bun.write(REMOTION_DIR + "/plan.json", JSON.stringify(plan, null, 2)); // เก็บสคริปต์เต็มไว้ดูภายหลัง
   const lines = plan.shots.map((s) => fixThaiPron(s.line)); // บทพูดแก้คำอ่าน (timing อิงตัวนี้)
   const keywords = plan.shots.map((s) => s.keyword); // keyword บนจอ = ต้นฉบับ
@@ -298,8 +314,8 @@ export async function runFromPlan(
   const [clipFiles, voice] = await Promise.all([
     Promise.all(
       plan.shots.map(async (s, i) => {
-        const angleId = await genAngleImage(imageId, s.type, i, canvas.aspect);
-        return genShotClip(angleId, s.type, i, canvas.aspect, canvas.seedanceRes);
+        const angleId = await genAngleImage(imageId, s.type, i, canvas.aspect, (s as any).imgPrompt);
+        return genShotClip(angleId, s.type, i, canvas.aspect, canvas.seedanceRes, (s as any).vidPrompt);
       }),
     ),
     synthesizeVoice(linesToTtsText(lines), opts.voiceId),
