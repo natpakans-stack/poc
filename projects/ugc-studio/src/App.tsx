@@ -33,7 +33,7 @@ export default function App() {
 
   async function onGenerate() {
     if (!images.length) return fail("กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป");
-    if (template === "avatar" && !avatarId) return fail("กรุณาเลือก avatar"); // full/no_person สร้างคนจาก prompt ไม่ต้องใช้ avatar
+    if (template !== "no_person" && !avatarId) return fail("กรุณาเลือก avatar (พรีเซนเตอร์)"); // avatar + full มีคน → ต้องเลือกพรีเซนเตอร์; no_person สร้างจาก prompt
     if (!script.trim()) return fail("กรุณาใส่สคริปต์");
 
     setGen({ phase: "sending", videoUrl: null, statusText: "กำลังอัปโหลดรูปและส่งงานสร้างวิดีโอ…", statusErr: false });

@@ -27,7 +27,7 @@ export function SourceColumn({
   const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
   useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews]);
 
-  const needsAvatar = template === "avatar"; // full/no_person generate the person from the prompt — no preset
+  const needsAvatar = template !== "no_person"; // avatar + full both have a presenter → need an avatar; no_person doesn't
   const selectedAvatar = avatars.find((a) => a.id === avatarId); // avatar is picked in ตั้งโจทย์ now → show read-only here
 
   return (

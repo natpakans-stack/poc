@@ -153,7 +153,7 @@ export function StoryboardStep({
               <div className="sb-rail-h">ตั้งโจทย์</div>
               {STEPS.map((s) => {
                 const done =
-                  s.id === "fmt" ? (template !== "avatar" || !!avatarId) :
+                  s.id === "fmt" ? (template === "no_person" || !!avatarId) :
                   s.id === "what" ? object.trim().length > 0 :
                   s.id === "len" ? sceneCount >= 1 :
                   moodId !== "none" || visualStyleId !== "none" || styleNums.length > 0;
@@ -177,9 +177,9 @@ export function StoryboardStep({
                     </button>
                   ))}
                 </div>
-                {template === "avatar" && (
+                {template !== "no_person" && (
                   <div className="field" style={{ marginTop: 18, marginBottom: 0 }}>
-                    <label>เลือก Avatar (พรีเซนเตอร์) {avatarId ? <span className="sb-badge">✓</span> : <span className="hint" style={{ display: "inline" }}>· ต้องเลือกหน้าคนพูด</span>}</label>
+                    <label>เลือก Avatar (พรีเซนเตอร์) {avatarId ? <span className="sb-badge">✓</span> : <span className="hint" style={{ display: "inline" }}>· {template === "avatar" ? "หน้าคนพูด" : "หน้าพรีเซนเตอร์ให้เหมือนกันทุกซีน"}</span>}</label>
                     <AvatarGrid avatars={avatars} loading={avLoading} error={avError} selected={avatarId} onSelect={setAvatarId} onZoom={onZoom} />
                   </div>
                 )}
@@ -269,6 +269,7 @@ export function StoryboardStep({
         {/* ── right: the result (only once generating/generated) ── */}
         {(busy || result) && (
         <div className="sb-result">
+          <div className="sb-result-scroll">
           {busy && !result && <div className="ph"><div className="spinner" />กำลังให้ AI ร่าง storyboard…</div>}
           {result && (
             <>
@@ -320,13 +321,16 @@ export function StoryboardStep({
               ))}
               {result.caption && <div className="sb-meta"><b>Caption</b><p>{result.caption}</p></div>}
               {result.hashtags && <div className="sb-meta"><b>Hashtags</b><p>{result.hashtags}</p></div>}
-              <div className="sb-result-cta">
-                <button className="sb-skip" onClick={() => setResult(null)}>← กลับไปแก้โจทย์</button>
-                <button className="gen" onClick={() => onUse(dialoguesToScript(result.scenes), result, totalSec)}>
-                  ใช้ storyboard นี้ → เข้าสตูดิโอ
-                </button>
-              </div>
             </>
+          )}
+          </div>
+          {result && (
+            <div className="sb-result-cta">
+              <button className="sb-skip" onClick={() => setResult(null)}>← กลับไปแก้โจทย์</button>
+              <button className="gen" onClick={() => onUse(dialoguesToScript(result.scenes), result, totalSec)}>
+                ใช้ storyboard นี้ → เข้าสตูดิโอ
+              </button>
+            </div>
           )}
         </div>
         )}
