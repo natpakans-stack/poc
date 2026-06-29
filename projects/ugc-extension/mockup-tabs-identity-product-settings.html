@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UGC Extension — Tabs: ตัวตน · สินค้า · ตั้งค่า</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#F2603A; --primary-tint:#FDEDE7; --primary-deep:#D94A26;
+    --bg:#FFFFFF; --backdrop:#E9E6E2; --surface:#F7F5F3;
+    --border:#EBE8E4; --border-strong:#DEDAD4;
+    --text:#1C1B1A; --muted:#8C867F; --green:#15A34A; --green-tint:#E7F6ED;
+    --r:12px; --shadow:0 1px 2px rgba(28,27,26,.04),0 4px 16px rgba(28,27,26,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans Thai",system-ui,-apple-system,sans-serif;background:var(--backdrop);
+    color:var(--text);-webkit-font-smoothing:antialiased;padding:32px;
+    display:flex;gap:40px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;gap:12px;align-items:center}
+  .stage-label{font-size:13px;font-weight:600;color:#5A554F}
+  .stage-label b{color:var(--primary-deep)}
+  .panel{width:360px;height:760px;background:var(--bg);border-radius:14px;
+    box-shadow:0 12px 40px rgba(28,27,26,.18);overflow:hidden;display:flex;flex-direction:column;
+    border:1px solid var(--border-strong)}
+  .ph{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .ph .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#F2603A,#F59E5B);
+    color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+  .ph .meta{flex:1;min-width:0}
+  .ph .meta h1{font-size:13.5px;font-weight:700}
+  .ph .meta span{font-size:11px;color:var(--muted)}
+  .pill{font-size:10.5px;font-weight:600;color:var(--green);background:var(--green-tint);
+    padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green)}
+  .tabs{display:flex;gap:2px;padding:8px 10px 0;border-bottom:1px solid var(--border)}
+  .tab{flex:1;text-align:center;padding:9px 4px 11px;font-size:12px;font-weight:600;color:var(--muted);
+    border-bottom:2.5px solid transparent;display:flex;flex-direction:column;gap:3px;align-items:center}
+  .tab .ic{font-size:15px}
+  .tab.on{color:var(--primary-deep);border-bottom-color:var(--primary)}
+  .body{flex:1;overflow-y:auto;padding:14px}
+  .body::-webkit-scrollbar{width:6px}
+  .body::-webkit-scrollbar-thumb{background:#D9D5CF;border-radius:3px}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+  .sec-head h2{font-size:13.5px;font-weight:700}
+  .sec-head .step{font-size:10.5px;font-weight:700;color:var(--primary);background:var(--primary-tint);padding:2px 7px;border-radius:6px}
+  .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:13px}
+
+  .field{margin-top:14px}
+  .field:first-of-type{margin-top:0}
+  .lab{font-size:11.5px;font-weight:600;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+  .lab small{color:var(--muted);font-weight:500}
+  input.in,textarea.in,.selbox{width:100%;border:1.5px solid var(--border-strong);border-radius:10px;
+    padding:11px 12px;font-size:12.5px;font-family:inherit;color:var(--text);background:var(--bg)}
+  textarea.in{resize:none;line-height:1.5}
+  input.in::placeholder,textarea.in::placeholder{color:#B4AFA8}
+  .selbox{display:flex;justify-content:space-between;align-items:center;font-weight:600}
+  .selbox .cv{color:var(--muted);font-weight:400}
+
+  /* WHO/WHAT mode cards */
+  .modes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+  .mode{border:1.5px solid var(--border-strong);border-radius:var(--r);padding:10px 6px;text-align:center;
+    display:flex;flex-direction:column;gap:4px;align-items:center}
+  .mode .e{font-size:19px}
+  .mode .t{font-size:10.5px;font-weight:700;line-height:1.2}
+  .mode .d{font-size:9px;color:var(--muted)}
+  .mode.on{border-color:var(--primary);background:var(--primary-tint)}
+  .mode.on .t{color:var(--primary-deep)}
+
+  .seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px}
+  .seg div{flex:1;text-align:center;font-size:11px;font-weight:600;padding:7px 4px;border-radius:7px;color:var(--muted)}
+  .seg div.on{background:var(--bg);color:var(--primary-deep);box-shadow:var(--shadow)}
+
+  /* toggle card */
+  .togcard{margin-top:14px;display:flex;gap:10px;align-items:center;border:1.5px solid var(--primary);
+    background:var(--primary-tint);border-radius:var(--r);padding:11px}
+  .togcard .ck{width:19px;height:19px;border-radius:5px;background:var(--primary);color:#fff;font-size:12px;
+    display:grid;place-items:center;flex:none;font-weight:700}
+  .togcard .tt{flex:1}
+  .togcard .tt b{font-size:11.5px;display:block}
+  .togcard .tt small{font-size:10px;color:#7a6a5f}
+
+  /* avatar picker */
+  .avrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+  .av{width:58px;flex:none;text-align:center}
+  .av .ph2{width:58px;height:58px;border-radius:12px;border:2px solid var(--border-strong);overflow:hidden;
+    display:grid;place-items:center;font-size:24px;background:var(--surface)}
+  .av.on .ph2{border-color:var(--primary);box-shadow:0 0 0 3px rgba(242,96,58,.15)}
+  .av .nn{font-size:9.5px;margin-top:3px;color:var(--muted)}
+  .av.on .nn{color:var(--primary-deep);font-weight:600}
+
+  /* product scrape */
+  .urlbar{display:flex;gap:7px}
+  .urlbar input{flex:1}
+  .btn{border:none;border-radius:10px;padding:0 14px;font-size:12px;font-weight:700;font-family:inherit;
+    background:var(--primary);color:#fff;white-space:nowrap}
+  .prod{margin-top:14px;border:1.5px solid var(--border-strong);border-radius:var(--r);overflow:hidden}
+  .prod .imgs{display:flex;gap:6px;padding:10px;background:var(--surface);overflow-x:auto}
+  .prod .imgs .im{width:62px;height:62px;border-radius:9px;flex:none;display:grid;place-items:center;font-size:26px;
+    border:2px solid transparent;background:#fff;position:relative}
+  .prod .imgs .im.on{border-color:var(--primary)}
+  .prod .imgs .im.on::after{content:"✓";position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;
+    background:var(--primary);color:#fff;font-size:10px;display:grid;place-items:center;font-weight:700}
+  .prod .info{padding:11px 12px}
+  .prod .info .nm{font-size:12.5px;font-weight:700;line-height:1.3}
+  .prod .info .pr{font-size:13px;font-weight:700;color:var(--primary-deep);margin-top:2px}
+  .prod .info .src{font-size:9.5px;color:var(--muted);margin-top:2px}
+  .seltag{margin-top:10px}
+  .seltag .lab{margin-bottom:6px}
+  .tagwrap{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:10.5px;background:var(--surface);border:1px solid var(--border-strong);border-radius:7px;padding:5px 8px;font-weight:500}
+  .tag.add{border-style:dashed;color:var(--muted)}
+  .note{margin-top:12px;font-size:10.5px;color:#7a6a5f;background:var(--green-tint);border-radius:9px;padding:9px 11px;line-height:1.45}
+
+  /* settings */
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+  .srow:last-child{border-bottom:none}
+  .srow .sl{font-size:12px;font-weight:600}
+  .srow .sl small{display:block;font-size:10px;color:var(--muted);font-weight:500;margin-top:1px}
+  .srow .sv{font-size:11.5px;font-weight:600;color:var(--muted)}
+  .status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--green)}
+  .status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .sw{width:40px;height:23px;border-radius:20px;background:#D9D5CF;position:relative;flex:none}
+  .sw.on{background:var(--primary)}
+  .sw::after{content:"";position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .sw.on::after{left:19.5px}
+  .ssub{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 2px}
+  .cta{margin-top:18px;width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;
+    font-size:14px;font-weight:700;font-family:inherit;box-shadow:0 4px 14px rgba(242,96,58,.3);
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  .cta.ghost{background:var(--bg);color:var(--primary-deep);border:1.5px solid var(--primary);box-shadow:none}
+</style>
+</head>
+<body>
+
+<!-- ============ TAB: ตัวตน ============ -->
+<div class="stage">
+  <div class="stage-label">แท็บ <b>ตัวตน</b> — WHO ใครเล่า</div>
+  <div class="panel">
+    <div class="ph"><div class="logo">PCS</div>
+      <div class="meta"><h1>Prompt Creator Studio</h1><span>UGC 9:16 · v2.2.0</span></div>
+      <span class="pill">พร้อมใช้งาน</span></div>
+    <div class="tabs">
+      <div class="tab on"><span class="ic">👤</span>ตัวตน</div>
+      <div class="tab"><span class="ic">📦</span>สินค้า</div>
+      <div class="tab"><span class="ic">🎬</span>ซีรีย์</div>
+      <div class="tab"><span class="ic">⚙️</span>ตั้งค่า</div>
+    </div>
+    <div class="body">
+      <div class="sec-head"><h2>โหมดสร้างตัวตน</h2></div>
+      <div class="hint">เลือกว่าใครเป็นคนเล่า — คนพูด, ของพูดได้ หรือโชว์แต่สินค้า</div>
+
+      <div class="modes">
+        <div class="mode on"><span class="e">🧑‍💼</span><span class="t">คนพูด</span><span class="d">lip-sync</span></div>
+        <div class="mode"><span class="e">🎒</span><span class="t">ของพูดได้</span><span class="d">3D</span></div>
+        <div class="mode"><span class="e">📦</span><span class="t">ไม่เห็นคน</span><span class="d">สินค้า/มือ</span></div>
+      </div>
+
+      <div class="field" style="margin-top:16px">
+        <div class="lab">ชื่อ / คาแรกเตอร์</div>
+        <input class="in" placeholder="เช่น ครูพิม, นักธุรกิจสาว, เชฟหนุ่ม">
+      </div>
+      <div class="field">
+        <div class="lab">เพศ / ตัวแบบ</div>
+        <div class="selbox">ผู้หญิงไทย <span class="cv">▾</span></div>
+      </div>
+
+      <div class="togcard">
+        <div class="ck">✓</div>
+        <div class="tt"><b>สุ่มภาพจากคลังพร้อมของฉัน</b><small>รูปจริง · ไม่ใช้ AI · เร็ว · หน้าไม่ซ้ำ · เพศตามที่เลือก</small></div>
+      </div>
+
+      <div class="field">
+        <div class="lab">โทนสีผิว</div>
+        <div class="selbox">ผิวขาวออร่า (เน็ตไอดอล) <span class="cv">▾</span></div>
+      </div>
+      <div class="field">
+        <div class="lab">เสียงพากย์</div>
+        <div class="selbox">— สุ่ม/ตามที่กรอกเอง — <span class="cv">▾</span></div>
+      </div>
+      <div class="field">
+        <div class="lab">รายละเอียดเพิ่มเติม <small>ระบบจำช่องนี้</small></div>
+        <textarea class="in" rows="2" placeholder="เช่น อายุ 30 ยุคลิปอบอุ่น เฉดสีน้ำตาล"></textarea>
+      </div>
+
+      <div class="field">
+        <div class="lab">ล็อกหน้า Avatar <small>PRESENTER_LOCK</small></div>
+        <div class="avrow">
+          <div class="av on"><div class="ph2">👩🏻</div><div class="nn">มิวา</div></div>
+          <div class="av"><div class="ph2">👨🏻</div><div class="nn">เจเดน</div></div>
+          <div class="av"><div class="ph2">👩🏻‍🦰</div><div class="nn">พิม</div></div>
+          <div class="av"><div class="ph2">🧑🏻</div><div class="nn">โต้ง</div></div>
+          <div class="av"><div class="ph2">＋</div><div class="nn">เพิ่ม</div></div>
+        </div>
+      </div>
+      <button class="cta ghost">บันทึกตัวตน ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: สินค้า ============ -->
+<div class="stage">
+  <div class="stage-label">แท็บ <b>สินค้า</b> — WHAT + 🅰 Scraper</div>
+  <div class="panel">
+    <div class="ph"><div class="logo">PCS</div>
+      <div class="meta"><h1>Prompt Creator Studio</h1><span>UGC 9:16 · v2.2.0</span></div>
+      <span class="pill">พร้อมใช้งาน</span></div>
+    <div class="tabs">
+      <div class="tab"><span class="ic">👤</span>ตัวตน</div>
+      <div class="tab on"><span class="ic">📦</span>สินค้า</div>
+      <div class="tab"><span class="ic">🎬</span>ซีรีย์</div>
+      <div class="tab"><span class="ic">⚙️</span>ตั้งค่า</div>
+    </div>
+    <div class="body">
+      <div class="sec-head"><h2>สินค้า / หัวข้อ</h2></div>
+      <div class="hint">วางลิงก์สินค้า — ระบบดึง ชื่อ · รูปจริง · ราคา · จุดขาย มาให้เป็นสารตั้งต้น</div>
+
+      <div class="seg" style="margin-bottom:14px">
+        <div class="on">วางลิงก์</div><div>พิมพ์เอง</div><div>คู่ตัวละคร</div>
+      </div>
+
+      <div class="field">
+        <div class="lab">ลิงก์สินค้า <small>Shopee · Lazada · TikTok</small></div>
+        <div class="urlbar">
+          <input class="in" value="shopee.co.th/matchazuki-ceremonial..." readonly>
+          <button class="btn">ดึง</button>
+        </div>
+      </div>
+
+      <div class="prod">
+        <div class="imgs">
+          <div class="im on">🍵</div><div class="im on">🥤</div><div class="im">📦</div><div class="im">🌿</div>
+        </div>
+        <div class="info">
+          <div class="nm">Matchazuki มัทฉะเซเรโมเนียล เกรดพรีเมียม 30g</div>
+          <div class="pr">฿390</div>
+          <div class="src">ดึงจาก Shopee · เลือกรูป 2/4 เป็น reference</div>
+        </div>
+      </div>
+
+      <div class="seltag">
+        <div class="lab">จุดขาย <small>แก้ไขได้</small></div>
+        <div class="tagwrap">
+          <span class="tag">มัทฉะแท้ญี่ปุ่น</span><span class="tag">ไม่ขม</span>
+          <span class="tag">เกรดพิธีชง</span><span class="tag">ละลายง่าย</span><span class="tag add">＋ เพิ่ม</span>
+        </div>
+      </div>
+
+      <div class="note">💡 หัวข้อเป็นอาหาร/ของ → ระบบจะสลับเป็น <b>“ของพูดได้” (3D)</b> อัตโนมัติ ถ้าเลือกโหมดนั้นในแท็บตัวตน</div>
+
+      <button class="cta ghost">ใช้สินค้านี้ ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: ตั้งค่า ============ -->
+<div class="stage">
+  <div class="stage-label">แท็บ <b>ตั้งค่า</b> — global config</div>
+  <div class="panel">
+    <div class="ph"><div class="logo">PCS</div>
+      <div class="meta"><h1>Prompt Creator Studio</h1><span>UGC 9:16 · v2.2.0</span></div>
+      <span class="pill">พร้อมใช้งาน</span></div>
+    <div class="tabs">
+      <div class="tab"><span class="ic">👤</span>ตัวตน</div>
+      <div class="tab"><span class="ic">📦</span>สินค้า</div>
+      <div class="tab"><span class="ic">🎬</span>ซีรีย์</div>
+      <div class="tab on"><span class="ic">⚙️</span>ตั้งค่า</div>
+    </div>
+    <div class="body">
+      <div class="ssub">การเชื่อมต่อ</div>
+      <div class="srow"><div class="sl">Google Flow<small>ปลายทาง gen วิดีโอ</small></div><span class="status">เชื่อมแล้ว · แท็บ 2</span></div>
+      <div class="srow"><div class="sl">LLM Key<small>gen prompt (Gemini)</small></div><span class="sv">•••• ตั้งแล้ว ▸</span></div>
+
+      <div class="ssub">Output</div>
+      <div class="srow"><div class="sl">อัตราส่วน</div><span class="sv">9:16 ▾</span></div>
+      <div class="srow"><div class="sl">ความยาว → ฉาก<small>Flow 8 วิ/ฉาก</small></div><span class="sv">อัตโนมัติ ▾</span></div>
+      <div class="srow"><div class="sl">เพลง / ซับ default</div><span class="sv">ตั้งค่า ▸</span></div>
+
+      <div class="ssub">ความปลอดภัยคอนเทนต์</div>
+      <div class="srow"><div class="sl">กรองคำต้องห้าม อย.<small>FDA word filter</small></div><div class="sw on"></div></div>
+      <div class="srow"><div class="sl">กรองความรุนแรง<small>เลี่ยง AI censor</small></div><div class="sw on"></div></div>
+
+      <div class="ssub">สไตล์ตั้งต้น</div>
+      <div class="srow"><div class="sl">โทนภาพ default</div><span class="sv">Cinematic ▾</span></div>
+      <div class="srow"><div class="sl">สไตล์ภาพ default</div><span class="sv">Real Cinematic ▾</span></div>
+
+      <button class="cta">บันทึกการตั้งค่า</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
