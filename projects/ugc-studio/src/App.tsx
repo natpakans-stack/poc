@@ -98,6 +98,7 @@ export default function App() {
         <StoryboardStep
           images={images} setImages={setImages}
           template={template} setTemplate={setTemplate}
+          avatarId={avatarId} setAvatarId={setAvatarId} onZoom={setZoom}
           onUse={(s, result) => {
             // storyboard wins on length: target = the actual VO length, same estimator as §2 (chars/8) → no false "เกิน"
             const est = Math.max(5, Math.round(s.length / 8));

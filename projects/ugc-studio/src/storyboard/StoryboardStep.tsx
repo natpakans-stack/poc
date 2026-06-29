@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Dropdown } from "../components/Dropdown";
-import { generateStoryboard, type Scene, type StoryboardResult, type Template } from "../lib/api";
+import { AvatarGrid } from "../components/AvatarGrid";
+import { generateStoryboard, fetchAvatars, type Avatar, type Scene, type StoryboardResult, type Template } from "../lib/api";
 import { narrativeStyles, moodKeywords, visualStyles } from "./data";
 import type { PromptMode, PlatformMode } from "./engine";
 
@@ -32,15 +33,23 @@ const dialoguesToScript = (scenes: Scene[]) =>
   scenes.map((s) => s.dialogue).filter(Boolean).join(" ");
 
 export function StoryboardStep({
-  images, setImages, template, setTemplate, onUse, onSkip,
+  images, setImages, template, setTemplate, avatarId, setAvatarId, onZoom, onUse, onSkip,
 }: {
   images: File[];
   setImages: (f: File[]) => void;
   template: Template;
   setTemplate: (t: Template) => void;
+  avatarId: string | null;
+  setAvatarId: (id: string) => void;
+  onZoom: (a: Avatar) => void;
   onUse: (script: string, result: StoryboardResult, totalSec: number) => void;
   onSkip: (totalSec: number) => void;
 }) {
+  // avatar belongs here: choosing the "Avatar พูด" format means choosing who talks, in the same breath
+  const [avatars, setAvatars] = useState<Avatar[]>([]);
+  const [avLoading, setAvLoading] = useState(true);
+  const [avError, setAvError] = useState(false);
+  useEffect(() => { fetchAvatars().then(setAvatars).catch(() => setAvError(true)).finally(() => setAvLoading(false)); }, []);
   const [object, setObject] = useState("");
   const [mode, setMode] = useState<PromptMode>("review");
   const [platform, setPlatform] = useState<PlatformMode>("flow");
@@ -69,18 +78,20 @@ export function StoryboardStep({
   useEffect(() => {
     const root = sectionsRef.current;
     if (!root || busy || result) return;
-    const scroller = root.closest(".sb-grid");
+    const scroller = root.closest(".sb-grid") as HTMLElement | null;
+    if (!scroller) return;
     const secs = [...root.querySelectorAll<HTMLElement>("[data-step]")];
-    const io = new IntersectionObserver(
-      (entries) => {
-        const top = entries.filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (top) setActive((top.target as HTMLElement).dataset.step!);
-      },
-      { root: scroller, rootMargin: "-15% 0px -75% 0px", threshold: 0 }
-    );
-    secs.forEach((s) => io.observe(s));
-    return () => io.disconnect();
+    // single deterministic scroll handler (no IO race): active = last section above the 20% line, or the last step at bottom
+    const onScroll = () => {
+      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 8) { setActive(STEPS[STEPS.length - 1].id); return; }
+      const line = scroller.getBoundingClientRect().top + scroller.clientHeight * 0.2;
+      let cur = secs[0];
+      for (const s of secs) if (s.getBoundingClientRect().top <= line) cur = s;
+      if (cur) setActive(cur.dataset.step!);
+    };
+    onScroll();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
   }, [busy, result]);
 
   const goto = (id: string) => document.getElementById(`step-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -117,6 +128,10 @@ export function StoryboardStep({
   };
   const togglePrompt = (n: number) =>
     setOpenPrompts((s) => { const x = new Set(s); x.has(n) ? x.delete(n) : x.add(n); return x; });
+  // Full/no_person consume the per-scene prompts → let the user tune them here (Avatar ignores them, stays read-only)
+  const promptsEditable = template !== "avatar";
+  const editScene = (n: number, field: "image_prompt" | "video_prompt" | "dialogue", value: string) =>
+    setResult((r) => (r ? { ...r, scenes: r.scenes.map((s) => (s.scene_number === n ? { ...s, [field]: value } : s)) } : r));
   const styleCount = styleNums.length;
 
   return (
@@ -130,7 +145,7 @@ export function StoryboardStep({
               <div className="sb-rail-h">ตั้งโจทย์</div>
               {STEPS.map((s) => {
                 const done =
-                  s.id === "fmt" ? !!template :
+                  s.id === "fmt" ? (template !== "avatar" || !!avatarId) :
                   s.id === "what" ? object.trim().length > 0 :
                   s.id === "len" ? sceneCount >= 1 :
                   moodId !== "none" || visualStyleId !== "none" || styleNums.length > 0;
@@ -154,6 +169,12 @@ export function StoryboardStep({
                     </button>
                   ))}
                 </div>
+                {template === "avatar" && (
+                  <div className="field" style={{ marginTop: 18, marginBottom: 0 }}>
+                    <label>เลือก Avatar (พรีเซนเตอร์) {avatarId ? <span className="sb-badge">✓</span> : <span className="hint" style={{ display: "inline" }}>· ต้องเลือกหน้าคนพูด</span>}</label>
+                    <AvatarGrid avatars={avatars} loading={avLoading} error={avError} selected={avatarId} onSelect={setAvatarId} onZoom={onZoom} />
+                  </div>
+                )}
               </section>
 
               <section id="step-what" data-step="what" className="sb-sec">
@@ -243,6 +264,7 @@ export function StoryboardStep({
           {result && (
             <>
               {result.storyboardOverview && <pre className="sb-overview">{result.storyboardOverview}</pre>}
+              {promptsEditable && <div className="sb-edit-hint">✎ รูปแบบนี้สร้างภาพ <b>ราย scene</b> — กด ✎ ที่แต่ละ scene เพื่อปรับ image/video prompt เองได้ (นี่คือจุดที่คุมรายละเอียดได้มากกว่า Avatar)</div>}
               {result.scenes.map((s) => (
                 <div className="sb-scene" key={s.scene_number}>
                   <div className="sb-scene-h">
@@ -259,14 +281,24 @@ export function StoryboardStep({
                     <button className={copiedKey === `${s.scene_number}-vid` ? "copied" : ""} onClick={() => copy(s.video_prompt, `${s.scene_number}-vid`)}>
                       {copiedKey === `${s.scene_number}-vid` ? "✓ คัดลอกแล้ว" : "📋 Video Prompt"}
                     </button>
-                    <button className="sb-prompt-eye" onClick={() => togglePrompt(s.scene_number)} title="ดู prompt เต็ม">
-                      {openPrompts.has(s.scene_number) ? "▲" : "▼"}
+                    <button className="sb-prompt-eye" onClick={() => togglePrompt(s.scene_number)} title={promptsEditable ? "แก้ prompt ราย scene" : "ดู prompt เต็ม"}>
+                      {openPrompts.has(s.scene_number) ? "▲" : promptsEditable ? "✎" : "▼"}
                     </button>
                   </div>
                   {openPrompts.has(s.scene_number) && (
                     <div className="sb-prompt-body">
-                      <div className="sb-prompt-blk"><span>🖼 Image Prompt</span><pre>{s.image_prompt}</pre></div>
-                      <div className="sb-prompt-blk"><span>🎬 Video Prompt</span><pre>{s.video_prompt}</pre></div>
+                      <div className="sb-prompt-blk">
+                        <span>🖼 Image Prompt {promptsEditable && <i>แก้ได้</i>}</span>
+                        {promptsEditable
+                          ? <textarea className="sb-prompt-edit" value={s.image_prompt} onChange={(e) => editScene(s.scene_number, "image_prompt", e.target.value)} />
+                          : <pre>{s.image_prompt}</pre>}
+                      </div>
+                      <div className="sb-prompt-blk">
+                        <span>🎬 Video Prompt {promptsEditable && <i>แก้ได้</i>}</span>
+                        {promptsEditable
+                          ? <textarea className="sb-prompt-edit" value={s.video_prompt} onChange={(e) => editScene(s.scene_number, "video_prompt", e.target.value)} />
+                          : <pre>{s.video_prompt}</pre>}
+                      </div>
                     </div>
                   )}
                 </div>

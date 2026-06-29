@@ -28,6 +28,7 @@ export function SourceColumn({
   useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews]);
 
   const needsAvatar = template === "avatar"; // full/no_person generate the person from the prompt — no preset
+  const selectedAvatar = avatars.find((a) => a.id === avatarId); // avatar is picked in ตั้งโจทย์ now → show read-only here
 
   return (
     <>
@@ -49,14 +50,19 @@ export function SourceColumn({
         )}
       </Accordion>
 
-      <Accordion title="เลือก Avatar" subtitle={needsAvatar ? "(พรีเซนเตอร์)" : "(ไม่ต้องสำหรับทรงนี้)"}>
+      <Accordion title="Avatar" subtitle={needsAvatar ? "(จากตั้งโจทย์)" : "(ไม่ต้องสำหรับรูปแบบนี้)"}>
         {needsAvatar ? (
-          <>
-            <div className="hint">หน้าตาพรีเซนเตอร์ที่จะมาพูดขายของ{personaHint ? <> · บทเขียนไว้สำหรับ <b style={{ color: "var(--accent)" }}>{personaHint}</b> เลือกให้เข้าโทน</> : null}</div>
-            <AvatarGrid avatars={avatars} loading={loading} error={error} selected={avatarId} onSelect={setAvatarId} onZoom={onZoom} />
-          </>
+          selectedAvatar ? (
+            <div className="av-recap">
+              <img src={selectedAvatar.preview_url} alt="" />
+              <div><b>{selectedAvatar.name}</b><small>พรีเซนเตอร์ที่เลือกไว้</small></div>
+              <button className="link-btn" onClick={onBack}>← แก้</button>
+            </div>
+          ) : (
+            <div className="src-empty">ยังไม่ได้เลือก avatar<button className="link-btn" onClick={onBack}>เลือกที่ตั้งโจทย์ →</button></div>
+          )
         ) : (
-          <div className="src-empty">พรีเซนเตอร์จะถูก<b style={{ color: "var(--text)" }}> สร้างจาก prompt</b> อัตโนมัติ — ไม่ต้องเลือก avatar สำหรับทรง “{template === "no_person" ? "ไม่เห็นคน" : "Full pipeline"}”</div>
+          <div className="src-empty">พรีเซนเตอร์จะถูก<b style={{ color: "var(--text)" }}> สร้างจาก prompt</b> อัตโนมัติ — ไม่ต้องเลือก avatar สำหรับรูปแบบ “{template === "no_person" ? "ไม่เห็นคน" : "Full pipeline"}”</div>
         )}
       </Accordion>
     </>
