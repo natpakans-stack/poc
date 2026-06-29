@@ -58,6 +58,22 @@ export async function draftScript(brief: string, durationSec = 15): Promise<stri
   return data.script as string;
 }
 
+// initial flow: generate a full per-scene storyboard from the picks (OpenAI, server-side engine)
+import type { StoryboardOptions, StoryboardResult } from "../storyboard/engine";
+export type { StoryboardOptions, StoryboardResult, Scene } from "../storyboard/engine";
+
+export async function generateStoryboard(opts: StoryboardOptions): Promise<StoryboardResult> {
+  const res = await fetch("/api/storyboard", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(opts),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || "สร้าง storyboard ไม่สำเร็จ");
+  if (!data.scenes?.length) throw new Error("แตก scene ไม่ได้ — ลองใหม่อีกครั้ง");
+  return data as StoryboardResult;
+}
+
 // launch Remotion Studio (timeline + props edit), returns its url
 export async function openEditor(): Promise<string> {
   const res = await fetch("/api/edit", { method: "POST" });

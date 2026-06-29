@@ -4,12 +4,15 @@ import { Lightbox } from "./components/Lightbox";
 import { SourceColumn } from "./columns/SourceColumn";
 import { ScriptColumn } from "./columns/ScriptColumn";
 import { OutputColumn, type Settings, type GenState } from "./columns/OutputColumn";
+import { StoryboardStep } from "./storyboard/StoryboardStep";
 import { startGenerate, getStatus, openEditor, type Avatar, type Template, type Kind } from "./lib/api";
 
 const DEFAULT_SCRIPT =
   "สวัสดีค่าทุกคน วันนี้มารีวิวเซรั่มวิตามินซี AURA ทาแล้วหน้าใสขึ้นออร่า ซึมไว ไม่เหนียว ลดจุดด่างดำ วันนี้ลดพิเศษเฉพาะไลฟ์ กดสั่งเลยน้า";
 
 export default function App() {
+  // initial flow: storyboard step → studio (the 3 columns)
+  const [stage, setStage] = useState<"storyboard" | "studio">("storyboard");
   // source
   const [images, setImages] = useState<File[]>([]);
   const [refVideo, setRefVideo] = useState<File | null>(null);
@@ -81,9 +84,13 @@ export default function App() {
       <div className="top">
         <span className="logo">U</span>
         <h1>UGC Studio</h1>
-        <span className="sub">powered by Higgsfield · Marketing Studio</span>
+        {stage === "studio" && <button className="back-btn" onClick={() => setStage("storyboard")}>← Storyboard</button>}
+        <span className="sub">{stage === "storyboard" ? "Storyboard Generator · Viral Intelligence" : "powered by Higgsfield · Marketing Studio"}</span>
       </div>
 
+      {stage === "storyboard" ? (
+        <StoryboardStep onUse={(s) => { setScript(s); setStage("studio"); }} onSkip={() => setStage("studio")} />
+      ) : (
       <main>
         <Column index={1} title="Source" variant="source">
           <SourceColumn
@@ -106,6 +113,7 @@ export default function App() {
           />
         </Column>
       </main>
+      )}
 
       <Lightbox src={zoom?.preview_url ?? null} name={zoom?.name ?? ""} onClose={() => setZoom(null)} />
     </>

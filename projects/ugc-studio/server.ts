@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import index from "./index.html";
 import { draftFullScript, runFromPlan } from "./pipeline";
+import { buildMessages, parseStoryboard, type StoryboardOptions } from "./src/storyboard/engine";
 
 const HF = "/Users/natpakansirirat/.npm-global/lib/node_modules/@higgsfield/cli/vendor/hf";
 const ROOT = import.meta.dir;
@@ -182,6 +183,37 @@ Bun.serve({
         if (!brief || !String(brief).trim()) return json({ error: "กรุณาใส่ brief" }, 400);
         const script = await draftFullScript(String(brief).trim(), parseInt(duration, 10) || 15);
         return json({ script });
+      } catch (e) { return json({ error: (e as Error).message }, 500); }
+    }
+
+    // initial flow: generate a full per-scene storyboard from the picks (ported 1click1story engine, via OpenAI)
+    if (url.pathname === "/api/storyboard" && req.method === "POST") {
+      try {
+        const o = (await req.json()) as StoryboardOptions;
+        if (!o?.object?.trim()) return json({ error: "กรุณาใส่หัวข้อ/ชื่อสินค้า" }, 400);
+        const { system, user } = buildMessages({ ...o, object: o.object.trim() });
+        const key = (process.env.OPENAI_API_KEY ?? "").trim();
+        if (!key) return json({ error: "OPENAI_API_KEY missing — run with --env-file=../.env" }, 500);
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            temperature: 1.0,
+            max_tokens: 16384, // ponytail: single-shot up to ~40 scenes; original batches at 10 — add batching if output truncates
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+          }),
+        });
+        if (!res.ok) return json({ error: `OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}` }, 502);
+        const data = await res.json();
+        const raw = (data.choices?.[0]?.message?.content ?? "").trim();
+        if (!raw) return json({ error: "OpenAI ส่งผลลัพธ์ว่าง" }, 502);
+        const parsed = parseStoryboard(raw);
+        if (!parsed.scenes.length) return json({ error: "แตก scene ไม่ได้", rawText: raw }, 200);
+        return json(parsed);
       } catch (e) { return json({ error: (e as Error).message }, 500); }
     }
 
