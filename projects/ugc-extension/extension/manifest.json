@@ -6,7 +6,9 @@
   "permissions": ["sidePanel", "scripting", "tabs"],
   "host_permissions": [
     "https://shopee.co.th/*",
-    "https://*.lazada.co.th/*"
+    "https://*.lazada.co.th/*",
+    "https://labs.google/*",
+    "https://*.google.com/*"
   ],
   "background": { "service_worker": "background.js" },
   "action": { "default_title": "เปิด PCS Side Panel" },

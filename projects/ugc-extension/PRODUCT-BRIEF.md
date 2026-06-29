@@ -324,7 +324,9 @@ user กดโหลดคลิปจาก Flow + ตัดต่อ/ลงโ
 - **fallback กรอกมือ** ต้องมีเสมอ (เผื่อ user ไม่เปิดหน้า / โครงเปลี่ยน)
 - แต่ละ marketplace โครงต่างกัน → adapter ต่อเว็บ (เริ่ม 1–2 เจ้า)
 
-**ยังพิสูจน์ไม่จบ:** test harness เองคือ automation เลยโดนจับ — ต้องลองจริงด้วย **content script ใน Chrome ปกติของ user** (โหลด unpacked extension) ว่า passive DOM read บนหน้าที่ user เปิดเอง ผ่าน anti-bot ไหม → **spike รอบ 2 ต้องทำใน extension จริง ไม่ใช่ MCP**
+**✅ พิสูจน์แล้ว (extension จริง, 2026-06-29):** โหลด unpacked → เปิดหน้าสินค้า Shopee เอง → กดดึง → ได้ **`via shopee-api`** (ครบ ชื่อ/ราคา/รูป/stock/rating) → **passive content script ผ่าน anti-bot** ที่ automated navigation โดนเด้ง = **เสา 🅰 viable, สถาปัตยกรรมถูกทาง**
+- โค้ด spike: `extension/` (MV3, `scrapeProduct()` 4 กลยุทธ์: shopee-api → og-meta → jsonld → dom-price)
+- เหลือ harden: adapter Lazada/TikTok · fallback กรอกมือ · กันกรณี Shopee เปลี่ยน API/เด้ง verify เป็นครั้งคราว
 
 ### ~~9.3 ดึงวิดีโอออกจาก Flow~~ — **ตัดทิ้ง** (user โหลดเอง)
 ### ~~9.4 ตัดต่อ client-side~~ — **ตัดทิ้ง** (user ตัดเอง)
