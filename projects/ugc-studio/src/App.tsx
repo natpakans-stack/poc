@@ -130,7 +130,7 @@ export default function App() {
         <Column index={3} title="Output" variant="output">
           <OutputColumn
             settings={settings} setSettings={setSettings}
-            template={template}
+            template={template} engine={engine}
             sceneCount={storyboard?.scenes.length}
             gen={gen} onGenerate={onGenerate} onEdit={onEdit}
             onBack={() => setStage("storyboard")}

@@ -1,5 +1,7 @@
 import { Dropdown } from "../components/Dropdown";
-import type { Template } from "../lib/api";
+import type { Template, Engine } from "../lib/api";
+
+const ENGINE_LABEL: Record<Engine, string> = { higgsfield: "🟢 Higgsfield", flow: "🔵 Google Flow" };
 
 export type Settings = { mode: string; aspect: string; duration: string; resolution: string };
 export type GenState = {
@@ -46,10 +48,11 @@ function Stage({ gen }: { gen: GenState }) {
   return <div className="ph">กรอกข้อมูล แล้วกด “สร้างวิดีโอ”<br />วิดีโอจะแสดงที่นี่</div>;
 }
 
-export function OutputColumn({ settings, template, setSettings, sceneCount, gen, onGenerate, onEdit, onBack }: {
+export function OutputColumn({ settings, template, engine, setSettings, sceneCount, gen, onGenerate, onEdit, onBack }: {
   settings: Settings;
   setSettings: (s: Settings) => void;
   template: Template;
+  engine: Engine;
   sceneCount?: number; // from the kept storyboard result — proof it's not discarded
   gen: GenState;
   onGenerate: () => void;
@@ -67,6 +70,7 @@ export function OutputColumn({ settings, template, setSettings, sceneCount, gen,
       <div className="recap">
         <div className="recap-h"><span>ตั้งไว้ที่ “ตั้งโจทย์”</span><button className="link-btn" onClick={onBack}>← แก้</button></div>
         <div className="recap-row"><span>รูปแบบคลิป</span><b>{templateLabel}</b></div>
+        <div className="recap-row"><span>Engine</span><b>{ENGINE_LABEL[engine]}</b></div>
         <div className="recap-row"><span>สัดส่วน</span><b>{aspectLabel}</b></div>
         <div className="recap-row"><span>ความยาว</span><b>{settings.duration} วิ <i>{sceneCount ? "≈ จากบท" : "จาก platform×ฉาก"}</i></b></div>
         {!!sceneCount && <div className="recap-row"><span>Storyboard</span><b>{sceneCount} ฉาก → pipeline</b></div>}

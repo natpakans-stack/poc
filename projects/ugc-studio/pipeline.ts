@@ -288,6 +288,8 @@ export async function runFromPlan(
 ): Promise<{ plan: ShotPlan; out: string }> {
   const productImage = opts.productImage ?? "ugc-review/assets/product.png";
   const canvas = dims(opts.aspect, opts.resolution);
+  // wipe leftover clips from a previous (longer) render so the Studio never shows stale shots (e.g. old clip4/5)
+  await $`rm -f ${PUBLIC_DIR}/clip0.mp4 ${PUBLIC_DIR}/clip1.mp4 ${PUBLIC_DIR}/clip2.mp4 ${PUBLIC_DIR}/clip3.mp4 ${PUBLIC_DIR}/clip4.mp4 ${PUBLIC_DIR}/clip5.mp4 ${PUBLIC_DIR}/clip6.mp4 ${PUBLIC_DIR}/clip7.mp4 ${PUBLIC_DIR}/clip8.mp4 ${PUBLIC_DIR}/clip9.mp4`.quiet().nothrow();
 
   // storyboard present → each scene IS a shot (line=dialogue, prompts = the scene's own image/video prompt).
   // absent → fall back to the LLM shot planner. imgPrompt/vidPrompt ride along on the shot for the gen step.

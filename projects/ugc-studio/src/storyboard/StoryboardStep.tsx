@@ -250,16 +250,17 @@ export function StoryboardStep({
                   </div>
                 </div>
                 <div className="sb-opts">
-                  {mode === "review" && (
+                  {mode === "review" && template !== "no_person" && (
                     <label className={`sb-opt${glassSkin ? " on" : ""}`}>
                       <div className="sb-opt-txt">
                         <b>✨ ผิวฉ่ำวาว (Glass skin)</b>
-                        <small>ผิวนางแบบฉ่ำวาวเงาแบบเกาหลี · ปิด = ผิวธรรมชาติ</small>
+                        <small>ผิวพรีเซนเตอร์ฉ่ำวาวเงาแบบเกาหลี · ปิด = ผิวธรรมชาติ</small>
                       </div>
                       <input type="checkbox" checked={glassSkin} onChange={(e) => setGlassSkin(e.target.checked)} />
                       <span className="sb-switch" />
                     </label>
                   )}
+                  {(mode !== "review" || template === "no_person") && <div className="hint" style={{ margin: 0 }}>ไม่มีตัวเลือกเพิ่มเติมสำหรับรูปแบบนี้</div>}
                 </div>
               </section>
             </div>
