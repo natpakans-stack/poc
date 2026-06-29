@@ -5,7 +5,7 @@ import { SourceColumn } from "./columns/SourceColumn";
 import { ScriptColumn } from "./columns/ScriptColumn";
 import { OutputColumn, type Settings, type GenState } from "./columns/OutputColumn";
 import { StoryboardStep } from "./storyboard/StoryboardStep";
-import { startGenerate, getStatus, openEditor, type Avatar, type Template, type Kind, type StoryboardResult } from "./lib/api";
+import { startGenerate, getStatus, openEditor, type Avatar, type Template, type Engine, type Kind, type StoryboardResult } from "./lib/api";
 
 const DEFAULT_SCRIPT =
   "สวัสดีค่าทุกคน วันนี้มารีวิวเซรั่มวิตามินซี AURA ทาแล้วหน้าใสขึ้นออร่า ซึมไว ไม่เหนียว ลดจุดด่างดำ วันนี้ลดพิเศษเฉพาะไลฟ์ กดสั่งเลยน้า";
@@ -24,6 +24,7 @@ export default function App() {
   // output settings + template
   const [settings, setSettings] = useState<Settings>({ mode: "product_review", aspect: "9:16", duration: "15", resolution: "720p" });
   const [template, setTemplate] = useState<Template>("avatar");
+  const [engine, setEngine] = useState<Engine>("higgsfield"); // where the video builds — Higgsfield (auto) or Google Flow
   // lightbox + generation
   const [zoom, setZoom] = useState<Avatar | null>(null);
   const [gen, setGen] = useState<GenState>({ phase: "idle", videoUrl: null, statusText: "", statusErr: false });
@@ -99,6 +100,7 @@ export default function App() {
           images={images} setImages={setImages}
           template={template} setTemplate={setTemplate}
           avatarId={avatarId} setAvatarId={setAvatarId} onZoom={setZoom}
+          engine={engine} setEngine={setEngine}
           onUse={(s, result) => {
             // storyboard wins on length: target = the actual VO length, same estimator as §2 (chars/8) → no false "เกิน"
             const est = Math.max(5, Math.round(s.length / 8));

@@ -116,6 +116,8 @@ select:focus,input[type=number]:focus{outline:none;border-color:var(--accent)}
 .dd-opt{padding:9px 11px;border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .12s}
 .dd-opt:hover{background:var(--panel)}
 .dd-opt.sel{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.dd-opt.disabled{opacity:.4;cursor:not-allowed;color:var(--muted)}
+.dd-opt.disabled:hover{background:none}
 
 /* script: AI helper toggle — compact lime pill, right-aligned (transcript stays hero) */
 .ai-toggle{align-self:flex-end;display:inline-flex;align-items:center;gap:7px;background:rgba(200,255,61,.09);border:1px solid rgba(200,255,61,.30);border-radius:9px;padding:8px 14px;color:var(--accent);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:background .15s,border-color .15s}
@@ -206,6 +208,12 @@ select:focus,input[type=number]:focus{outline:none;border-color:var(--accent)}
 .sb-prompt-edit:focus{outline:none;box-shadow:inset 0 0 0 1px var(--accent)}
 .sb-edit-hint{font-size:12px;color:var(--text);background:rgba(200,255,61,.08);border:1px solid rgba(200,255,61,.3);border-radius:10px;padding:10px 13px;margin-bottom:14px;line-height:1.5}
 .sb-edit-hint b{color:var(--accent)}
+.sb-style-bar{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.sb-style-bar .ctl{max-width:360px}
+/* sticky primary CTA at the bottom of the result panel + secondary "back" action */
+.sb-result-cta{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;margin:14px -24px 0;padding:14px 24px;background:#0c0c0f;border-top:1px solid var(--line)}
+.sb-result-cta .gen{flex:1;margin:0}
+.sb-result-cta .sb-skip{width:auto;margin:0;white-space:nowrap;padding:8px 14px}
 .sb-meta{margin-top:14px;font-size:13px}
 .sb-meta b{color:var(--accent);display:block;margin-bottom:4px}
 .sb-meta p{color:var(--muted);line-height:1.5}

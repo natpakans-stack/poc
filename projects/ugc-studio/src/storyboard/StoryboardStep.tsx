@@ -1,16 +1,22 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Dropdown } from "../components/Dropdown";
 import { AvatarGrid } from "../components/AvatarGrid";
-import { generateStoryboard, fetchAvatars, type Avatar, type Scene, type StoryboardResult, type Template } from "../lib/api";
+import { generateStoryboard, fetchAvatars, type Avatar, type Scene, type StoryboardResult, type Template, type Engine } from "../lib/api";
 import { narrativeStyles, moodKeywords, visualStyles } from "./data";
 import type { PromptMode, PlatformMode } from "./engine";
 
 // one source of truth for clip length: platform seconds × scene count (matches the per-scene word budget the engine writes to)
 const PLATFORM_SEC: Record<PlatformMode, number> = { flow: 8, grok: 6, supergrok: 10 };
+// "style" of the per-scene prompt — for when the user takes the prompts to gen on these platforms themselves
 const PLATFORMS: { value: PlatformMode; label: string }[] = [
   { value: "flow", label: "🌊 Flow — 8 วิ (20–25 คำ)" },
   { value: "grok", label: "⚡ Grok — 6 วิ (15–18 คำ)" },
   { value: "supergrok", label: "🚀 Super Grok — 10 วิ (25–30 คำ)" },
+];
+// the engine that actually builds the video
+const ENGINES: { value: Engine; label: string; disabled?: boolean }[] = [
+  { value: "higgsfield", label: "🟢 Higgsfield — สร้างให้อัตโนมัติ" },
+  { value: "flow", label: "🔵 Google Flow — เร็วๆ นี้ (รอ research API)", disabled: true },
 ];
 const TEMPLATES: { value: Template; label: string; hint: string }[] = [
   { value: "avatar", label: "🧑‍💼 Avatar พูด", hint: "คนพูด sync ปาก" },
@@ -33,7 +39,7 @@ const dialoguesToScript = (scenes: Scene[]) =>
   scenes.map((s) => s.dialogue).filter(Boolean).join(" ");
 
 export function StoryboardStep({
-  images, setImages, template, setTemplate, avatarId, setAvatarId, onZoom, onUse, onSkip,
+  images, setImages, template, setTemplate, avatarId, setAvatarId, engine, setEngine, onZoom, onUse, onSkip,
 }: {
   images: File[];
   setImages: (f: File[]) => void;
@@ -41,6 +47,8 @@ export function StoryboardStep({
   setTemplate: (t: Template) => void;
   avatarId: string | null;
   setAvatarId: (id: string) => void;
+  engine: Engine;
+  setEngine: (e: Engine) => void;
   onZoom: (a: Avatar) => void;
   onUse: (script: string, result: StoryboardResult, totalSec: number) => void;
   onSkip: (totalSec: number) => void;
@@ -99,7 +107,7 @@ export function StoryboardStep({
   const toggleStyle = (n: number) =>
     setStyleNums((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]));
 
-  async function generate() {
+  async function generate(styleOverride?: PlatformMode) {
     if (!object.trim()) {
       setObjErr("ใส่หัวข้อ / ชื่อสินค้า ก่อน เช่น “เซรั่มวิตามินซี AURA” หรือ “ผักด่ากัน”");
       goto("what");
@@ -110,7 +118,7 @@ export function StoryboardStep({
     try {
       setResult(await generateStoryboard({
         object: object.trim(), styleNums, moodId, visualStyleId,
-        sceneCount, promptMode: mode, platformMode: platform,
+        sceneCount, promptMode: mode, platformMode: styleOverride ?? platform,
         includeTextOverlay: textOverlay, glassSkin,
         noPerson: template === "no_person",
       }));
@@ -202,11 +210,11 @@ export function StoryboardStep({
               </section>
 
               <section id="step-len" data-step="len" className="sb-sec">
-                <header className="sb-sec-h"><span className="sb-sec-n">3</span><div><b>ความยาว & แพลตฟอร์ม</b><small>กำหนดความยาวคลิปก่อน — บทในสตูดิโอจะยึดเป้านี้</small></div></header>
+                <header className="sb-sec-h"><span className="sb-sec-n">3</span><div><b>ความยาว & Engine</b><small>จำนวนฉาก + จะ build วิดีโอด้วย engine ไหน</small></div></header>
                 <div className="row">
                   <div className="ctl">
-                    <label>Platform</label>
-                    <Dropdown options={PLATFORMS} value={platform} onChange={(v) => setPlatform(v as PlatformMode)} />
+                    <label>Engine <span className="ctl-note">สร้างวิดีโอด้วย</span></label>
+                    <Dropdown options={ENGINES} value={engine} onChange={(v) => setEngine(v as Engine)} />
                   </div>
                   <div className="ctl">
                     <label>จำนวนฉาก</label>
@@ -214,7 +222,8 @@ export function StoryboardStep({
                       onChange={(e) => setSceneCount(Math.max(1, Math.min(40, parseInt(e.target.value, 10) || 1)))} />
                   </div>
                 </div>
-                <div className="sb-len">⏱ ความยาวรวม ≈ <b>{totalSec} วิ</b> <span>({PLATFORM_SEC[platform]} วิ × {sceneCount} ฉาก) — ใช้เป็นเป้าความยาวบทในสตูดิโอ</span></div>
+                <div className="sb-len">⏱ ความยาวรวม ≈ <b>{totalSec} วิ</b> <span>(ประมาณ {PLATFORM_SEC[platform]} วิ × {sceneCount} ฉาก) — ความยาวจริงยึดตามบท</span></div>
+                {engine === "flow" && <div className="hint" style={{ marginTop: 8 }}>🔵 Flow ยังไม่ได้ตั้งค่า API — ตอนนี้ใช้ Higgsfield สร้างจริง · prompt พร้อม export ที่ result</div>}
               </section>
 
               <section id="step-tone" data-step="tone" className="sb-sec">
@@ -263,6 +272,12 @@ export function StoryboardStep({
           {busy && !result && <div className="ph"><div className="spinner" />กำลังให้ AI ร่าง storyboard…</div>}
           {result && (
             <>
+              <div className="sb-style-bar">
+                <div className="ctl">
+                  <label>Style Prompt <span className="ctl-note">สไตล์ prompt — เปลี่ยนแล้วร่างใหม่ (สำหรับเอาไป gen เอง)</span></label>
+                  <Dropdown options={PLATFORMS} value={platform} onChange={(v) => { setPlatform(v as PlatformMode); generate(v as PlatformMode); }} />
+                </div>
+              </div>
               {result.storyboardOverview && <pre className="sb-overview">{result.storyboardOverview}</pre>}
               {promptsEditable && <div className="sb-edit-hint">✎ รูปแบบนี้สร้างภาพ <b>ราย scene</b> — กด ✎ ที่แต่ละ scene เพื่อปรับ image/video prompt เองได้ (นี่คือจุดที่คุมรายละเอียดได้มากกว่า Avatar)</div>}
               {result.scenes.map((s) => (
@@ -305,9 +320,12 @@ export function StoryboardStep({
               ))}
               {result.caption && <div className="sb-meta"><b>Caption</b><p>{result.caption}</p></div>}
               {result.hashtags && <div className="sb-meta"><b>Hashtags</b><p>{result.hashtags}</p></div>}
-              <button className="gen" onClick={() => onUse(dialoguesToScript(result.scenes), result, totalSec)}>
-                ใช้ storyboard นี้ → เข้าสตูดิโอ
-              </button>
+              <div className="sb-result-cta">
+                <button className="sb-skip" onClick={() => setResult(null)}>← กลับไปแก้โจทย์</button>
+                <button className="gen" onClick={() => onUse(dialoguesToScript(result.scenes), result, totalSec)}>
+                  ใช้ storyboard นี้ → เข้าสตูดิโอ
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -321,7 +339,7 @@ export function StoryboardStep({
             <div className="sb-bar-len">⏱ ความยาวรวม <b>{totalSec} วิ</b></div>
             {err && <div className="field-err sb-bar-err" title={err}>{err}</div>}
             <button className="sb-skip" onClick={() => onSkip(totalSec)}>ข้าม — พิมพ์สคริปต์เอง →</button>
-            <button className="gen" disabled={busy} onClick={generate}>💎 สร้าง Storyboard</button>
+            <button className="gen" disabled={busy} onClick={() => generate()}>💎 สร้าง Storyboard</button>
           </div>
         </div>
       )}

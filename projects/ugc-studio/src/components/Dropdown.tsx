@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-export type Option = { value: string; label: string };
+export type Option = { value: string; label: string; disabled?: boolean };
 
 // custom dropdown matching the theme (lime highlight, radius) — replaces native <select>
 export function Dropdown({ options, value, onChange }: {
@@ -32,10 +32,10 @@ export function Dropdown({ options, value, onChange }: {
         {options.map((o) => (
           <div
             key={o.value}
-            className={`dd-opt${o.value === value ? " sel" : ""}`}
-            onClick={() => { onChange(o.value); setOpen(false); }}
+            className={`dd-opt${o.value === value ? " sel" : ""}${o.disabled ? " disabled" : ""}`}
+            onClick={() => { if (o.disabled) return; onChange(o.value); setOpen(false); }}
           >
-            {o.label}{o.value === value && <span>✓</span>}
+            {o.label}{o.value === value && !o.disabled && <span>✓</span>}
           </div>
         ))}
       </div>

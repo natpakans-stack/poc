@@ -10,6 +10,7 @@ export async function fetchAvatars(): Promise<Avatar[]> {
 }
 
 export type Template = "avatar" | "full" | "no_person";
+export type Engine = "higgsfield" | "flow"; // where the video gets built (Higgsfield pipeline vs Google Flow)
 export type Kind = "hf" | "pipeline";
 
 // per-scene prompts from the storyboard — drive the render (Gap 4) instead of being copy-only
