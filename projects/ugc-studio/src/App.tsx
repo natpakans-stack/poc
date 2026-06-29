@@ -21,6 +21,7 @@ export default function App() {
   const [avatarId, setAvatarId] = useState<string | null>(null);
   // script
   const [script, setScript] = useState(DEFAULT_SCRIPT);
+  const [renderedScript, setRenderedScript] = useState(""); // the script snapshot the active/last render used → detect stale edits
   // output settings + template
   const [settings, setSettings] = useState<Settings>({ mode: "product_review", aspect: "9:16", duration: "15", resolution: "720p" });
   const [template, setTemplate] = useState<Template>("avatar");
@@ -36,6 +37,7 @@ export default function App() {
     if (template !== "no_person" && !avatarId) return fail("กรุณาเลือก avatar (พรีเซนเตอร์)"); // avatar + full มีคน → ต้องเลือกพรีเซนเตอร์; no_person สร้างจาก prompt
     if (!script.trim()) return fail("กรุณาใส่สคริปต์");
 
+    setRenderedScript(script.trim()); // snapshot — edits after this point mark the render stale, not auto-queued
     setGen({ phase: "sending", videoUrl: null, statusText: "กำลังอัปโหลดรูปและส่งงานสร้างวิดีโอ…", statusErr: false });
     try {
       const { jobId, refNote, kind } = await startGenerate({ images, refVideo, script: script.trim(), avatarId, template, ...settings, scenes: storyboard?.scenes });
@@ -132,6 +134,7 @@ export default function App() {
             settings={settings} setSettings={setSettings}
             template={template} engine={engine}
             sceneCount={storyboard?.scenes.length}
+            scriptStale={(gen.phase === "sending" || gen.phase === "processing" || gen.phase === "done") && script.trim() !== renderedScript}
             gen={gen} onGenerate={onGenerate} onEdit={onEdit}
             onBack={() => setStage("storyboard")}
           />

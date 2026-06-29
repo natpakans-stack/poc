@@ -48,12 +48,13 @@ function Stage({ gen }: { gen: GenState }) {
   return <div className="ph">กรอกข้อมูล แล้วกด “สร้างวิดีโอ”<br />วิดีโอจะแสดงที่นี่</div>;
 }
 
-export function OutputColumn({ settings, template, engine, setSettings, sceneCount, gen, onGenerate, onEdit, onBack }: {
+export function OutputColumn({ settings, template, engine, setSettings, sceneCount, scriptStale, gen, onGenerate, onEdit, onBack }: {
   settings: Settings;
   setSettings: (s: Settings) => void;
   template: Template;
   engine: Engine;
   sceneCount?: number; // from the kept storyboard result — proof it's not discarded
+  scriptStale?: boolean; // script edited after this render started → result is for the OLD script
   gen: GenState;
   onGenerate: () => void;
   onEdit: () => void;
@@ -82,7 +83,12 @@ export function OutputColumn({ settings, template, engine, setSettings, sceneCou
         <Dropdown options={RESOLUTIONS} value={settings.resolution} onChange={(v) => set({ resolution: v })} />
       </div>
 
-      <button className="gen" disabled={busy} onClick={onGenerate}>สร้างวิดีโอ</button>
+      {scriptStale && (
+        <div className="stale-warn">⚠️ บทถูกแก้หลังเริ่มสร้าง — วิดีโอ{busy ? "ที่กำลังสร้างนี้" : "นี้"}ยังเป็นบทเดิม{busy ? " (กดสร้างใหม่ได้เมื่อเสร็จ)" : ""}</div>
+      )}
+      <button className={`gen${scriptStale && !busy ? " regen" : ""}`} disabled={busy} onClick={onGenerate}>
+        {busy ? "กำลังสร้าง…" : scriptStale ? "🔄 สร้างใหม่ (บทเปลี่ยน)" : "สร้างวิดีโอ"}
+      </button>
 
       <div className="stage"><Stage gen={gen} /></div>
       <div className={`status${gen.statusErr ? " err" : ""}`}>{gen.statusText}</div>
