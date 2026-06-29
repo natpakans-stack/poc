@@ -239,7 +239,7 @@ async function genAngleImage(imageId: string, type: string, i: number, aspect: s
 // gen คลิปจากรูปมุม (seedance i2v) → download เป็น clip{i}.mp4 คืนชื่อไฟล์
 async function genShotClip(startImageRef: string, type: string, i: number, aspect: string, resolution: string, override?: string): Promise<string> {
   const prompt = (override && override.trim()) || MOTION_PROMPT[type] || MOTION_PROMPT.product_closeup;
-  const r = await withRetry(`seedance#${i}`, () => $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio ${aspect} --duration 4 --resolution ${resolution} --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet());
+  const r = await withRetry(`seedance#${i}`, () => $`${HF} generate create seedance1_5 --prompt ${prompt} --image ${startImageRef} --aspect_ratio ${aspect} --duration 8 --resolution ${resolution} --generate_audio false --wait --wait-timeout 8m --wait-interval 5s --json`.quiet());
   const url = findMediaUrl(JSON.parse(r.stdout.toString()), /\.mp4/);
   if (!url) throw new Error(`seedance ไม่คืน mp4 สำหรับช็อต ${i} (${type})`);
   const name = `clip${i}.mp4`;
@@ -248,7 +248,7 @@ async function genShotClip(startImageRef: string, type: string, i: number, aspec
 }
 
 // ── 5. Render via Remotion ───────────────────────────────────────────────────
-export type Clip = { src: string; startMs: number; endMs: number; startFromMs?: number; transition?: boolean };
+export type Clip = { src: string; startMs: number; endMs: number; startFromMs?: number; playbackRate?: number; transition?: boolean };
 export type RenderProps = {
   clips: Clip[]; // visual timeline
   captions: Caption[]; // keyword overlay (audio-synced)
@@ -331,14 +331,14 @@ export async function runFromPlan(
   const durationMs = Math.max(cap.durationMs, audioMs) + TAIL_MS;
   if (captions.length) captions[captions.length - 1].endMs = durationMs; // keyword ท้ายค้างจนจบเสียง
 
-  // v1: clips 1:1 กับ caption (seedance ต่อช็อต) — transition แบบประหยัดเฉพาะคู่
-  // TODO: presenter-spine arrangement (demo.mp4 แบบ marketing_studio_video เป็นแกน + b-roll สลับ)
-  const timeline: Clip[] = captions.map((c, i) => ({
-    src: clipFiles[i],
-    startMs: c.startMs,
-    endMs: i + 1 < captions.length ? captions[i + 1].startMs : durationMs,
-    transition: i > 0 && i % 2 === 0,
-  }));
+  // clips 1:1 กับ caption (seedance 8 วิ/ช็อต). ถ้า window เสียงยาวกว่าคลิป → slow คลิปให้เติมเต็ม (กันค้างเฟรม = วิดีโอต่อเนื่อง)
+  const CLIP_S = 8;
+  const timeline: Clip[] = captions.map((c, i) => {
+    const endMs = i + 1 < captions.length ? captions[i + 1].startMs : durationMs;
+    const windowS = (endMs - c.startMs) / 1000;
+    const playbackRate = windowS > CLIP_S ? Math.max(0.4, CLIP_S / windowS) : 1; // <1 = slow-fill เมื่อเสียงยาวกว่าคลิป
+    return { src: clipFiles[i], startMs: c.startMs, endMs, playbackRate, transition: i > 0 && i % 2 === 0 };
+  });
 
   const out = await renderVideo(
     { clips: timeline, captions, audioSrc: "voice.mp3", hook: plan.hook, durationInSeconds: durationMs / 1000, sfx: true, width: canvas.width, height: canvas.height },
