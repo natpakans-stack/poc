@@ -4,6 +4,7 @@
 
 const $ = (id) => document.getElementById(id);
 let selectedImages = []; // รูปที่ user ติ๊กเลือก (คงอยู่ข้ามแท็บ สำหรับยัดเข้า Flow)
+let lastProduct = null;  // ผล scrape ล่าสุด (ใช้สร้าง prompt)
 
 $("go").addEventListener("click", async () => {
   const btn = $("go");
@@ -48,6 +49,7 @@ function render(r) {
   }
 
   setStatus(`<span class="badge ok">สำเร็จ</span> via <b>${r.method}</b>`);
+  lastProduct = r;
   $("card").style.display = "block";
   $("nm").textContent = r.name || "(ไม่พบชื่อ)";
   $("pr").textContent = r.price != null ? `฿${r.price}` : "";
@@ -123,6 +125,25 @@ async function injectActive(func, args = []) {
 }
 function setF(html) { $("fstatus").innerHTML = html; }
 
+// ── Prompt config: สร้าง prompt จากสินค้า + มุมที่เลือก ──────────────
+function buildPrompt() {
+  const name = (lastProduct?.name || "the product").replace(/\s+/g, " ").slice(0, 90);
+  const desc = (lastProduct?.desc || "").replace(/\s+/g, " ").slice(0, 160);
+  const skel = {
+    review: `Cinematic vertical 9:16 UGC product review. A Thai creator holds and reviews ${name} to camera with warm, authentic enthusiasm. Key points: ${desc}. Natural indoor lighting, shallow depth of field.`,
+    story: `Cinematic vertical 9:16 brand story featuring ${name}. Emotional, relatable Thai lifestyle scene. ${desc}. Warm cinematic color grade.`,
+    unbox: `Vertical 9:16 unboxing of ${name}. Close-up hands opening the package, satisfying reveal, crisp macro product shots. ${desc}.`,
+    demo: `Vertical 9:16 how-to demo of ${name}. A Thai creator demonstrates using the product step by step, clear close-ups. ${desc}.`,
+  };
+  let out = skel[$("ptemplate").value] || skel.review;
+  out += $("plang").value === "th" ? " Thai voice-over narration." : " English voice-over narration.";
+  return out;
+}
+$("pbuild").addEventListener("click", () => {
+  if (!lastProduct) { $("prompt").placeholder = "ยังไม่มีสินค้า — กด 'ดึงข้อมูลจากหน้านี้' ก่อน"; return; }
+  $("prompt").value = buildPrompt();
+});
+
 $("probe").addEventListener("click", async () => {
   setF("⏳ กำลังตรวจ DOM...");
   try {
@@ -146,7 +167,8 @@ $("probe").addEventListener("click", async () => {
 });
 
 $("fill").addEventListener("click", async () => {
-  const sample = "A cinematic 9:16 product review by a Thai female creator holding a Bluetooth mini keyboard, warm UGC tone, vertical video";
+  const sample = $("prompt").value.trim() ||
+    (lastProduct ? buildPrompt() : "A cinematic vertical 9:16 UGC product review by a Thai creator, warm authentic tone");
   setF("⏳ พิมพ์แบบ keystroke จริง (CDP)... จะมีแถบ debugging โผล่ ปกติ");
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -199,9 +221,9 @@ $("injimg").addEventListener("click", async () => {
   } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
 });
 
-// กด Create (generate จริง) — user กดเองเท่านั้น = การยืนยัน, ยิงเฉพาะปุ่มที่ enabled
+// กด Create (generate จริง) — ยิงเฉพาะปุ่ม arrow_forward ที่ enabled (ไม่แตะปุ่ม +)
 $("gen").addEventListener("click", async () => {
-  setF("⏳ กด Create...");
+  setF("⏳ กด Generate...");
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!/labs\.google|google\.com/.test(tab?.url || "")) {

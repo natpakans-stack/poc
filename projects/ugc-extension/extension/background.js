@@ -95,15 +95,19 @@ async function clickGenerate(tabId) {
   }
 }
 
-// center ของปุ่ม generate ที่ "เปิดอยู่" (ถ้าปิด = คืน null → ไม่ยิง)
+// center ของปุ่ม Generate จริง (arrow_forward) ที่ "เปิดอยู่"
+// ⚠️ ต้องตัดปุ่ม "+" (add_2 = add source/reference) ทิ้ง — มันมีคำว่า Create เหมือนกัน
+// ถ้าปุ่ม generate ปิด/ไม่เจอ = คืน null (ไม่ fallback ปุ่มอื่น กันกดผิดไปโดนปุ่ม +)
 function getGenerateCenter() {
   const vis = (el) => { const r = el.getBoundingClientRect();
     return (el.offsetParent !== null || getComputedStyle(el).position === "fixed") && r.width > 4 && r.height > 4; };
-  const reGen = /\b(create|generate|render|animate)\b|สร้าง|เริ่ม/i;
-  const gens = [...document.querySelectorAll('button,[role="button"]')].filter(vis)
-    .filter((b) => { const t = (b.innerText || "").trim();
-      return t.length < 40 && reGen.test(t) && !(b.disabled || b.getAttribute("aria-disabled") === "true"); });
-  const g = gens.find((b) => /arrow_forward/i.test(b.innerText)) || gens[0];
+  const txt = (b) => (b.innerText || b.textContent || "").trim();
+  const isAdd = (b) => /add_|(^|\s)add(\s|$)|^\+$/i.test(txt(b)); // ปุ่ม + / add source — ห้ามแตะ
+  const enabled = (b) => !(b.disabled || b.getAttribute("aria-disabled") === "true");
+  const reGen = /\b(generate|render|animate|create)\b|สร้าง|เริ่ม/i;
+  const cands = [...document.querySelectorAll('button,[role="button"]')].filter(vis)
+    .filter((b) => txt(b).length < 40 && !isAdd(b) && enabled(b) && reGen.test(txt(b)));
+  const g = cands.find((b) => /arrow_forward/i.test(txt(b))) || cands[0];
   if (!g) return null;
   const r = g.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
