@@ -150,10 +150,24 @@ $("pbuild").addEventListener("click", () => {
   $("prompt").value = buildPrompt();
 });
 
-// OpenAI key (เก็บใน chrome.storage.local)
-chrome.storage.local.get("openai_key").then(({ openai_key }) => { if (openai_key) $("apikey").value = openai_key; });
+// LLM key/provider/model (เก็บใน chrome.storage.local) — รองรับ OpenAI + DeepSeek
+const KEY_FIELD = { openai: "openai_key", deepseek: "deepseek_key" };
+chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_model"]).then((s) => {
+  const p = s.llm_provider || "openai";
+  $("provider").value = p;
+  $("apikey").value = s[KEY_FIELD[p]] || "";
+  $("model").value = s.llm_model || "";
+});
+$("provider").addEventListener("change", async () => {
+  const s = await chrome.storage.local.get(["openai_key", "deepseek_key"]);
+  $("apikey").value = s[KEY_FIELD[$("provider").value]] || "";
+});
 $("keysave").addEventListener("click", () => {
-  chrome.storage.local.set({ openai_key: $("apikey").value.trim() });
+  chrome.storage.local.set({
+    llm_provider: $("provider").value,
+    [KEY_FIELD[$("provider").value]]: $("apikey").value.trim(),
+    llm_model: $("model").value.trim(),
+  });
   $("keysave").textContent = "บันทึกแล้ว ✓";
   setTimeout(() => { $("keysave").textContent = "บันทึก"; }, 1500);
 });
@@ -176,14 +190,62 @@ $("psb").addEventListener("click", async () => {
   try {
     const resp = await chrome.runtime.sendMessage({
       type: "genStoryboard", apiKey: key,
+      provider: $("provider").value, model: $("model").value.trim(),
       product: { name: lastProduct.name, desc: lastProduct.desc, reviews: lastProduct.reviews },
       angle: ANGLE_LABEL[$("ptemplate").value] || "UGC review",
       lang: $("plang").value, scenes: +$("pscenes").value,
     });
     if (!resp?.ok) { setF(`<span class="badge bad">สร้างไม่ได้</span> ${resp?.error || "?"}`); return; }
     renderScenes(resp.scenes);
-    setF(`<span class="badge ok">ได้ ${resp.scenes.length} ซีน ✅</span> พิมพ์ทีละซีน → Generate → กด + เพิ่มซีนใน Flow`);
+    $("autoqueue").style.display = "block";
+    setF(`<span class="badge ok">ได้ ${resp.scenes.length} ซีน ✅</span> พิมพ์ทีละซีน หรือกด ▶️ Auto ยิงครบเอง`);
   } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
+});
+
+// ▶️ Auto scene-queue: วน type → generate → รอเสร็จ → กด + → ซีนถัดไป (เปลืองเครดิตหลายเครดิต!)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function waitGenerateDone(tabId, baselineVideos, timeoutMs) {
+  const start = Date.now(); let wasBusy = false;
+  while (Date.now() - start < timeoutMs) {
+    await sleep(4000);
+    const s = await chrome.runtime.sendMessage({ type: "flowState", tabId });
+    if (!s) continue;
+    if (s.busy > 0) wasBusy = true;
+    if (s.videos > baselineVideos) return true;                          // มี clip ใหม่ = เสร็จ
+    if (wasBusy && s.busy === 0 && Date.now() - start > 10000) return true; // เคยประมวลผลแล้วหยุด
+  }
+  return false;
+}
+$("autoqueue").addEventListener("click", async () => {
+  const tas = [...$("scenes").querySelectorAll("textarea[data-i]")].filter((t) => t.value.trim());
+  if (!tas.length) return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!/labs\.google|google\.com/.test(tab?.url || "")) {
+    setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อน`); return;
+  }
+  $("autoqueue").disabled = true;
+  try {
+    for (let i = 0; i < tas.length; i++) {
+      const text = tas[i].value.trim();
+      setF(`⏳ ซีน ${i + 1}/${tas.length}: พิมพ์ prompt...`);
+      const t = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text });
+      if (!t?.ok) { setF(`<span class="badge bad">ซีน ${i + 1}: พิมพ์ไม่ได้</span> ${t?.error}`); return; }
+      await sleep(600);
+      const base = (await chrome.runtime.sendMessage({ type: "flowState", tabId: tab.id }))?.videos ?? 0;
+      setF(`⏳ ซีน ${i + 1}/${tas.length}: กด Generate...`);
+      const g = await chrome.runtime.sendMessage({ type: "clickGenerate", tabId: tab.id });
+      if (!g?.ok) { setF(`<span class="badge bad">ซีน ${i + 1}: generate ไม่ได้</span> ${g?.error}`); return; }
+      setF(`⏳ ซีน ${i + 1}/${tas.length}: รอ generate เสร็จ... (สูงสุด 4 นาที)`);
+      const done = await waitGenerateDone(tab.id, base, 240000);
+      if (!done) { setF(`<span class="badge bad">ซีน ${i + 1}: รอเกินเวลา</span> เช็คหน้า Flow แล้วทำต่อเอง`); return; }
+      if (i < tas.length - 1) {
+        setF(`⏳ เพิ่มซีน ${i + 2}...`);
+        await chrome.runtime.sendMessage({ type: "clickAdd", tabId: tab.id });
+        await sleep(1500);
+      }
+    }
+    setF(`<span class="badge ok">ยิงครบ ${tas.length} ซีน ✅</span> ดูผลในหน้า Flow แล้วโหลดเอง`);
+  } finally { $("autoqueue").disabled = false; }
 });
 
 function renderScenes(scenes) {
@@ -450,6 +512,42 @@ async function scrapeProduct() {
       out.desc = out.desc || (prod.description || "").slice(0, 300);
     }
   } catch (e) { out.debug.jsonld = "throw:" + e.message; }
+
+  // strategy C2: __NEXT_DATA__ / __NUXT__ — Next.js/Nuxt ฝัง product ใน JSON (Lotus's/BigC ฯลฯ)
+  if (out.price == null || !out._ld) {
+    try {
+      const el = document.getElementById("__NEXT_DATA__");
+      let root = null;
+      if (el) { try { root = JSON.parse(el.textContent); } catch {} }
+      if (!root && window.__NUXT__) root = window.__NUXT__;
+      if (root) {
+        const PRICE = /^(price|sellprice|saleprice|finalprice|priceincvat|unitprice|special_?price|min_?price|current_?price)$/i;
+        const NAME = /^(name|title|productname|product_name|displayname)$/i;
+        const seen = new Set();
+        let found = null;
+        const walk = (o, d) => {
+          if (found || !o || typeof o !== "object" || d > 8 || seen.has(o)) return;
+          seen.add(o);
+          let nm = null, pr = null, img = null;
+          for (const k in o) {
+            const v = o[k];
+            if (!nm && typeof v === "string" && NAME.test(k) && v.length >= 5 && v.length <= 150) nm = v;
+            if (pr == null && PRICE.test(k) && (typeof v === "number" || (typeof v === "string" && /^[0-9.]+$/.test(v)))) { const n = +v; if (n > 0) pr = n; }
+            if (!img && typeof v === "string" && /image|thumb|cover|photo/i.test(k) && /^https?:/.test(v)) img = v;
+          }
+          if (nm && pr != null) { found = { name: nm, price: pr, image: img }; return; }
+          for (const k in o) if (o[k] && typeof o[k] === "object") { walk(o[k], d + 1); if (found) return; }
+        };
+        walk(root, 0);
+        if (found) {
+          out.method = out.method ? out.method + "+nextdata" : "nextdata";
+          if (!out._ld && found.name) out._ld = found.name;
+          if (out.price == null) out.price = found.price;
+          if (found.image) out.images = [...out.images, found.image];
+        }
+      }
+    } catch (e) { out.debug.nextdata = "throw:" + e.message; }
+  }
 
   // strategy D: ราคาจาก DOM (fallback หยาบ) — หาเลขที่มี ฿/บาท
   if (out.price == null) {

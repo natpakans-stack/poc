@@ -132,14 +132,22 @@
     <button class="go alt" id="psb" style="flex:1">🎬 storyboard (LLM)</button>
   </div>
   <details id="keywrap">
-    <summary style="font-size:11px;color:var(--muted);cursor:pointer">⚙️ OpenAI API key (เก็บในเครื่อง)</summary>
+    <summary style="font-size:11px;color:var(--muted);cursor:pointer">⚙️ LLM API key (เก็บในเครื่อง)</summary>
     <div class="prow" style="margin-top:6px">
-      <input class="psel" id="apikey" type="password" placeholder="sk-..." style="flex:1" autocomplete="off">
+      <select class="psel" id="provider" style="max-width:110px">
+        <option value="openai">OpenAI</option>
+        <option value="deepseek">DeepSeek</option>
+      </select>
+      <input class="psel" id="apikey" type="password" placeholder="API key" style="flex:1" autocomplete="off">
+    </div>
+    <div class="prow" style="margin-top:0">
+      <input class="psel" id="model" placeholder="model (เว้น = ค่าเริ่มต้น)" style="flex:1">
       <button class="go alt" id="keysave" style="width:auto;padding:8px 12px">บันทึก</button>
     </div>
   </details>
   <textarea class="pin" id="prompt" rows="4" placeholder="prompt เดี่ยว — กด ✨ ให้สร้าง หรือพิมพ์เอง"></textarea>
   <div id="scenes"></div>
+  <button class="go" id="autoqueue" style="width:100%;margin-top:8px;display:none">▶️ Auto: ยิงทุกซีนเข้า Flow (เปลืองเครดิต)</button>
 
   <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 0">
 

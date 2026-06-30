@@ -16,6 +16,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     genStoryboard(msg).then(sendResponse).catch((e) => sendResponse({ ok: false, error: e.message }));
     return true;
   }
+  if (msg?.type === "flowState") {
+    chrome.scripting.executeScript({ target: { tabId: msg.tabId }, world: "MAIN", func: flowState })
+      .then(([r]) => sendResponse(r?.result || null)).catch(() => sendResponse(null));
+    return true;
+  }
+  if (msg?.type === "clickAdd") {
+    clickAdd(msg.tabId).then(sendResponse).catch((e) => sendResponse({ ok: false, error: e.message }));
+    return true;
+  }
   if (msg?.type !== "fetchImage") return;
   fetch(msg.url)
     .then((r) => r.ok ? r.blob() : Promise.reject(new Error("HTTP " + r.status)))
@@ -118,8 +127,10 @@ function getGenerateCenter() {
 }
 
 // ── LLM storyboard: แตกสินค้า → N ซีน (video-prompt อังกฤษ + บทไทย) ผ่าน OpenAI ──
-async function genStoryboard({ apiKey, product, angle, lang, scenes }) {
-  if (!apiKey) return { ok: false, error: "ยังไม่ได้ใส่ OpenAI API key (ช่อง ⚙️)" };
+async function genStoryboard({ apiKey, product, angle, lang, scenes, provider, model }) {
+  if (!apiKey) return { ok: false, error: "ยังไม่ได้ใส่ LLM API key (ช่อง ⚙️)" };
+  const ENDPOINT = provider === "deepseek" ? "https://api.deepseek.com/chat/completions" : "https://api.openai.com/v1/chat/completions";
+  const MODEL = model?.trim() || (provider === "deepseek" ? "deepseek-chat" : "gpt-4o");
   const n = Math.max(1, Math.min(8, +scenes || 3));
   const sys = `You are a UGC short-video storyboard director for Google Flow (Veo), making vertical 9:16 product videos for the Thai market.
 Output a storyboard of EXACTLY ${n} distinct scenes (~8s each) forming one cohesive, scroll-stopping UGC review.
@@ -136,15 +147,15 @@ Top reviews: ${(product.reviews || []).slice(0, 3).map((r) => `"${r.comment}"`).
 Angle: ${angle}
 Number of scenes: ${n}`;
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-4o", response_format: { type: "json_object" },
+      model: MODEL, response_format: { type: "json_object" },
       messages: [{ role: "system", content: sys }, { role: "user", content: user }],
     }),
   });
-  if (!res.ok) return { ok: false, error: `OpenAI ${res.status}: ${(await res.text()).slice(0, 180)}` };
+  if (!res.ok) return { ok: false, error: `${provider || "openai"} ${res.status}: ${(await res.text()).slice(0, 180)}` };
   const data = await res.json();
   let parsed;
   try { parsed = JSON.parse(data.choices[0].message.content); }
@@ -152,4 +163,44 @@ Number of scenes: ${n}`;
   const out = Array.isArray(parsed.scenes) ? parsed.scenes : [];
   if (!out.length) return { ok: false, error: "ไม่ได้ซีนกลับมา" };
   return { ok: true, scenes: out };
+}
+
+// ── done-detection: สถานะ Flow (จำนวน video + กำลังประมวลผลไหม) ──
+function flowState() {
+  const videos = document.querySelectorAll("video").length;
+  const busy = document.querySelectorAll('[aria-busy="true"],[role="progressbar"]').length +
+    [...document.querySelectorAll("button,span,div")].filter((e) =>
+      /generating|loading|processing|rendering|กำลังสร้าง|กำลังประมวล/i.test((e.innerText || "").slice(0, 40))).length;
+  return { videos, busy };
+}
+
+// ── กดปุ่ม "+" (add_2 = add scene/source) ผ่าน CDP — สำหรับเพิ่มซีนถัดไป ──
+async function clickAdd(tabId) {
+  const [{ result: pos } = {}] = await chrome.scripting.executeScript({
+    target: { tabId }, world: "MAIN", func: getAddCenter,
+  });
+  if (!pos) return { ok: false, error: "ไม่เจอปุ่ม + (add)" };
+  const target = { tabId };
+  await chrome.debugger.attach(target, "1.3");
+  const cmd = (m, p) => chrome.debugger.sendCommand(target, m, p);
+  try {
+    await cmd("Input.dispatchMouseEvent", { type: "mousePressed", x: pos.x, y: pos.y, button: "left", clickCount: 1 });
+    await cmd("Input.dispatchMouseEvent", { type: "mouseReleased", x: pos.x, y: pos.y, button: "left", clickCount: 1 });
+    return { ok: true };
+  } finally {
+    await chrome.debugger.detach(target).catch(() => {});
+  }
+}
+
+function getAddCenter() {
+  const vis = (el) => { const r = el.getBoundingClientRect();
+    return (el.offsetParent !== null || getComputedStyle(el).position === "fixed") && r.width > 4 && r.height > 4; };
+  const txt = (b) => (b.innerText || b.textContent || "").trim();
+  const enabled = (b) => !(b.disabled || b.getAttribute("aria-disabled") === "true");
+  const adds = [...document.querySelectorAll('button,[role="button"]')].filter(vis)
+    .filter((b) => /add_|(^|\s)add(\s|$)|^\+$/i.test(txt(b)) && enabled(b));
+  const g = adds.find((b) => /add_2/i.test(txt(b))) || adds[0];
+  if (!g) return null;
+  const r = g.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
