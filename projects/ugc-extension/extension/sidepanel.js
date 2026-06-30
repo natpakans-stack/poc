@@ -12,7 +12,7 @@ const ICONS = {
   thumb: '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
 };
 const ic = (n) => `<svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ""}</svg>`;
-let selectedImages = []; // รูปที่ user ติ๊กเลือก (คงอยู่ข้ามแท็บ สำหรับยัดเข้า Flow)
+let selectedImages = []; // รูปที่ user ติ๊กเลือก (คงอยู่ข้ามแท็บ สำหรับส่งเข้า Flow)
 let lastProduct = null;  // ผล scrape ล่าสุด (ใช้สร้าง prompt)
 
 $("go").addEventListener("click", async () => {
@@ -55,7 +55,7 @@ function render(r) {
 
   if (!r) { setStatus(`<span class="badge bad">ไม่มีข้อมูลกลับมา</span>`); return; }
   if (r.blocked) {
-    setStatus(`<span class="badge bad">โดน anti-bot</span> หน้านี้เป็นหน้า verify ของ Shopee — ลองรีเฟรช/เลื่อนดูสินค้าเองก่อนแล้วกดใหม่`);
+    setStatus(`<span class="badge bad">หน้านี้กำลังให้ยืนยันตัวตน</span> เลื่อนดูสินค้าในหน้าเองสักครู่ แล้วกดดึงใหม่`);
     $("card").style.display = "none";
     return;
   }
@@ -67,8 +67,8 @@ function render(r) {
   $("desc").value = r.desc || "";
   const got = r.name || r.price || (r.images && r.images.length);
   setStatus(got
-    ? `<span class="badge ok">สำเร็จ</span> via <b>${r.method}</b> — แก้ไขช่องได้`
-    : `<span class="badge bad">scrape ไม่เจอ</span> กรอกชื่อ/ราคา/รูปเองได้เลย (storyboard ใช้ค่าที่กรอก)`);
+    ? `<span class="badge ok">ดึงข้อมูลสำเร็จ</span> แก้ไขช่องด้านล่างได้`
+    : `<span class="badge bad">ดึงอัตโนมัติไม่ได้</span> กรอกชื่อ/ราคา/รูปเองได้เลย`);
 
   const imgs = r.images || [];
   renderImagePicker(imgs);
@@ -156,8 +156,8 @@ const schema = (lang, dlgMax) => `Return STRICT JSON {"items":[{"label":"2-4 wor
 - dialogue: spoken line in ${lang === "en" ? "English" : "Thai"}, conversational, <= ${dlgMax} words.`;
 async function callGen(system, user) {
   const key = $("apikey").value.trim();
-  if (!key) { switchTab("settings"); setG(`<span class="badge bad">ใส่ LLM API key ก่อน</span> (แท็บ ตั้งค่า)`); return null; }
-  setG("LLM กำลังสร้าง...");
+  if (!key) { switchTab("settings"); setG(`<span class="badge bad">ใส่คีย์ AI ก่อน</span> ไปที่แท็บ ตั้งค่า`); return null; }
+  setG("กำลังสร้างฉาก...");
   const resp = await chrome.runtime.sendMessage({
     type: "genLLM", apiKey: key, provider: $("provider").value, model: $("model").value.trim(), system, user,
   });
@@ -170,7 +170,7 @@ async function callGen(system, user) {
 function showCards(items, label) {
   renderCards(items);
   $("autoqueue").style.display = "block";
-  setG(`<span class="badge ok">${label} </span> พิมพ์ทีละ card หรือกด  Auto (ด้านล่าง) — เปิดแท็บ Flow ก่อน`);
+  setG(`<span class="badge ok">${label}</span> ส่งทีละฉาก หรือกดสร้างทั้งหมด (ด้านล่าง) — เปิดแท็บ Flow ก่อน`);
 }
 
 $("genIdentity").addEventListener("click", async () => {
@@ -273,24 +273,24 @@ $("autoqueue").addEventListener("click", async () => {
   try {
     for (let i = 0; i < tas.length; i++) {
       const text = tas[i].value.trim();
-      setF(`ซีน ${i + 1}/${tas.length}: พิมพ์ prompt...`);
+      setF(`ฉาก ${i + 1}/${tas.length}: กำลังส่ง...`);
       const t = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text });
-      if (!t?.ok) { setF(`<span class="badge bad">ซีน ${i + 1}: พิมพ์ไม่ได้</span> ${t?.error}`); return; }
+      if (!t?.ok) { setF(`<span class="badge bad">ฉาก ${i + 1}: ส่งไม่ได้</span> ${t?.error}`); return; }
       await sleep(600);
       const base = (await chrome.runtime.sendMessage({ type: "flowState", tabId: tab.id }))?.videos ?? 0;
-      setF(`ซีน ${i + 1}/${tas.length}: กด Generate...`);
+      setF(`ฉาก ${i + 1}/${tas.length}: กำลังสั่งสร้าง...`);
       const g = await chrome.runtime.sendMessage({ type: "clickGenerate", tabId: tab.id });
-      if (!g?.ok) { setF(`<span class="badge bad">ซีน ${i + 1}: generate ไม่ได้</span> ${g?.error}`); return; }
-      setF(`ซีน ${i + 1}/${tas.length}: รอ generate เสร็จ... (สูงสุด 4 นาที)`);
+      if (!g?.ok) { setF(`<span class="badge bad">ฉาก ${i + 1}: สั่งสร้างไม่ได้</span> ${g?.error}`); return; }
+      setF(`ฉาก ${i + 1}/${tas.length}: กำลังสร้างวิดีโอ... (สูงสุด 4 นาที)`);
       const done = await waitGenerateDone(tab.id, base, 240000);
-      if (!done) { setF(`<span class="badge bad">ซีน ${i + 1}: รอเกินเวลา</span> เช็คหน้า Flow แล้วทำต่อเอง`); return; }
+      if (!done) { setF(`<span class="badge bad">ฉาก ${i + 1}: รอเกินเวลา</span> เช็คหน้า Flow แล้วทำต่อเอง`); return; }
       if (i < tas.length - 1) {
-        setF(`เพิ่มซีน ${i + 2}...`);
+        setF(`เพิ่มฉาก ${i + 2}...`);
         await chrome.runtime.sendMessage({ type: "clickAdd", tabId: tab.id });
         await sleep(1500);
       }
     }
-    setF(`<span class="badge ok">ยิงครบ ${tas.length} ซีน </span> ดูผลในหน้า Flow แล้วโหลดเอง`);
+    setF(`<span class="badge ok">สร้างครบ ${tas.length} ฉาก</span> ดูผลในหน้า Flow แล้วโหลดเอง`);
   } finally { $("autoqueue").disabled = false; }
 });
 
@@ -298,7 +298,7 @@ function renderCards(items) {
   const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   $("cards").innerHTML = items.map((s, i) => `
     <div class="scene">
-      <div class="scene-h"><b>${i + 1} · ${esc(s.label || s.shot || "")}</b><button data-i="${i}">${ic("keyboard")}พิมพ์ → Flow</button></div>
+      <div class="scene-h"><b>${i + 1} · ${esc(s.label || s.shot || "")}</b><button data-i="${i}">${ic("keyboard")}ส่งฉากนี้</button></div>
       <textarea data-i="${i}" rows="3">${esc(s.video_prompt || s.prompt || "")}</textarea>
       ${s.dialogue ? `<div class="dlg">${ic("mic")}${esc(s.dialogue)}</div>` : ""}
     </div>`).join("");
@@ -306,55 +306,51 @@ function renderCards(items) {
     btn.addEventListener("click", async () => {
       const i = btn.dataset.i;
       const ta = $("cards").querySelector(`textarea[data-i="${i}"]`);
-      setF(`พิมพ์ card ${+i + 1} เข้า Flow...`);
+      setF(`กำลังส่งฉาก ${+i + 1}...`);
       const r = await typeToFlow(ta.value.trim());
       setF(r.ok
-        ? `<span class="badge ok">พิมพ์ card ${+i + 1} แล้ว </span> กด  Generate → รอเสร็จ → กด + ใน Flow → พิมพ์ card ถัดไป`
-        : `<span class="badge bad">พิมพ์ไม่ได้</span> ${r.error}`);
+        ? `<span class="badge ok">ส่งฉาก ${+i + 1} แล้ว</span> กดสร้างวิดีโอ → รอเสร็จ → เพิ่มฉากใน Flow → ส่งฉากถัดไป`
+        : `<span class="badge bad">ส่งไม่ได้</span> ${r.error}`);
     });
   });
 }
 
 $("probe").addEventListener("click", async () => {
-  setF("กำลังตรวจ DOM...");
+  setF("กำลังเช็คการเชื่อมต่อ...");
   try {
     const { result: r, tab } = await injectActive(probeFlow);
     $("fraw").textContent = JSON.stringify(r, null, 2);
     $("frawWrap").style.display = "block";
     if (!/labs\.google|google\.com/.test(tab.url)) {
-      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> เปิด labs.google/fx/tools/flow ก่อน (host ปัจจุบัน: ${new URL(tab.url).host})`);
+      setF(`<span class="badge bad">ยังไม่ได้เปิดหน้า Flow</span> เปิด Google Flow ในอีกแท็บก่อน แล้วกดใหม่`);
       return;
     }
-    const okIn = r.bestPrompt ? "" : "";
-    const okBtn = r.bestGenerate ? "" : "";
-    const gtext = (r.bestGenerate?.text || "ไม่เจอ").replace(/\n/g, " ");
-    setF(`<span class="badge ${r.bestPrompt && r.bestGenerate ? "ok" : "bad"}">ผลตรวจ</span>
-      ${okIn} prompt: <b>${r.bestPrompt?.sel || "ไม่เจอ"}</b> ${r.bestPrompt?.editable ? "(editable✓)" : ""}<br>
-      ${okBtn} generate: <b>${gtext}</b> ${r.bestGenerate?.disabled ? "(ปิดอยู่—รอพิมพ์)" : "(พร้อม)"}<br>
-      <span style="color:var(--muted)">fields ${r.fields?.length ?? 0} · buttons ${r.buttons?.length ?? 0} · video ${r.media?.videos ?? 0} · loading ${r.media?.loading ?? 0}</span>`);
+    const ok = r.bestPrompt && r.bestGenerate;
+    setF(`<span class="badge ${ok ? "ok" : "bad"}">${ok ? "เชื่อมต่อ Flow ได้" : "ยังเชื่อมไม่ได้"}</span>
+      ${r.bestPrompt ? "พบช่องพิมพ์ ✓" : "ไม่พบช่องพิมพ์ ✗"} · ${r.bestGenerate ? "พบปุ่มสร้าง ✓" : "ไม่พบปุ่มสร้าง ✗"}`);
   } catch (e) {
-    setF(`<span class="badge bad">ตรวจไม่ได้</span> ${e.message}`);
+    setF(`<span class="badge bad">เช็คไม่ได้</span> ${e.message}`);
   }
 });
 
-// ── Flow: ยัดรูปที่เลือก เข้า Flow เป็น reference ──────────
-// background fetch bytes (เลี่ยง CORS) → ส่ง data URL → ประกอบ File ในหน้า Flow → ยัด file input
+// ── Flow: ส่งรูปที่เลือก เข้า Flow เป็น reference ──────────
+// background fetch bytes (เลี่ยง CORS) → ส่ง data URL → ประกอบ File ในหน้า Flow → ส่ง file input
 $("injimg").addEventListener("click", async () => {
   try {
     if (!selectedImages.length) {
-      setF(`<span class="badge bad">ยังไม่มีรูป</span> กด "ดึงข้อมูลจากหน้านี้" แล้วเลือกรูปก่อน (แท็บ Shopee)`);
+      setF(`<span class="badge bad">ยังไม่ได้เลือกรูป</span> ไปแท็บ สินค้า กดดึงข้อมูล แล้วเลือกรูปก่อน`);
       return;
     }
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!/labs\.google|google\.com/.test(tab?.url || "")) {
-      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อนกด (รูปที่เลือกยังอยู่)`);
+      setF(`<span class="badge bad">ยังไม่ได้เปิดหน้า Flow</span> สลับไปแท็บ Flow ก่อน (รูปที่เลือกยังอยู่)`);
       return;
     }
     const urls = selectedImages;
     let injected = 0, failed = 0;
-    // วนยัดทีละรูป + เว้นจังหวะให้ Flow รับ (re-query input ใหม่ทุกรอบในตัว inject)
+    // วนส่งทีละรูป + เว้นจังหวะให้ Flow รับ (re-query input ใหม่ทุกรอบในตัว inject)
     for (let i = 0; i < urls.length; i++) {
-      setF(`ยัดรูป ${i + 1}/${urls.length}... (สำเร็จ ${injected})`);
+      setF(`ส่งรูป ${i + 1}/${urls.length}... (สำเร็จ ${injected})`);
       const resp = await chrome.runtime.sendMessage({ type: "fetchImage", url: urls[i] });
       if (!resp?.ok) { failed++; continue; }
       const [{ result: r } = {}] = await chrome.scripting.executeScript({
@@ -364,27 +360,27 @@ $("injimg").addEventListener("click", async () => {
       if (r?.ok) injected++; else failed++;
       await new Promise((res) => setTimeout(res, 700)); // ให้ Flow ประมวลผลก่อนรูปถัดไป
     }
-    setF(`<span class="badge ${injected ? "ok" : "bad"}">ยัดเสร็จ</span> สำเร็จ <b>${injected}</b>/${urls.length} รูป${failed ? ` · พลาด ${failed}` : ""}
-      <br> ดูที่ Flow ว่ารูปขึ้นครบไหม — ℹ โหมด Ingredients ของ Flow มักรับสูงสุด ~3 รูป`);
+    setF(`<span class="badge ${injected ? "ok" : "bad"}">ส่งรูปแล้ว <b>${injected}</b>/${urls.length}</span>${failed ? ` · ไม่สำเร็จ ${failed}` : ""}
+      <br>ดูที่ Flow ว่ารูปขึ้นครบไหม — Flow มักรับรูปอ้างอิงสูงสุด ~3 รูป`);
   } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
 });
 
 // กด Create (generate จริง) — ยิงเฉพาะปุ่ม arrow_forward ที่ enabled (ไม่แตะปุ่ม +)
 $("gen").addEventListener("click", async () => {
-  setF("กด Generate...");
+  setF("กำลังสั่งสร้าง...");
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!/labs\.google|google\.com/.test(tab?.url || "")) {
-      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อน`); return;
+      setF(`<span class="badge bad">ยังไม่ได้เปิดหน้า Flow</span> สลับไปแท็บ Flow ก่อน`); return;
     }
     const resp = await chrome.runtime.sendMessage({ type: "clickGenerate", tabId: tab.id });
     setF(resp?.ok
-      ? `<span class="badge ok">กด Create แล้ว </span> Flow กำลัง generate — รอผลในหน้า Flow แล้วโหลดคลิปเอง`
-      : `<span class="badge bad">กดไม่ได้</span> ${resp?.error || "?"}`);
+      ? `<span class="badge ok">สั่งสร้างแล้ว</span> Flow กำลังสร้างวิดีโอ — รอในหน้า Flow แล้วโหลดคลิปเอง`
+      : `<span class="badge bad">สั่งสร้างไม่ได้</span> ${resp?.error || "?"}`);
   } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
 });
 
-// injected: ประกอบ File จาก data URL แล้วยัดเข้า file input / drop ของ Flow
+// injected: ประกอบ File จาก data URL แล้วส่งเข้า file input / drop ของ Flow
 async function injectImageToFlow(arg) {
   try {
     const blob = await (await fetch(arg.dataUrl)).blob(); // data: URL ไม่ติด CORS

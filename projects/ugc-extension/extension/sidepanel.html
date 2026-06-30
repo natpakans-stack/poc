@@ -133,7 +133,7 @@
 
   <!-- ===== ตัวตน ===== -->
   <div class="panel on" id="tab-identity">
-    <div class="hint">สร้างคาแรกเตอร์ครีเอเตอร์ไทย — gen prompt หลายชุด ตัวตนเดียวกัน</div>
+    <div class="hint">สร้างคาแรกเตอร์ครีเอเตอร์ไทย ได้หลายแบบจากตัวตนเดียวกัน</div>
     <label class="lab">ชื่อ / คาแรกเตอร์</label>
     <input class="psel" id="idName" placeholder="เช่น ครูพิม, นักธุรกิจสาว, เชฟหนุ่ม">
     <div class="prow">
@@ -157,12 +157,12 @@
       <div></div>
     </div>
     <label class="chk"><input type="checkbox" id="idText"> ใส่ข้อความบนภาพ (caption)</label>
-    <button class="go" id="genIdentity" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างพรอมต์ตัวตน</button>
+    <button class="go" id="genIdentity" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างฉากตัวตน</button>
   </div>
 
   <!-- ===== สินค้า ===== -->
   <div class="panel" id="tab-product">
-    <div class="hint">ดึงข้อมูลสินค้าเว็บไหนก็ได้ (เปิดหน้าเองแล้วกด) → gen prompt รีวิว</div>
+    <div class="hint">เปิดหน้าสินค้าเว็บไหนก็ได้ แล้วกดดึงข้อมูล มาทำคลิปรีวิว</div>
     <button class="go" id="go"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>ดึงข้อมูลจากหน้านี้</button>
     <div class="status" id="status"></div>
     <div class="card" id="card">
@@ -191,7 +191,7 @@
       <div></div>
     </div>
     <label class="chk"><input type="checkbox" id="pdText" checked> ใส่ข้อความพาดหัวบนภาพ</label>
-    <button class="go" id="genProduct" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างพรอมต์สินค้า</button>
+    <button class="go" id="genProduct" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างฉากรีวิวสินค้า</button>
   </div>
 
   <!-- ===== ซีรีย์ ===== -->
@@ -224,7 +224,7 @@
 
   <!-- ===== ไวรัล ===== -->
   <div class="panel" id="tab-viral">
-    <div class="hint">เลือกเอฟเฟกต์ไวรัลฮิตๆ (แนว Higgsfield) → AI เขียน prompt ใส่เอฟเฟกต์นั้นให้</div>
+    <div class="hint">เลือกเอฟเฟกต์ไวรัลฮิตๆ → AI สร้างฉากใส่เอฟเฟกต์นั้นให้</div>
     <label class="lab">หัวข้อ / ของในคลิป</label>
     <input class="psel" id="vrSubject" placeholder="เช่น สินค้า X, ครีเอเตอร์, รถซิ่ง">
     <label class="lab">เอฟเฟกต์ไวรัล</label>
@@ -256,13 +256,13 @@
         <select class="psel" id="vrCount"><option>1</option><option selected>3</option><option>5</option><option>8</option></select></div>
       <div></div>
     </div>
-    <button class="go" id="genViral" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างพรอมต์ไวรัล</button>
+    <button class="go" id="genViral" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างฉากไวรัล</button>
   </div>
 
   <!-- ===== ตั้งค่า ===== -->
   <div class="panel" id="tab-settings">
-    <div class="hint">LLM provider/key (เก็บในเครื่อง) + ภาษาพากย์ — ใช้ทุกโหมด</div>
-    <label class="lab">Provider + API key</label>
+    <div class="hint">เลือก AI ที่ใช้สร้างฉาก + ภาษาพากย์ (เก็บไว้ในเครื่องนี้ ใช้ทุกโหมด)</div>
+    <label class="lab">AI ที่ใช้ + คีย์</label>
     <div class="prow">
       <select class="psel" id="provider" style="max-width:120px"><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option></select>
       <input class="psel" id="apikey" type="password" placeholder="API key" autocomplete="off">
@@ -281,16 +281,16 @@
     <hr class="hr">
     <div id="genstatus" class="status"></div>
     <div id="cards"></div>
-    <button class="go" id="autoqueue" style="margin-top:8px;display:none"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>Auto: ยิงทุก card เข้า Flow (เปลืองเครดิต)</button>
+    <button class="go" id="autoqueue" style="margin-top:8px;display:none"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>สร้างทุกฉากอัตโนมัติ (ใช้หลายเครดิต)</button>
 
     <hr class="hr">
-    <div class="sect"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="19" height="18" rx="2"/><path d="M2.5 8.5h19M2.5 15.5h19M8 3v18M16 3v18"/></svg>Flow (executor)</div>
-    <div class="hint">เปิด Google Flow ที่ <b>login แล้ว</b> → ยัดรูป reference → ยิง card เข้า Flow (ปุ่ม Auto ด้านบน หรือทีละ card)</div>
+    <div class="sect"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="19" height="18" rx="2"/><path d="M2.5 8.5h19M2.5 15.5h19M8 3v18M16 3v18"/></svg>ส่งเข้า Google Flow</div>
+    <div class="hint">เปิด Google Flow ที่เข้าสู่ระบบแล้ว → ใส่รูปสินค้า → ส่งฉากที่สร้างไปทำเป็นวิดีโอ (ทั้งหมดด้านบน หรือทีละฉาก)</div>
     <div class="btn-row">
-      <button class="go alt" id="probe"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>ตรวจ DOM</button>
-      <button class="go alt" id="injimg"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>ยัดรูป→Flow</button>
+      <button class="go alt" id="probe"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>เช็คการเชื่อมต่อ</button>
+      <button class="go alt" id="injimg"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>ใส่รูปลง Flow</button>
     </div>
-    <button class="go" id="gen" style="width:100%;margin-top:7px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>กด Generate (1 ครั้ง)</button>
+    <button class="go" id="gen" style="width:100%;margin-top:7px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>สร้างวิดีโอ 1 คลิป</button>
     <div class="status" id="fstatus"></div>
     <details id="frawWrap" style="display:none"><summary>candidates (debug)</summary><pre id="fraw"></pre></details>
   </div>
