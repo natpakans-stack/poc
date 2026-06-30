@@ -11,19 +11,31 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:"Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
     background:var(--bg);color:var(--text);font-size:13px;padding:14px;-webkit-font-smoothing:antialiased}
-  .head{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  .head{display:flex;align-items:center;gap:9px}
   .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#F2603A,#F59E5B);
     color:#fff;font-weight:700;font-size:11px;display:grid;place-items:center;flex:none}
   .head h1{font-size:13px;font-weight:700}
   .head span{font-size:10.5px;color:var(--muted)}
   .hint{font-size:11px;color:var(--muted);line-height:1.5;margin:8px 0 12px}
   .sect{font-size:11px;font-weight:800;color:var(--primary-deep);letter-spacing:.02em;margin-top:14px}
+  .lab{font-size:11px;font-weight:600;margin:10px 0 4px;display:block}
   .btn-row{display:flex;gap:7px}
   .prow{display:flex;gap:7px;margin:8px 0}
-  select.psel,textarea.pin{width:100%;font-family:inherit;font-size:12px;border:1.5px solid var(--border);
+  select.psel,textarea.pin,input.psel{width:100%;font-family:inherit;font-size:12px;border:1.5px solid var(--border);
     border-radius:9px;padding:9px;color:var(--text);background:#fff}
-  .prow select{flex:1}
-  textarea.pin{resize:vertical;line-height:1.5;margin-top:7px}
+  .prow select,.prow input{flex:1}
+  textarea.pin{resize:vertical;line-height:1.5;margin-top:0}
+  .chk{display:flex;align-items:center;gap:7px;font-size:11.5px;margin-top:10px;cursor:pointer}
+  /* tabs */
+  .tabs{display:flex;gap:2px;border-bottom:1.5px solid var(--border);margin:10px 0 12px}
+  .tab{flex:1;text-align:center;padding:9px 2px 8px;font-size:11px;font-weight:600;color:var(--muted);
+    border:none;border-bottom:2.5px solid transparent;cursor:pointer;background:none;font-family:inherit;
+    display:flex;flex-direction:column;gap:2px;align-items:center}
+  .tab .ic{font-size:15px}
+  .tab.on{color:var(--primary-deep);border-bottom-color:var(--primary)}
+  .panel{display:none}
+  .panel.on{display:block}
+  /* generated cards */
   .scene{border:1.5px solid var(--border);border-radius:10px;padding:9px;margin-top:8px;background:var(--surface)}
   .scene-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
   .scene-h b{font-size:11px;color:var(--primary-deep)}
@@ -38,7 +50,7 @@
     font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(242,96,58,.28)}
   button.go:active{transform:translateY(1px)}
   button.go:disabled{opacity:.6;cursor:default}
-  .status{margin-top:12px;font-size:11.5px;line-height:1.5}
+  .status{margin-top:10px;font-size:11.5px;line-height:1.5}
   .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px}
   .ok{color:var(--green);background:#E7F6ED}
   .bad{color:var(--red);background:var(--red-tint)}
@@ -76,94 +88,146 @@
   summary{font-size:11px;color:var(--muted);cursor:pointer}
   pre{font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px;
     margin-top:7px;white-space:pre-wrap;word-break:break-all;max-height:240px;overflow:auto;line-height:1.45}
+  .hr{border:none;border-top:1px solid var(--border);margin:16px 0 0}
 </style>
 </head>
 <body>
   <div class="head">
     <div class="logo">PCS</div>
-    <div><h1>Product Scraper</h1><span>spike v0.1 · passive scrape</span></div>
+    <div><h1>Prompt Creator Studio</h1><span>spike · scrape + Flow</span></div>
   </div>
-  <div class="sect">🅰 สินค้า (เว็บไหนก็ได้)</div>
-  <div class="hint">เปิดหน้าสินค้าเว็บใดก็ได้ <b>ด้วยตัวเอง</b> แล้วกดปุ่มนี้ — อ่านจากหน้าที่เปิดอยู่ (Shopee ได้ครบสุดผ่าน API · เว็บอื่นได้ ชื่อ/ราคา/รูป จาก og-meta/JSON-LD)</div>
-  <button class="go" id="go">🔍 ดึงข้อมูลจากหน้านี้</button>
-  <div class="status" id="status"></div>
 
-  <div class="card" id="card">
-    <div class="selbar" id="selbar"></div>
-    <div class="imgs grid" id="imgs"></div>
-    <div class="info">
-      <input class="ed" id="nm" placeholder="ชื่อสินค้า — กรอก/แก้ได้">
-      <input class="ed" id="pr" placeholder="ราคา">
-      <textarea class="ed" id="desc" rows="3" placeholder="รายละเอียด / จุดขาย — กรอก/แก้ได้"></textarea>
-      <div class="meta-row" id="meta"></div>
-      <div class="reviews" id="reviews"></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="identity"><span class="ic">👤</span>ตัวตน</button>
+    <button class="tab" data-tab="product"><span class="ic">📦</span>สินค้า</button>
+    <button class="tab" data-tab="series"><span class="ic">🎬</span>ซีรีย์</button>
+    <button class="tab" data-tab="settings"><span class="ic">⚙️</span>ตั้งค่า</button>
+  </div>
+
+  <!-- ===== ตัวตน ===== -->
+  <div class="panel on" id="tab-identity">
+    <div class="hint">สร้างคาแรกเตอร์ครีเอเตอร์ไทย — gen prompt หลายชุด ตัวตนเดียวกัน</div>
+    <label class="lab">ชื่อ / คาแรกเตอร์</label>
+    <input class="psel" id="idName" placeholder="เช่น ครูพิม, นักธุรกิจสาว, เชฟหนุ่ม">
+    <div class="prow">
+      <div><label class="lab">เพศ / ตัวแบบ</label>
+        <select class="psel" id="idGender"><option>ผู้หญิงไทย</option><option>ผู้ชายไทย</option><option>หญิงสาว</option><option>หนุ่ม</option></select></div>
+      <div><label class="lab">โทนสีผิว</label>
+        <select class="psel" id="idSkin"><option>ผิวขาวออร่า</option><option>ผิวขาวเนียนใส</option><option>โทนผิวธรรมชาติ</option><option>ผิวสองสีสุขภาพดี</option><option>ผิวแทนสุขภาพดี</option></select></div>
+    </div>
+    <label class="lab">ธีม (การแต่งกาย + ฉาก)</label>
+    <select class="psel" id="idTheme">
+      <option>ครู</option><option>นักธุรกิจ / CEO</option><option>ออฟฟิศ / ทำงาน</option><option>นักศึกษา</option>
+      <option>ฟิตเนส / สุขภาพ</option><option>คาเฟ่ / ไลฟ์สไตล์</option><option>ทำอาหาร / เชฟ</option><option>ท่องเที่ยว</option>
+      <option>สายให้ความรู้</option><option>ศิลปะ / ครีเอทีฟ</option><option>สตรีท / แฟชั่น</option><option>เอาท์ดอร์ / กลางแจ้ง</option>
+      <option>หรูหรา / งานอีเวนต์</option><option>ทะเล / ซัมเมอร์</option><option>อยู่บ้านชิลๆ</option><option>สายรถ</option><option>ปาร์ตี้ / สังสรรค์</option>
+    </select>
+    <label class="lab">รายละเอียดเพิ่มเติม</label>
+    <textarea class="pin" id="idDetails" rows="2" placeholder="เช่น อายุ 30 ลุคอบอุ่น เฉดสีน้ำตาล"></textarea>
+    <div class="prow">
+      <div><label class="lab">จำนวนชุด</label>
+        <select class="psel" id="idCount"><option>1</option><option selected>3</option><option>5</option><option>8</option></select></div>
+      <div></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="idText"> ใส่ข้อความบนภาพ (caption)</label>
+    <button class="go" id="genIdentity" style="margin-top:12px">✨ สร้างพรอมต์ตัวตน</button>
+  </div>
+
+  <!-- ===== สินค้า ===== -->
+  <div class="panel" id="tab-product">
+    <div class="hint">ดึงข้อมูลสินค้าเว็บไหนก็ได้ (เปิดหน้าเองแล้วกด) → gen prompt รีวิว</div>
+    <button class="go" id="go">🔍 ดึงข้อมูลจากหน้านี้</button>
+    <div class="status" id="status"></div>
+    <div class="card" id="card">
+      <div class="selbar" id="selbar"></div>
+      <div class="imgs grid" id="imgs"></div>
+      <div class="info">
+        <input class="ed" id="nm" placeholder="ชื่อสินค้า — กรอก/แก้ได้">
+        <input class="ed" id="pr" placeholder="ราคา">
+        <textarea class="ed" id="desc" rows="3" placeholder="รายละเอียด / จุดขาย — กรอก/แก้ได้"></textarea>
+        <div class="meta-row" id="meta"></div>
+        <div class="reviews" id="reviews"></div>
+      </div>
+    </div>
+    <details id="rawWrap" style="display:none"><summary>ดู raw JSON (debug)</summary><pre id="raw"></pre></details>
+    <label class="lab">สไตล์ภาพ / มุมการขาย</label>
+    <select class="psel" id="pdAngle">
+      <option>ให้ระบบคิดฉากเอง (คนใช้สินค้าจริง)</option>
+      <option>คนถือโชว์สินค้าใกล้กล้อง (ไลฟ์/รีวิว)</option>
+      <option>รีวิวเห็นแค่มือกับสินค้า (โคลสอัพ ไม่เห็นหน้า)</option>
+      <option>โกดัง/โรงงาน ลังเพียบ + ป้ายราคา (ไวรัล)</option>
+      <option>วางโชว์สตูดิโอ/บนโต๊ะ (โปรดักต์ช็อตสะอาด)</option>
+    </select>
+    <div class="prow">
+      <div><label class="lab">จำนวนชุด</label>
+        <select class="psel" id="pdCount"><option>1</option><option selected>3</option><option>5</option><option>8</option></select></div>
+      <div></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="pdText" checked> ใส่ข้อความพาดหัวบนภาพ</label>
+    <button class="go" id="genProduct" style="margin-top:12px">✨ สร้างพรอมต์สินค้า</button>
+  </div>
+
+  <!-- ===== ซีรีย์ ===== -->
+  <div class="panel" id="tab-series">
+    <div class="hint">AI สร้างซีรีย์ ตัวเอกคนเดิมหน้าเดิมทุกฉาก — ต่อเนื่อง</div>
+    <label class="lab">แนวซีรีย์</label>
+    <select class="psel" id="srGenre">
+      <option>ซีรีย์จีนโบราณ (ฮ่องเต้/วังหลวง)</option><option>ซีรีย์จีนทันสมัย (CEO/โรแมนติก)</option>
+      <option>ซีรีย์เกาหลี (โรแมนติก/ดราม่า)</option><option>เกาหลีย้อนยุค (ซากึก/ราชวงศ์)</option>
+      <option>ซีรีย์ญี่ปุ่น (ดราม่า/ฟีลกู้ด)</option><option>หนังไทย (ดราม่า/โรแมนติก)</option>
+      <option>หนังจักรๆ วงศ์ๆ (ไทยพื้นบ้านแฟนตาซี)</option><option>ละครสั้นไทยตลก</option>
+      <option>ละครไทบ้าน (อีสาน/ชนบท)</option><option>สยองขวัญ/ผี (ไทย)</option>
+    </select>
+    <div class="prow">
+      <div><label class="lab">จำนวนฉาก</label>
+        <select class="psel" id="srScenes"><option>3</option><option selected>4</option><option>5</option><option>8</option></select></div>
+      <div><label class="lab">ตัวละครหลัก</label>
+        <select class="psel" id="srChars"><option>1 คน (ตัวเอกเดียว)</option><option>2 คน (คู่พระนาง/คู่หู)</option><option>3 คน</option></select></div>
+    </div>
+    <div class="prow">
+      <div><label class="lab">เพศตัวเอก</label>
+        <select class="psel" id="srGender"><option>ผู้หญิง</option><option>ผู้ชาย</option></select></div>
+      <div><label class="lab">โทนสีผิว</label>
+        <select class="psel" id="srSkin"><option>ผิวขาวออร่า</option><option>ผิวขาวเนียนใส</option><option>โทนผิวธรรมชาติ</option><option>ผิวสองสีสุขภาพดี</option><option>ผิวแทนสุขภาพดี</option></select></div>
+    </div>
+    <label class="lab">รายละเอียดตัวเอก / เนื้อเรื่อง</label>
+    <textarea class="pin" id="srStory" rows="3" placeholder="เว้นว่างให้ AI คิด — เช่น นางเอกถูกใส่ร้าย ต้องล้างมลทินและแก้แค้น"></textarea>
+    <button class="go" id="genSeries" style="margin-top:12px">✨ สร้างซีรีย์</button>
+  </div>
+
+  <!-- ===== ตั้งค่า ===== -->
+  <div class="panel" id="tab-settings">
+    <div class="hint">LLM provider/key (เก็บในเครื่อง) + ภาษาพากย์ — ใช้ทุกโหมด</div>
+    <label class="lab">Provider + API key</label>
+    <div class="prow">
+      <select class="psel" id="provider" style="max-width:120px"><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option></select>
+      <input class="psel" id="apikey" type="password" placeholder="API key" autocomplete="off">
+    </div>
+    <label class="lab">Model (เว้น = ค่าเริ่มต้น)</label>
+    <input class="psel" id="model" placeholder="เช่น gpt-4o / deepseek-chat / deepseek-v4-flash">
+    <div class="prow">
+      <div><label class="lab">ภาษาพากย์</label>
+        <select class="psel" id="lang"><option value="th">ไทย</option><option value="en">English</option></select></div>
+      <div style="display:flex;align-items:flex-end"><button class="go alt" id="keysave" style="width:100%;padding:9px">บันทึก</button></div>
     </div>
   </div>
 
-  <details id="rawWrap" style="display:none">
-    <summary>ดู raw JSON (debug)</summary>
-    <pre id="raw"></pre>
-  </details>
+  <!-- ===== SHARED: results + Flow executor ===== -->
+  <hr class="hr">
+  <div id="genstatus" class="status"></div>
+  <div id="cards"></div>
+  <button class="go" id="autoqueue" style="margin-top:8px;display:none">▶️ Auto: ยิงทุก card เข้า Flow (เปลืองเครดิต)</button>
 
-  <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 0">
-
-  <div class="sect">📝 Prompt / Storyboard (ป้อนเข้า Flow)</div>
-  <div class="hint">เดี่ยว: ✨ จาก template · หลายซีน: 🎬 ให้ LLM แตก storyboard จากสินค้า+รีวิว แล้วพิมพ์ทีละซีนเข้า Flow</div>
-  <div class="prow">
-    <select class="psel" id="ptemplate">
-      <option value="review">รีวิวขายของ</option>
-      <option value="story">เล่าเรื่องแบรนด์</option>
-      <option value="unbox">แกะกล่อง</option>
-      <option value="demo">สาธิตวิธีใช้</option>
-    </select>
-    <select class="psel" id="plang">
-      <option value="th">พากย์ไทย</option>
-      <option value="en">English</option>
-    </select>
-    <select class="psel" id="pscenes">
-      <option value="1">1 ซีน</option>
-      <option value="3" selected>3 ซีน</option>
-      <option value="5">5 ซีน</option>
-      <option value="8">8 ซีน</option>
-    </select>
-  </div>
-  <div class="prow">
-    <button class="go alt" id="pbuild" style="flex:1">✨ prompt เดี่ยว</button>
-    <button class="go alt" id="psb" style="flex:1">🎬 storyboard (LLM)</button>
-  </div>
-  <details id="keywrap">
-    <summary style="font-size:11px;color:var(--muted);cursor:pointer">⚙️ LLM API key (เก็บในเครื่อง)</summary>
-    <div class="prow" style="margin-top:6px">
-      <select class="psel" id="provider" style="max-width:110px">
-        <option value="openai">OpenAI</option>
-        <option value="deepseek">DeepSeek</option>
-      </select>
-      <input class="psel" id="apikey" type="password" placeholder="API key" style="flex:1" autocomplete="off">
-    </div>
-    <div class="prow" style="margin-top:0">
-      <input class="psel" id="model" placeholder="model (เว้น = ค่าเริ่มต้น)" style="flex:1">
-      <button class="go alt" id="keysave" style="width:auto;padding:8px 12px">บันทึก</button>
-    </div>
-  </details>
-  <textarea class="pin" id="prompt" rows="4" placeholder="prompt เดี่ยว — กด ✨ ให้สร้าง หรือพิมพ์เอง"></textarea>
-  <div id="scenes"></div>
-  <button class="go" id="autoqueue" style="width:100%;margin-top:8px;display:none">▶️ Auto: ยิงทุกซีนเข้า Flow (เปลืองเครดิต)</button>
-
-  <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 0">
-
-  <div class="sect">🎬 Flow (automate)</div>
-  <div class="hint">เปิดหน้า Google Flow ที่ <b>login แล้ว</b> → <b>ตรวจ DOM</b> หา prompt field + ปุ่ม generate → <b>ทดสอบพิมพ์</b> (ยังไม่กด generate จริง)</div>
+  <hr class="hr">
+  <div class="sect">🎬 Flow (executor)</div>
+  <div class="hint">เปิด Google Flow ที่ <b>login แล้ว</b> → ยัดรูป reference → ยิง card เข้า Flow (ปุ่ม Auto ด้านบน หรือทีละ card)</div>
   <div class="btn-row">
-    <button class="go alt" id="probe">🔎 ตรวจ DOM Flow</button>
-    <button class="go alt" id="fill">⌨️ ทดสอบพิมพ์ prompt</button>
+    <button class="go alt" id="probe">🔎 ตรวจ DOM</button>
+    <button class="go alt" id="injimg">🖼️ ยัดรูป→Flow</button>
   </div>
-  <button class="go alt" id="injimg" style="width:100%;margin-top:7px">🖼️ ยัดรูปที่เลือก → Flow</button>
-  <button class="go" id="gen" style="width:100%;margin-top:7px">▶️ กด Create — generate จริง (เปลืองเครดิต)</button>
+  <button class="go" id="gen" style="width:100%;margin-top:7px">▶️ กด Generate (1 ครั้ง)</button>
   <div class="status" id="fstatus"></div>
-  <details id="frawWrap" style="display:none">
-    <summary>ดู candidates ที่เจอ (debug)</summary>
-    <pre id="fraw"></pre>
-  </details>
+  <details id="frawWrap" style="display:none"><summary>candidates (debug)</summary><pre id="fraw"></pre></details>
 
   <script src="sidepanel.js"></script>
 </body>

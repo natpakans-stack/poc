@@ -131,23 +131,69 @@ async function injectActive(func, args = []) {
 }
 function setF(html) { $("fstatus").innerHTML = html; }
 
-// ── Prompt config: สร้าง prompt จากสินค้า + มุมที่เลือก ──────────────
-function buildPrompt() {
-  const name = (lastProduct?.name || "the product").replace(/\s+/g, " ").slice(0, 90);
-  const desc = (lastProduct?.desc || "").replace(/\s+/g, " ").slice(0, 160);
-  const skel = {
-    review: `Cinematic vertical 9:16 UGC product review. A Thai creator holds and reviews ${name} to camera with warm, authentic enthusiasm. Key points: ${desc}. Natural indoor lighting, shallow depth of field.`,
-    story: `Cinematic vertical 9:16 brand story featuring ${name}. Emotional, relatable Thai lifestyle scene. ${desc}. Warm cinematic color grade.`,
-    unbox: `Vertical 9:16 unboxing of ${name}. Close-up hands opening the package, satisfying reveal, crisp macro product shots. ${desc}.`,
-    demo: `Vertical 9:16 how-to demo of ${name}. A Thai creator demonstrates using the product step by step, clear close-ups. ${desc}.`,
-  };
-  let out = skel[$("ptemplate").value] || skel.review;
-  out += $("plang").value === "th" ? " Thai voice-over narration." : " English voice-over narration.";
-  return out;
+// ── Tabs ───────────────────────────────────────────────────────────
+document.querySelectorAll(".tab[data-tab]").forEach((t) =>
+  t.addEventListener("click", () => switchTab(t.dataset.tab)));
+function switchTab(name) {
+  document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
+  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === `tab-${name}`));
 }
-$("pbuild").addEventListener("click", () => {
-  if (!lastProduct) { $("prompt").placeholder = "ยังไม่มีสินค้า — กด 'ดึงข้อมูลจากหน้านี้' ก่อน"; return; }
-  $("prompt").value = buildPrompt();
+function setG(html) { $("genstatus").innerHTML = html; }
+
+// ── 3 โหมด gen prompt (ตัวตน/สินค้า/ซีรีย์) ผ่าน system prompt เฉพาะโหมด → cards ────
+const schema = (lang, dlgMax) => `Return STRICT JSON {"items":[{"label":"2-4 word label","video_prompt":"...","dialogue":"..."}]}.
+- video_prompt: ENGLISH, vivid cinematic for Veo (camera/shot/action/lighting/mood), vertical 9:16.
+- dialogue: spoken line in ${lang === "en" ? "English" : "Thai"}, conversational, <= ${dlgMax} words.`;
+async function callGen(system, user) {
+  const key = $("apikey").value.trim();
+  if (!key) { switchTab("settings"); setG(`<span class="badge bad">ใส่ LLM API key ก่อน</span> (แท็บ ตั้งค่า)`); return null; }
+  setG("⏳ LLM กำลังสร้าง...");
+  const resp = await chrome.runtime.sendMessage({
+    type: "genLLM", apiKey: key, provider: $("provider").value, model: $("model").value.trim(), system, user,
+  });
+  if (!resp?.ok) { setG(`<span class="badge bad">สร้างไม่ได้</span> ${resp?.error || "?"}`); return null; }
+  let items;
+  try { items = JSON.parse(resp.content).items; } catch { setG(`<span class="badge bad">parse JSON ไม่ได้</span>`); return null; }
+  if (!Array.isArray(items) || !items.length) { setG(`<span class="badge bad">ไม่ได้ผลลัพธ์</span>`); return null; }
+  return items;
+}
+function showCards(items, label) {
+  renderCards(items);
+  $("autoqueue").style.display = "block";
+  setG(`<span class="badge ok">${label} ✅</span> พิมพ์ทีละ card หรือกด ▶️ Auto (ด้านล่าง) — เปิดแท็บ Flow ก่อน`);
+}
+
+$("genIdentity").addEventListener("click", async () => {
+  const n = +$("idCount").value, lang = $("lang").value;
+  const system = `You are a UGC video prompt director for Google Flow (Veo), Thai market.
+Generate EXACTLY ${n} distinct vertical 9:16 video prompts for ONE consistent Thai content creator (same gender/skin/look every item), in the given theme. Each item = a DIFFERENT shot/moment of that creator talking to camera.
+${schema(lang, 14)}`;
+  const user = `Creator: ${$("idName").value || "Thai creator"}\nGender: ${$("idGender").value}\nSkin: ${$("idSkin").value}\nTheme/setting: ${$("idTheme").value}\nExtra: ${$("idDetails").value}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
+  const items = await callGen(system, user);
+  if (items) showCards(items, `ตัวตน ${items.length} ชุด`);
+});
+
+$("genProduct").addEventListener("click", async () => {
+  if (!lastProduct || (!lastProduct.name && !lastProduct.desc)) {
+    switchTab("product"); setG(`<span class="badge bad">ยังไม่มีข้อมูลสินค้า</span> ดึง/กรอกในแท็บ สินค้า ก่อน`); return;
+  }
+  const n = +$("pdCount").value, lang = $("lang").value;
+  const system = `You are a UGC product-review prompt director for Google Flow (Veo), Thai market.
+Generate EXACTLY ${n} distinct vertical 9:16 video prompts reviewing the product, sales angle "${$("pdAngle").value}". The REAL product appears; each item a DIFFERENT shot. Use only real facts from details/reviews.
+${schema(lang, 14)}`;
+  const user = `Product: ${lastProduct.name || ""}\nDetails: ${(lastProduct.desc || "").slice(0, 600)}\nReviews: ${(lastProduct.reviews || []).slice(0, 3).map((r) => `"${r.comment}"`).join(" ") || "(none)"}\nAngle: ${$("pdAngle").value}\nText overlay: ${$("pdText").checked ? "yes" : "no"}\nCount: ${n}`;
+  const items = await callGen(system, user);
+  if (items) showCards(items, `สินค้า ${items.length} ชุด`);
+});
+
+$("genSeries").addEventListener("click", async () => {
+  const n = +$("srScenes").value, lang = $("lang").value;
+  const system = `You are a short-drama series director for Google Flow (Veo).
+Generate a CONNECTED ${n}-scene vertical 9:16 story in genre "${$("srGenre").value}", with the SAME protagonist(s) (consistent face/look) in EVERY scene. Continuous narrative arc across scenes.
+${schema(lang, 21)} label = scene beat.`;
+  const user = `Genre: ${$("srGenre").value}\nScenes: ${n}\nMain characters: ${$("srChars").value}\nLead gender: ${$("srGender").value}\nSkin: ${$("srSkin").value}\nStory: ${$("srStory").value || "(AI decides a compelling arc)"}`;
+  const items = await callGen(system, user);
+  if (items) showCards(items, `ซีรีย์ ${items.length} ฉาก`);
 });
 
 // LLM key/provider/model (เก็บใน chrome.storage.local) — รองรับ OpenAI + DeepSeek
@@ -171,8 +217,6 @@ $("keysave").addEventListener("click", () => {
   $("keysave").textContent = "บันทึกแล้ว ✓";
   setTimeout(() => { $("keysave").textContent = "บันทึก"; }, 1500);
 });
-const ANGLE_LABEL = { review: "UGC product review (ขายของ)", story: "brand storytelling", unbox: "unboxing", demo: "how-to demo" };
-
 // helper: พิมพ์ข้อความเข้า Flow (ใช้ทั้งปุ่มเดี่ยว + ปุ่มรายซีน) — คืน tabId เผื่อ re-probe
 async function typeToFlow(text) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -180,27 +224,6 @@ async function typeToFlow(text) {
   const resp = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text });
   return resp?.ok ? { ok: true, tabId: tab.id } : { ok: false, error: resp?.error || "?" };
 }
-
-// 🎬 สร้าง storyboard หลายซีน ผ่าน LLM
-$("psb").addEventListener("click", async () => {
-  const key = $("apikey").value.trim();
-  if (!lastProduct) { setF(`<span class="badge bad">ยังไม่มีสินค้า</span> ดึงข้อมูลจาก Shopee ก่อน`); return; }
-  if (!key) { $("keywrap").open = true; setF(`<span class="badge bad">ใส่ OpenAI key ก่อน</span> (⚙️ ด้านบน)`); return; }
-  setF("⏳ LLM กำลังแตก storyboard...");
-  try {
-    const resp = await chrome.runtime.sendMessage({
-      type: "genStoryboard", apiKey: key,
-      provider: $("provider").value, model: $("model").value.trim(),
-      product: { name: lastProduct.name, desc: lastProduct.desc, reviews: lastProduct.reviews },
-      angle: ANGLE_LABEL[$("ptemplate").value] || "UGC review",
-      lang: $("plang").value, scenes: +$("pscenes").value,
-    });
-    if (!resp?.ok) { setF(`<span class="badge bad">สร้างไม่ได้</span> ${resp?.error || "?"}`); return; }
-    renderScenes(resp.scenes);
-    $("autoqueue").style.display = "block";
-    setF(`<span class="badge ok">ได้ ${resp.scenes.length} ซีน ✅</span> พิมพ์ทีละซีน หรือกด ▶️ Auto ยิงครบเอง`);
-  } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
-});
 
 // ▶️ Auto scene-queue: วน type → generate → รอเสร็จ → กด + → ซีนถัดไป (เปลืองเครดิตหลายเครดิต!)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -217,7 +240,7 @@ async function waitGenerateDone(tabId, baselineVideos, timeoutMs) {
   return false;
 }
 $("autoqueue").addEventListener("click", async () => {
-  const tas = [...$("scenes").querySelectorAll("textarea[data-i]")].filter((t) => t.value.trim());
+  const tas = [...$("cards").querySelectorAll("textarea[data-i]")].filter((t) => t.value.trim());
   if (!tas.length) return;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!/labs\.google|google\.com/.test(tab?.url || "")) {
@@ -248,22 +271,22 @@ $("autoqueue").addEventListener("click", async () => {
   } finally { $("autoqueue").disabled = false; }
 });
 
-function renderScenes(scenes) {
+function renderCards(items) {
   const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-  $("scenes").innerHTML = scenes.map((s, i) => `
+  $("cards").innerHTML = items.map((s, i) => `
     <div class="scene">
-      <div class="scene-h"><b>ซีน ${i + 1} · ${esc(s.shot || "")}</b><button data-i="${i}">⌨️ พิมพ์ซีนนี้ → Flow</button></div>
-      <textarea data-i="${i}" rows="3">${esc(s.video_prompt || "")}</textarea>
+      <div class="scene-h"><b>${i + 1} · ${esc(s.label || s.shot || "")}</b><button data-i="${i}">⌨️ พิมพ์ → Flow</button></div>
+      <textarea data-i="${i}" rows="3">${esc(s.video_prompt || s.prompt || "")}</textarea>
       ${s.dialogue ? `<div class="dlg">🗣️ ${esc(s.dialogue)}</div>` : ""}
     </div>`).join("");
-  $("scenes").querySelectorAll("button[data-i]").forEach((btn) => {
+  $("cards").querySelectorAll("button[data-i]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const i = btn.dataset.i;
-      const ta = $("scenes").querySelector(`textarea[data-i="${i}"]`);
-      setF(`⏳ พิมพ์ซีน ${+i + 1} เข้า Flow...`);
+      const ta = $("cards").querySelector(`textarea[data-i="${i}"]`);
+      setF(`⏳ พิมพ์ card ${+i + 1} เข้า Flow...`);
       const r = await typeToFlow(ta.value.trim());
       setF(r.ok
-        ? `<span class="badge ok">พิมพ์ซีน ${+i + 1} แล้ว ✅</span> กด ▶️ Generate → รอเสร็จ → กด + เพิ่มซีนใน Flow → พิมพ์ซีนถัดไป`
+        ? `<span class="badge ok">พิมพ์ card ${+i + 1} แล้ว ✅</span> กด ▶️ Generate → รอเสร็จ → กด + ใน Flow → พิมพ์ card ถัดไป`
         : `<span class="badge bad">พิมพ์ไม่ได้</span> ${r.error}`);
     });
   });
@@ -291,26 +314,7 @@ $("probe").addEventListener("click", async () => {
   }
 });
 
-$("fill").addEventListener("click", async () => {
-  const sample = $("prompt").value.trim() ||
-    (lastProduct ? buildPrompt() : "A cinematic vertical 9:16 UGC product review by a Thai creator, warm authentic tone");
-  setF("⏳ พิมพ์แบบ keystroke จริง (CDP)... จะมีแถบ debugging โผล่ ปกติ");
-  try {
-    const r = await typeToFlow(sample);
-    if (!r.ok) { setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${r.error}`); return; }
-    // เช็คปุ่ม Create เปิดไหม (รอ React re-render)
-    await new Promise((res) => setTimeout(res, 600));
-    const [{ result: p } = {}] = await chrome.scripting.executeScript({ target: { tabId: r.tabId }, world: "MAIN", func: probeFlow });
-    const ge = p?.bestGenerate && !p.bestGenerate.disabled;
-    setF(ge
-      ? `<span class="badge ok">พิมพ์สำเร็จ + ปุ่ม Create เปิดแล้ว ✅</span> เขียน Flow ได้จริง → พร้อมกด generate`
-      : `<span class="badge bad">พิมพ์แล้ว แต่ Create ยังปิด</span> ดูช่อง prompt ขึ้นข้อความไหม (อาจต้องมี reference image ก่อน Create ถึงเปิด)`);
-  } catch (e) {
-    setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${e.message}`);
-  }
-});
-
-// ── Flow: ยัดรูปที่เลือก (Shopee) เข้า Flow เป็น reference ──────────
+// ── Flow: ยัดรูปที่เลือก เข้า Flow เป็น reference ──────────
 // background fetch bytes (เลี่ยง CORS) → ส่ง data URL → ประกอบ File ในหน้า Flow → ยัด file input
 $("injimg").addEventListener("click", async () => {
   try {

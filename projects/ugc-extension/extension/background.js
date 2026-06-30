@@ -12,8 +12,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     clickGenerate(msg.tabId).then(sendResponse).catch((e) => sendResponse({ ok: false, error: e.message }));
     return true;
   }
-  if (msg?.type === "genStoryboard") {
-    genStoryboard(msg).then(sendResponse).catch((e) => sendResponse({ ok: false, error: e.message }));
+  if (msg?.type === "genLLM") {
+    genLLM(msg).then(sendResponse).catch((e) => sendResponse({ ok: false, error: e.message }));
     return true;
   }
   if (msg?.type === "flowState") {
@@ -126,43 +126,22 @@ function getGenerateCenter() {
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
 
-// ── LLM storyboard: แตกสินค้า → N ซีน (video-prompt อังกฤษ + บทไทย) ผ่าน OpenAI ──
-async function genStoryboard({ apiKey, product, angle, lang, scenes, provider, model }) {
-  if (!apiKey) return { ok: false, error: "ยังไม่ได้ใส่ LLM API key (ช่อง ⚙️)" };
+// ── generic LLM call (OpenAI/DeepSeek compatible) — side panel ส่ง system+user มา ──
+async function genLLM({ apiKey, provider, model, system, user }) {
+  if (!apiKey) return { ok: false, error: "ยังไม่ได้ใส่ LLM API key (แท็บ ตั้งค่า)" };
   const ENDPOINT = provider === "deepseek" ? "https://api.deepseek.com/chat/completions" : "https://api.openai.com/v1/chat/completions";
   const MODEL = model?.trim() || (provider === "deepseek" ? "deepseek-chat" : "gpt-4o");
-  const n = Math.max(1, Math.min(8, +scenes || 3));
-  const sys = `You are a UGC short-video storyboard director for Google Flow (Veo), making vertical 9:16 product videos for the Thai market.
-Output a storyboard of EXACTLY ${n} distinct scenes (~8s each) forming one cohesive, scroll-stopping UGC review.
-Return STRICT JSON: {"scenes":[{"shot":"...","video_prompt":"...","dialogue":"..."}]}
-Rules:
-- video_prompt: ENGLISH, vivid cinematic description for Veo — camera angle/movement, on-screen subject & action, lighting, mood. A Thai creator and the REAL product appear naturally. Each scene a DIFFERENT shot (e.g. hook close-up, hands-on demo, lifestyle, reaction, CTA). Vertical 9:16.
-- dialogue: the spoken line in ${lang === "en" ? "English" : "Thai"}, conversational, <= 14 words.
-- shot: 2-4 word label.
-- Arc across scenes: hook -> benefit/demo -> proof/reaction -> CTA, adapted to the angle "${angle}".
-- Use only real facts from the product details/reviews. Do not invent specs.`;
-  const user = `Product: ${product.name || "(unknown)"}
-Details: ${(product.desc || "").slice(0, 600)}
-Top reviews: ${(product.reviews || []).slice(0, 3).map((r) => `"${r.comment}"`).join(" ") || "(none)"}
-Angle: ${angle}
-Number of scenes: ${n}`;
-
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: MODEL, response_format: { type: "json_object" },
-      messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
     }),
   });
   if (!res.ok) return { ok: false, error: `${provider || "openai"} ${res.status}: ${(await res.text()).slice(0, 180)}` };
   const data = await res.json();
-  let parsed;
-  try { parsed = JSON.parse(data.choices[0].message.content); }
-  catch { return { ok: false, error: "parse JSON ไม่ได้" }; }
-  const out = Array.isArray(parsed.scenes) ? parsed.scenes : [];
-  if (!out.length) return { ok: false, error: "ไม่ได้ซีนกลับมา" };
-  return { ok: true, scenes: out };
+  return { ok: true, content: data.choices?.[0]?.message?.content || "" };
 }
 
 // ── done-detection: สถานะ Flow (จำนวน video + กำลังประมวลผลไหม) ──
