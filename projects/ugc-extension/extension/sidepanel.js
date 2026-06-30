@@ -15,6 +15,7 @@ const ic = (n) => `<svg class="ici" viewBox="0 0 24 24" fill="none" stroke="curr
 let selectedImages = []; // รูปที่ user ติ๊กเลือก (จาก scrape สินค้า)
 let uploadedRefs = [];   // รูปใบหน้า/ลุค ที่ user อัปจากเครื่อง (data URL) — reference เพิ่ม
 let lastProduct = null;  // ผล scrape ล่าสุด (ใช้สร้าง prompt)
+let selectedReviews = new Set(); // index ของรีวิวที่ user ติ๊กเอาเข้า prompt
 
 // ── อัปโหลดรูปอ้างอิง (ใบหน้า/ลุค) จากเครื่อง — แท็บพรีเซนเตอร์ ──
 $("refUpload").addEventListener("click", () => $("refFile").click());
@@ -36,26 +37,26 @@ function renderRefThumbs() {
 // ── viral preset gallery (แทน dropdown — เห็นภาพสไตล์) ──
 // [value(prompt), ชื่อไทย, ชื่ออังกฤษ]
 const VIRAL = [
-  ["Earth zoom-out from the subject all the way into outer space", "ซูมออกสู่อวกาศ", "Earth Zoom Out"],
-  ["Earth zoom-in from outer space down to the subject", "ซูมจากอวกาศลงมา", "Earth Zoom In"],
-  ["free-fall skydiving with the subject, wind and motion", "ตกอิสระ/สกายไดฟ์", "Free Fall"],
-  ["superfast first-person flight, extreme speed motion blur", "บินความเร็วสูง", "Superfast Flight"],
-  ["green night-vision camera look, grainy IR", "กล้องไนท์วิชั่น", "Night Vision"],
-  ["office CCTV surveillance camera footage, timestamp overlay", "กล้องวงจรปิด", "CCTV"],
-  ["early-2000s paparazzi flash photography, harsh flash", "ปาปารัสซี่ Y2K", "Paparazzi"],
-  ["red carpet celebrity arrival, flashing cameras", "เดินพรมแดง", "Red Carpet"],
-  ["neon cyberpunk city at night, reflective rain", "เมืองนีออน", "Neon City"],
-  ["disintegration into particles, dissolving away", "สลายเป็นผง", "Disintegration"],
-  ["frozen time, camera orbits a still bullet-time moment", "หยุดเวลา", "Frozen Time"],
-  ["clean 3D CGI product render reveal on seamless studio", "3D เรนเดอร์", "3D Render"],
-  ["high-speed drift racing, tire smoke, motion blur", "ดริฟต์รถซิ่ง", "Drift Racing"],
-  ["casting a magic spell with glowing energy and particles", "ร่ายเวทมนตร์", "Magic Spell"],
-  ["epic dragon fantasy cinematic scene", "มังกรแฟนตาซี", "Dragon"],
-  ["slow-motion impact moment, shockwave ripple", "สโลโมชันกระแทก", "Slow-mo Impact"],
-  ["dramatic transformation morph of the subject", "แปลงร่าง", "Transformation"],
+  ["one continuous unbroken zoom-out starting tight on the subject, pulling back through clouds and atmosphere into outer space revealing the whole Earth, seamless dolly-out, epic scale", "ซูมออกสู่อวกาศ", "Earth Zoom Out"],
+  ["one continuous zoom-in from outer space, diving through the atmosphere and clouds straight down to the subject on the ground, seamless descent, epic reveal", "ซูมจากอวกาศลงมา", "Earth Zoom In"],
+  ["subject free-fall skydiving, body tumbling against rushing wind, wide aerial parachute-cam over landscape, heavy motion blur, adrenaline energy", "ตกอิสระ/สกายไดฟ์", "Free Fall"],
+  ["first-person superhero flight at extreme speed, streaking through sky and clouds, intense forward motion blur, dynamic banking camera, whoosh energy", "บินความเร็วสูง", "Superfast Flight"],
+  ["green monochrome night-vision goggle POV, grainy infrared, glowing hot highlights in pitch-dark surroundings, handheld found-footage", "กล้องไนท์วิชั่น", "Night Vision"],
+  ["fixed overhead office CCTV surveillance footage, wide fish-eye angle, timestamp overlay, slightly choppy low frame-rate, grainy security-cam look", "กล้องวงจรปิด", "CCTV"],
+  ["early-2000s paparazzi ambush, rapid harsh camera flashes, chaotic handheld, blown-out highlights, celebrity caught off-guard", "ปาปารัสซี่ Y2K", "Paparazzi"],
+  ["glamorous red carpet arrival, popping camera flashes, slow confident walk toward camera, luxury event spotlight, cinematic", "เดินพรมแดง", "Red Carpet"],
+  ["stylized 3D game-style hero character reveal, glowing neon cyberpunk city backdrop, rim lighting and rain reflections, dramatic title-screen 'special edition' cover look", "เมืองนีออน", "Neon City"],
+  ["subject dramatically disintegrating into flying particles and embers, dissolving away in the wind, snap-effect, slow motion vfx", "สลายเป็นผง", "Disintegration"],
+  ["time freezes mid-action, all motion suspended, camera orbits 360 around the frozen bullet-time moment, floating debris hangs still", "หยุดเวลา", "Frozen Time"],
+  ["clean 3D CGI render reveal on a seamless studio backdrop, smooth turntable rotation, soft studio lighting, glossy product-shot quality", "3D เรนเดอร์", "3D Render"],
+  ["high-speed drift racing, car sliding sideways, billowing tire smoke and sparks, low chase-cam, heavy motion blur, street-racing energy", "ดริฟต์รถซิ่ง", "Drift Racing"],
+  ["casting a powerful magic spell, swirling glowing energy and sparks around the hands, particle vfx, dramatic fantasy lighting", "ร่ายเวทมนตร์", "Magic Spell"],
+  ["epic cinematic fantasy scene with a massive dragon, sweeping camera, dramatic scale, atmospheric mist, blockbuster lighting", "มังกรแฟนตาซี", "Dragon"],
+  ["extreme slow-motion impact moment, shockwave ripple, debris and sweat flying, ultra high frame-rate, dramatic crunch", "สโลโมชันกระแทก", "Slow-mo Impact"],
+  ["dramatic transformation morph of the subject, body and outfit shifting form mid-shot, energy burst, seamless metamorphosis vfx", "แปลงร่าง", "Transformation"],
 ];
-// preview จริงจาก Higgsfield (mp4 + thumbnail) — null = ใช้ gradient
-const VIRAL_PREVIEW = [["https://cdn.higgsfield.ai/superhero-gen-preset/5b5cf127-8992-457f-8828-dfeb76603556.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/701b42c5-e637-45f8-a099-0b00a5fa9e8f.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/548bd523-4c5e-4a2d-a0d0-e72a0ca90380.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/3164376b-1cf1-48d4-84a7-44eeb965608a.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/c4fecf92-2899-47e8-a6c3-d8dc9630050f.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/801ea6a6-234e-4acc-86f6-15696f592e09.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/f3b95333-a0da-4317-9abe-69986aef299c.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/d3aa1e93-58cd-4190-bf7c-3b2c7138dc3c.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/9e1aa9b3-52cc-49de-b2bb-638175503ba0.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/e9c8396b-6fdc-4249-a893-4f1a287f5573.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/e7c754af-a8b3-4f16-850f-5422c2e05f3c.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/dffebc7a-dadf-4773-80d6-6ea2fa06e4fe.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/38f76e53-bd38-4976-a0c3-db11c27a654f.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/a5c957be-ee55-4f4f-a243-4e95751bd268.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/a3278dc3-13d2-4fd4-84da-5f708b16e419.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/0c8d6e22-707d-4d51-9fb7-4d2f2cb50b4e.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/313a91ab-0c72-48d7-820a-f67feec2ac0d.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/d0405bee-bb6e-4e6f-939d-f5ff207a5f5d.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/1490876d-9651-4ad8-9b8d-6989e3f7b76d.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/94e3850f-03dd-4aa8-b225-f4bc2cf68936.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/9a53dca8-6e11-4cd7-85c5-065b8d86badc.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/f8f10138-d49d-49da-b5f5-b5b7f7ae48ab.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/771aae60-d237-4da1-8f1e-5966f8dd7ecd.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/125ab1f6-1cde-4051-b017-4d70e75278fa.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/38bd10a6-f5a1-4f83-bcd8-39620399e2b1.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/29d305ff-b656-42c3-a2ac-94027f30b391.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/3ee48cb6-8f34-4f5a-aea9-f3ff467eb0a8.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/519917c4-1ce9-49c5-86b9-a75897400780.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/6f635ee6-31ee-4b86-9bc9-be16211f3a38.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/d7344f77-ae4c-4e16-884a-84b30a8d14df.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/4c490279-bcbe-4dd6-9e22-281a3bf9c84a.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/f927e509-25b0-47b4-8430-8a4bfeafbaff.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/ba13b36e-a8c7-4cc8-9a66-67600782abd4.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/f2db962f-ba52-44e3-a5f7-c2b7b2da9da3.webp"]];
+// preview vendored ในเครื่อง (viral/viral-N.mp4 + .webp) — ดึงมาจาก Higgsfield ครั้งเดียว ไม่พึ่ง CDN
+const VIRAL_PREVIEW = VIRAL.map((_, i) => [`viral/viral-${i}.mp4`, `viral/viral-${i}.webp`]);
 let viralPreset = VIRAL[0][0];
 (function renderViral() {
   $("vrGrid").innerHTML = VIRAL.map((p, i) => {
@@ -77,6 +78,42 @@ let viralPreset = VIRAL[0][0];
       $("vrGrid").querySelectorAll(".vrcard").forEach((x) => x.classList.remove("sel"));
       c.classList.add("sel");
       viralPreset = VIRAL[+c.dataset.i][0];
+    });
+  });
+})();
+
+// ── แนวเรื่อง (ละครสั้น) gallery — รูปประกอบ AI-gen ต่อแนว + fallback gradient ──
+// [value(ใช้ใน prompt), ชื่อสั้น(การ์ด), prompt รูป(อังกฤษ)]
+const GENRE = [
+  ["ซีรีย์จีนโบราณ (ฮ่องเต้/วังหลวง)", "จีนโบราณ", "ancient chinese imperial palace, emperor in royal robes, cinematic period drama"],
+  ["ซีรีย์จีนทันสมัย (CEO/โรแมนติก)", "จีนโมเดิร์น", "modern chinese CEO romance drama, elegant city skyline, cinematic"],
+  ["ซีรีย์เกาหลี (โรแมนติก/ดราม่า)", "เกาหลี", "korean romance drama, soft warm cinematic, couple in seoul"],
+  ["เกาหลีย้อนยุค (ซากึก/ราชวงศ์)", "เกาหลีย้อนยุค", "korean historical sageuk, hanbok, joseon royal palace, cinematic"],
+  ["ซีรีย์ญี่ปุ่น (ดราม่า/ฟีลกู้ด)", "ญี่ปุ่น", "japanese feel-good slice of life drama, warm tones, tokyo street"],
+  ["หนังไทย (ดราม่า/โรแมนติก)", "หนังไทย", "thai romantic drama film, cinematic warm mood"],
+  ["หนังจักรๆ วงศ์ๆ (ไทยพื้นบ้านแฟนตาซี)", "จักรๆวงศ์ๆ", "thai folklore fantasy, ornate traditional costume, mythical golden"],
+  ["ละครสั้นไทยตลก", "ตลก", "thai comedy sitcom, funny colorful vibrant scene"],
+  ["ละครไทบ้าน (อีสาน/ชนบท)", "ไทบ้าน", "thai isan rural countryside village life, warm rustic"],
+  ["สยองขวัญ/ผี (ไทย)", "ผีสยอง", "thai horror ghost film, dark eerie moody atmosphere"],
+];
+let seriesGenre = GENRE[0][0];
+(function renderGenre() {
+  $("srGrid").innerHTML = GENRE.map((g, i) => {
+    const url = `genres/genre-${i}.jpg`; // รูป vendored (square) → object-fit:cover crop ไม่บีบ
+    return `<div class="vrcard${i === 0 ? " sel" : ""}" data-i="${i}">
+      <div class="vrtile"><img class="vrvid" data-h="${(i * 53) % 360}" src="${url}" loading="lazy" referrerpolicy="no-referrer"><div class="vrname"><b>${g[1]}</b></div></div></div>`;
+  }).join("");
+  $("srGrid").querySelectorAll(".vrcard").forEach((c) => {
+    const img = c.querySelector("img");
+    img.addEventListener("error", () => {            // โหลดรูปไม่ได้ → gradient (inline handler โดน CSP บล็อก เลยผูกที่นี่)
+      const h = +img.dataset.h;
+      img.style.display = "none";
+      img.parentNode.style.background = `linear-gradient(135deg, oklch(0.55 0.16 ${h}), oklch(0.4 0.14 ${(h + 40) % 360}))`;
+    });
+    c.addEventListener("click", () => {
+      $("srGrid").querySelectorAll(".vrcard").forEach((x) => x.classList.remove("sel"));
+      c.classList.add("sel");
+      seriesGenre = GENRE[+c.dataset.i][0];
     });
   });
 })();
@@ -146,19 +183,26 @@ function render(r) {
     r.rating != null && `★ ${Number(r.rating).toFixed(1)}`,
   ].filter(Boolean).map((t) => `<span class="chip">${t}</span>`).join("");
 
-  // คอมเมนต์/รีวิว
-  const rv = r.reviews || [];
+  // คอมเมนต์/รีวิว — ติ๊กเลือกได้ว่าจะเอาอันไหนเข้า prompt (default 3 อันแรก)
+  const rv = (r.reviews || []).slice(0, 8);
+  selectedReviews = new Set(rv.map((_, i) => i).slice(0, 3));
   const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   $("reviews").innerHTML = rv.length ? `
-    <div class="rv-h">${ic("message")}รีวิว ${rv.length} รายการ</div>
-    ${rv.slice(0, 8).map((c) => `
-      <div class="rv">
+    <div class="rv-h">${ic("message")}รีวิว ${rv.length} รายการ — ติ๊กอันที่อยากใช้</div>
+    ${rv.map((c, i) => `
+      <label class="rv${selectedReviews.has(i) ? " sel" : ""}" data-i="${i}">
         <div class="rv-top">
-          <span><b>${esc(c.author) || "ผู้ใช้"}</b> <span class="rv-star">${"★".repeat(c.stars || 0)}</span></span>
+          <span><input type="checkbox" class="rv-ck" data-i="${i}"${selectedReviews.has(i) ? " checked" : ""}> <b>${esc(c.author) || "ผู้ใช้"}</b> <span class="rv-star">${"★".repeat(c.stars || 0)}</span></span>
           <span>${c.date || ""} · ${ic("thumb")}${c.likes}</span>
         </div>
         <div class="rv-txt">${esc(c.comment)}</div>
-      </div>`).join("")}` : "";
+      </label>`).join("")}` : "";
+  $("reviews").querySelectorAll(".rv-ck").forEach((ck) =>
+    ck.addEventListener("change", () => {
+      const i = +ck.dataset.i;
+      ck.checked ? selectedReviews.add(i) : selectedReviews.delete(i);
+      ck.closest(".rv").classList.toggle("sel", ck.checked);
+    }));
 }
 
 // ── Image picker: คลิกเลือกรูปที่จะใช้เป็น reference ───────────────
@@ -218,8 +262,10 @@ function switchTab(name) {
 function setG(html) { $("genstatus").innerHTML = html; }
 
 // ── 3 โหมด gen prompt (ตัวตน/สินค้า/ซีรีย์) ผ่าน system prompt เฉพาะโหมด → cards ────
-const schema = (lang, dlgMax) => `Return STRICT JSON {"items":[{"label":"2-4 word label","video_prompt":"...","dialogue":"..."}]}.
-- video_prompt: ENGLISH, vivid cinematic for Veo (camera/shot/action/lighting/mood), vertical 9:16.
+const schema = (lang, dlgMax, textOverlay) => `Return STRICT JSON {"items":[{"label":"2-4 word label","video_prompt":"...","dialogue":"..."}]}.
+- video_prompt: ENGLISH, vivid cinematic for Veo (camera/shot/action/lighting/mood), vertical 9:16.${
+  textOverlay === true ? `\n- ALSO embed a short punchy ${lang === "en" ? "English" : "Thai"} on-screen caption/hook as TEXT OVERLAY, described inside video_prompt.`
+  : textOverlay === false ? `\n- NO on-screen text or captions anywhere in frame.` : ""}
 - dialogue: spoken line in ${lang === "en" ? "English" : "Thai"}, conversational, <= ${dlgMax} words.`;
 async function callGen(system, user) {
   const key = $("apikey").value.trim();
@@ -244,7 +290,7 @@ $("genIdentity").addEventListener("click", async () => {
   const n = +$("idCount").value, lang = $("lang").value;
   const system = `You are a UGC video prompt director for Google Flow (Veo), Thai market.
 Generate EXACTLY ${n} distinct vertical 9:16 video prompts for ONE consistent Thai content creator (same gender/skin/look every item), in the given theme. Each item = a DIFFERENT shot/moment of that creator talking to camera.
-${schema(lang, 14)}`;
+${schema(lang, 14, $("idText").checked)}`;
   const user = `Creator: ${$("idName").value || "Thai creator"}\nGender: ${$("idGender").value}\nSkin: ${$("idSkin").value}\nTheme/setting: ${$("idTheme").value}\nExtra: ${$("idDetails").value}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
   const items = await callGen(system, user);
   if (items) showCards(items, `พรีเซนเตอร์ ${items.length} ชุด`);
@@ -256,9 +302,12 @@ $("genProduct").addEventListener("click", async () => {
   }
   const n = +$("pdCount").value, lang = $("lang").value;
   const system = `You are a UGC product-review prompt director for Google Flow (Veo), Thai market.
-Generate EXACTLY ${n} distinct vertical 9:16 video prompts reviewing the product, sales angle "${$("pdAngle").value}". The REAL product appears; each item a DIFFERENT shot. Use only real facts from details/reviews.
-${schema(lang, 14)}`;
-  const user = `Product: ${lastProduct.name || ""}\nDetails: ${(lastProduct.desc || "").slice(0, 600)}\nReviews: ${(lastProduct.reviews || []).slice(0, 3).map((r) => `"${r.comment}"`).join(" ") || "(none)"}\nAngle: ${$("pdAngle").value}\nText overlay: ${$("pdText").checked ? "yes" : "no"}\nCount: ${n}`;
+Generate EXACTLY ${n} distinct vertical 9:16 video prompts reviewing the product. The REAL product appears; each item a DIFFERENT shot. Use only real facts from details/reviews.
+EVERY prompt MUST strictly obey this shot directive (it defines the style/angle — do not deviate): ${$("pdAngle").value}.
+${schema(lang, 14, $("pdText").checked)}`;
+  const reviews = lastProduct.reviews || [];
+  const pickedReviews = [...selectedReviews].sort((a, b) => a - b).map((i) => reviews[i]?.comment).filter(Boolean);
+  const user = `Product: ${lastProduct.name || ""}\nDetails: ${(lastProduct.desc || "").slice(0, 600)}\nReviews: ${pickedReviews.map((c) => `"${c}"`).join(" ") || "(none)"}\nShot directive: ${$("pdAngle").value}\nText overlay: ${$("pdText").checked ? "yes" : "no"}\nCount: ${n}`;
   const items = await callGen(system, user);
   if (items) showCards(items, `สินค้า ${items.length} ชุด`);
 });
@@ -266,9 +315,9 @@ ${schema(lang, 14)}`;
 $("genSeries").addEventListener("click", async () => {
   const n = +$("srScenes").value, lang = $("lang").value;
   const system = `You are a short-drama series director for Google Flow (Veo).
-Generate a CONNECTED ${n}-scene vertical 9:16 story in genre "${$("srGenre").value}", with the SAME protagonist(s) (consistent face/look) in EVERY scene. Continuous narrative arc across scenes.
+Generate a CONNECTED ${n}-scene vertical 9:16 story in genre "${seriesGenre}", with the SAME protagonist(s) (consistent face/look) in EVERY scene. Continuous narrative arc across scenes.
 ${schema(lang, 21)} label = scene beat.`;
-  const user = `Genre: ${$("srGenre").value}\nScenes: ${n}\nMain characters: ${$("srChars").value}\nLead gender: ${$("srGender").value}\nSkin: ${$("srSkin").value}\nStory: ${$("srStory").value || "(AI decides a compelling arc)"}`;
+  const user = `Genre: ${seriesGenre}\nScenes: ${n}\nMain characters: ${$("srChars").value}\nLead gender: ${$("srGender").value}\nSkin: ${$("srSkin").value}\nStory: ${$("srStory").value || "(AI decides a compelling arc)"}`;
   const items = await callGen(system, user);
   if (items) showCards(items, `ละครสั้น ${items.length} ฉาก`);
 });
@@ -288,23 +337,27 @@ ${schema(lang, 12)}`;
 // LLM key/provider/model (เก็บใน chrome.storage.local) — รองรับ OpenAI + DeepSeek
 const KEY_FIELD = { openai: "openai_key", deepseek: "deepseek_key" };
 if (globalThis.chrome?.storage) {
-  chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_model"]).then((s) => {
+  chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_model", "lang"]).then((s) => {
     const p = s.llm_provider || "openai";
     $("provider").value = p;
     $("apikey").value = s[KEY_FIELD[p]] || "";
     $("model").value = s.llm_model || "";
+    if (s.lang) $("lang").value = s.lang;            // ภาษาพากย์ต้องคงค่าที่ user เลือก ไม่งั้น gen ผิดภาษาเงียบๆ
     resyncSelects();
   });
 }
 $("provider").addEventListener("change", async () => {
   const s = await chrome.storage.local.get(["openai_key", "deepseek_key"]);
   $("apikey").value = s[KEY_FIELD[$("provider").value]] || "";
+  $("model").value = "";                             // ล้าง model กัน gpt-4o ค้างไปยิง endpoint deepseek (400)
+  resyncSelects();
 });
 $("keysave").addEventListener("click", () => {
   chrome.storage.local.set({
     llm_provider: $("provider").value,
     [KEY_FIELD[$("provider").value]]: $("apikey").value.trim(),
     llm_model: $("model").value.trim(),
+    lang: $("lang").value,
   });
   $("keysave").textContent = "บันทึกแล้ว ✓";
   setTimeout(() => { $("keysave").textContent = "บันทึกการตั้งค่า"; }, 1500);
