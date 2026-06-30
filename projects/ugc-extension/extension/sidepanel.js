@@ -3,13 +3,22 @@
 // passive: ทำงานเฉพาะตอน user กด, บนหน้าที่เปิดอยู่แล้ว — ไม่ navigate เอง
 
 const $ = (id) => document.getElementById(id);
+// ── icon helper (Lucide path, inline SVG — กฏเหล็ก: ไม่ใช้ emoji) ──
+const ICONS = {
+  keyboard: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  mic: '<rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/>',
+  thumb: '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
+};
+const ic = (n) => `<svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ""}</svg>`;
 let selectedImages = []; // รูปที่ user ติ๊กเลือก (คงอยู่ข้ามแท็บ สำหรับยัดเข้า Flow)
 let lastProduct = null;  // ผล scrape ล่าสุด (ใช้สร้าง prompt)
 
 $("go").addEventListener("click", async () => {
   const btn = $("go");
   btn.disabled = true;
-  setStatus("⏳ กำลังอ่านหน้า...");
+  setStatus("กำลังอ่านหน้า...");
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) throw new Error("ไม่พบแท็บที่เปิดอยู่");
@@ -75,12 +84,12 @@ function render(r) {
   const rv = r.reviews || [];
   const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   $("reviews").innerHTML = rv.length ? `
-    <div class="rv-h">💬 รีวิว ${rv.length} รายการ</div>
+    <div class="rv-h">${ic("message")}รีวิว ${rv.length} รายการ</div>
     ${rv.slice(0, 8).map((c) => `
       <div class="rv">
         <div class="rv-top">
           <span><b>${esc(c.author) || "ผู้ใช้"}</b> <span class="rv-star">${"★".repeat(c.stars || 0)}</span></span>
-          <span>${c.date || ""} · 👍 ${c.likes}</span>
+          <span>${c.date || ""} · ${ic("thumb")}${c.likes}</span>
         </div>
         <div class="rv-txt">${esc(c.comment)}</div>
       </div>`).join("")}` : "";
@@ -102,7 +111,7 @@ function renderImagePicker(imgs) {
     bar.querySelector("b").textContent = sel.size;
     expose();
   };
-  bar.innerHTML = `<span>🖼️ เลือก <b>${sel.size}</b>/${imgs.length} รูป</span>
+  bar.innerHTML = `<span>${ic("image")}เลือก <b>${sel.size}</b>/${imgs.length} รูป</span>
     <span><button data-act="all">เลือกทั้งหมด</button> <button data-act="clr">ล้าง</button></span>`;
   bar.onclick = (e) => {
     const act = e.target.dataset.act;
@@ -137,6 +146,7 @@ document.querySelectorAll(".tab[data-tab]").forEach((t) =>
 function switchTab(name) {
   document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === `tab-${name}`));
+  $("shared").style.display = name === "settings" ? "none" : "block"; // ซ่อน executor/results ในแท็บตั้งค่า
 }
 function setG(html) { $("genstatus").innerHTML = html; }
 
@@ -147,7 +157,7 @@ const schema = (lang, dlgMax) => `Return STRICT JSON {"items":[{"label":"2-4 wor
 async function callGen(system, user) {
   const key = $("apikey").value.trim();
   if (!key) { switchTab("settings"); setG(`<span class="badge bad">ใส่ LLM API key ก่อน</span> (แท็บ ตั้งค่า)`); return null; }
-  setG("⏳ LLM กำลังสร้าง...");
+  setG("LLM กำลังสร้าง...");
   const resp = await chrome.runtime.sendMessage({
     type: "genLLM", apiKey: key, provider: $("provider").value, model: $("model").value.trim(), system, user,
   });
@@ -160,7 +170,7 @@ async function callGen(system, user) {
 function showCards(items, label) {
   renderCards(items);
   $("autoqueue").style.display = "block";
-  setG(`<span class="badge ok">${label} ✅</span> พิมพ์ทีละ card หรือกด ▶️ Auto (ด้านล่าง) — เปิดแท็บ Flow ก่อน`);
+  setG(`<span class="badge ok">${label} </span> พิมพ์ทีละ card หรือกด  Auto (ด้านล่าง) — เปิดแท็บ Flow ก่อน`);
 }
 
 $("genIdentity").addEventListener("click", async () => {
@@ -196,6 +206,18 @@ ${schema(lang, 21)} label = scene beat.`;
   if (items) showCards(items, `ซีรีย์ ${items.length} ฉาก`);
 });
 
+$("genViral").addEventListener("click", async () => {
+  const n = +$("vrCount").value, lang = $("lang").value;
+  const subject = $("vrSubject").value.trim() || (lastProduct?.name || "the subject");
+  const effect = $("vrPreset").value;
+  const system = `You are a viral short-video prompt director for Google Flow (Veo).
+Apply the viral video effect/style: "${effect}" to the subject. Generate EXACTLY ${n} vertical 9:16 Veo prompts that showcase this effect DRAMATICALLY — scroll-stopping, high-energy, trend-worthy. The subject appears clearly. Each item a distinct beat/angle of the effect.
+${schema(lang, 12)}`;
+  const user = `Subject: ${subject}\nViral effect: ${effect}\nCount: ${n}`;
+  const items = await callGen(system, user);
+  if (items) showCards(items, `ไวรัล ${items.length} ชุด`);
+});
+
 // LLM key/provider/model (เก็บใน chrome.storage.local) — รองรับ OpenAI + DeepSeek
 const KEY_FIELD = { openai: "openai_key", deepseek: "deepseek_key" };
 chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_model"]).then((s) => {
@@ -203,6 +225,7 @@ chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_mod
   $("provider").value = p;
   $("apikey").value = s[KEY_FIELD[p]] || "";
   $("model").value = s.llm_model || "";
+  resyncSelects();
 });
 $("provider").addEventListener("change", async () => {
   const s = await chrome.storage.local.get(["openai_key", "deepseek_key"]);
@@ -225,7 +248,7 @@ async function typeToFlow(text) {
   return resp?.ok ? { ok: true, tabId: tab.id } : { ok: false, error: resp?.error || "?" };
 }
 
-// ▶️ Auto scene-queue: วน type → generate → รอเสร็จ → กด + → ซีนถัดไป (เปลืองเครดิตหลายเครดิต!)
+//  Auto scene-queue: วน type → generate → รอเสร็จ → กด + → ซีนถัดไป (เปลืองเครดิตหลายเครดิต!)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function waitGenerateDone(tabId, baselineVideos, timeoutMs) {
   const start = Date.now(); let wasBusy = false;
@@ -250,24 +273,24 @@ $("autoqueue").addEventListener("click", async () => {
   try {
     for (let i = 0; i < tas.length; i++) {
       const text = tas[i].value.trim();
-      setF(`⏳ ซีน ${i + 1}/${tas.length}: พิมพ์ prompt...`);
+      setF(`ซีน ${i + 1}/${tas.length}: พิมพ์ prompt...`);
       const t = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text });
       if (!t?.ok) { setF(`<span class="badge bad">ซีน ${i + 1}: พิมพ์ไม่ได้</span> ${t?.error}`); return; }
       await sleep(600);
       const base = (await chrome.runtime.sendMessage({ type: "flowState", tabId: tab.id }))?.videos ?? 0;
-      setF(`⏳ ซีน ${i + 1}/${tas.length}: กด Generate...`);
+      setF(`ซีน ${i + 1}/${tas.length}: กด Generate...`);
       const g = await chrome.runtime.sendMessage({ type: "clickGenerate", tabId: tab.id });
       if (!g?.ok) { setF(`<span class="badge bad">ซีน ${i + 1}: generate ไม่ได้</span> ${g?.error}`); return; }
-      setF(`⏳ ซีน ${i + 1}/${tas.length}: รอ generate เสร็จ... (สูงสุด 4 นาที)`);
+      setF(`ซีน ${i + 1}/${tas.length}: รอ generate เสร็จ... (สูงสุด 4 นาที)`);
       const done = await waitGenerateDone(tab.id, base, 240000);
       if (!done) { setF(`<span class="badge bad">ซีน ${i + 1}: รอเกินเวลา</span> เช็คหน้า Flow แล้วทำต่อเอง`); return; }
       if (i < tas.length - 1) {
-        setF(`⏳ เพิ่มซีน ${i + 2}...`);
+        setF(`เพิ่มซีน ${i + 2}...`);
         await chrome.runtime.sendMessage({ type: "clickAdd", tabId: tab.id });
         await sleep(1500);
       }
     }
-    setF(`<span class="badge ok">ยิงครบ ${tas.length} ซีน ✅</span> ดูผลในหน้า Flow แล้วโหลดเอง`);
+    setF(`<span class="badge ok">ยิงครบ ${tas.length} ซีน </span> ดูผลในหน้า Flow แล้วโหลดเอง`);
   } finally { $("autoqueue").disabled = false; }
 });
 
@@ -275,25 +298,25 @@ function renderCards(items) {
   const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   $("cards").innerHTML = items.map((s, i) => `
     <div class="scene">
-      <div class="scene-h"><b>${i + 1} · ${esc(s.label || s.shot || "")}</b><button data-i="${i}">⌨️ พิมพ์ → Flow</button></div>
+      <div class="scene-h"><b>${i + 1} · ${esc(s.label || s.shot || "")}</b><button data-i="${i}">${ic("keyboard")}พิมพ์ → Flow</button></div>
       <textarea data-i="${i}" rows="3">${esc(s.video_prompt || s.prompt || "")}</textarea>
-      ${s.dialogue ? `<div class="dlg">🗣️ ${esc(s.dialogue)}</div>` : ""}
+      ${s.dialogue ? `<div class="dlg">${ic("mic")}${esc(s.dialogue)}</div>` : ""}
     </div>`).join("");
   $("cards").querySelectorAll("button[data-i]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const i = btn.dataset.i;
       const ta = $("cards").querySelector(`textarea[data-i="${i}"]`);
-      setF(`⏳ พิมพ์ card ${+i + 1} เข้า Flow...`);
+      setF(`พิมพ์ card ${+i + 1} เข้า Flow...`);
       const r = await typeToFlow(ta.value.trim());
       setF(r.ok
-        ? `<span class="badge ok">พิมพ์ card ${+i + 1} แล้ว ✅</span> กด ▶️ Generate → รอเสร็จ → กด + ใน Flow → พิมพ์ card ถัดไป`
+        ? `<span class="badge ok">พิมพ์ card ${+i + 1} แล้ว </span> กด  Generate → รอเสร็จ → กด + ใน Flow → พิมพ์ card ถัดไป`
         : `<span class="badge bad">พิมพ์ไม่ได้</span> ${r.error}`);
     });
   });
 }
 
 $("probe").addEventListener("click", async () => {
-  setF("⏳ กำลังตรวจ DOM...");
+  setF("กำลังตรวจ DOM...");
   try {
     const { result: r, tab } = await injectActive(probeFlow);
     $("fraw").textContent = JSON.stringify(r, null, 2);
@@ -302,8 +325,8 @@ $("probe").addEventListener("click", async () => {
       setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> เปิด labs.google/fx/tools/flow ก่อน (host ปัจจุบัน: ${new URL(tab.url).host})`);
       return;
     }
-    const okIn = r.bestPrompt ? "✅" : "❌";
-    const okBtn = r.bestGenerate ? "✅" : "❌";
+    const okIn = r.bestPrompt ? "" : "";
+    const okBtn = r.bestGenerate ? "" : "";
     const gtext = (r.bestGenerate?.text || "ไม่เจอ").replace(/\n/g, " ");
     setF(`<span class="badge ${r.bestPrompt && r.bestGenerate ? "ok" : "bad"}">ผลตรวจ</span>
       ${okIn} prompt: <b>${r.bestPrompt?.sel || "ไม่เจอ"}</b> ${r.bestPrompt?.editable ? "(editable✓)" : ""}<br>
@@ -331,7 +354,7 @@ $("injimg").addEventListener("click", async () => {
     let injected = 0, failed = 0;
     // วนยัดทีละรูป + เว้นจังหวะให้ Flow รับ (re-query input ใหม่ทุกรอบในตัว inject)
     for (let i = 0; i < urls.length; i++) {
-      setF(`⏳ ยัดรูป ${i + 1}/${urls.length}... (สำเร็จ ${injected})`);
+      setF(`ยัดรูป ${i + 1}/${urls.length}... (สำเร็จ ${injected})`);
       const resp = await chrome.runtime.sendMessage({ type: "fetchImage", url: urls[i] });
       if (!resp?.ok) { failed++; continue; }
       const [{ result: r } = {}] = await chrome.scripting.executeScript({
@@ -342,13 +365,13 @@ $("injimg").addEventListener("click", async () => {
       await new Promise((res) => setTimeout(res, 700)); // ให้ Flow ประมวลผลก่อนรูปถัดไป
     }
     setF(`<span class="badge ${injected ? "ok" : "bad"}">ยัดเสร็จ</span> สำเร็จ <b>${injected}</b>/${urls.length} รูป${failed ? ` · พลาด ${failed}` : ""}
-      <br>👀 ดูที่ Flow ว่ารูปขึ้นครบไหม — ℹ️ โหมด Ingredients ของ Flow มักรับสูงสุด ~3 รูป`);
+      <br> ดูที่ Flow ว่ารูปขึ้นครบไหม — ℹ โหมด Ingredients ของ Flow มักรับสูงสุด ~3 รูป`);
   } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
 });
 
 // กด Create (generate จริง) — ยิงเฉพาะปุ่ม arrow_forward ที่ enabled (ไม่แตะปุ่ม +)
 $("gen").addEventListener("click", async () => {
-  setF("⏳ กด Generate...");
+  setF("กด Generate...");
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!/labs\.google|google\.com/.test(tab?.url || "")) {
@@ -356,7 +379,7 @@ $("gen").addEventListener("click", async () => {
     }
     const resp = await chrome.runtime.sendMessage({ type: "clickGenerate", tabId: tab.id });
     setF(resp?.ok
-      ? `<span class="badge ok">กด Create แล้ว ▶️</span> Flow กำลัง generate — รอผลในหน้า Flow แล้วโหลดคลิปเอง`
+      ? `<span class="badge ok">กด Create แล้ว </span> Flow กำลัง generate — รอผลในหน้า Flow แล้วโหลดคลิปเอง`
       : `<span class="badge bad">กดไม่ได้</span> ${resp?.error || "?"}`);
   } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
 });
@@ -387,6 +410,43 @@ async function injectImageToFlow(arg) {
     return { ok: true, method: "drop(fallback)", fileInputs: 0 };
   } catch (e) { return { ok: false, reason: e.message }; }
 }
+
+// ── Custom dropdown (แทน native <select>) — เก็บ select เป็น state, overlay UI ของเรา ──
+const _csSyncs = [];
+function resyncSelects() { _csSyncs.forEach((f) => f()); }
+function buildCustom(sel) {
+  if (sel.dataset.cs) return; sel.dataset.cs = "1";
+  const wrap = document.createElement("div"); wrap.className = "cs";
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "cs-btn";
+  btn.innerHTML = '<span class="cs-val"></span><span class="cs-cv">▾</span>';
+  const list = document.createElement("div"); list.className = "cs-list";
+  const sync = () => {
+    btn.querySelector(".cs-val").textContent = sel.options[sel.selectedIndex]?.text || "";
+    [...list.children].forEach((li, i) => li.classList.toggle("on", i === sel.selectedIndex));
+  };
+  _csSyncs.push(sync);
+  [...sel.options].forEach((o, i) => {
+    const li = document.createElement("div"); li.className = "cs-opt"; li.textContent = o.text;
+    li.addEventListener("click", () => {
+      sel.selectedIndex = i; sel.dispatchEvent(new Event("change", { bubbles: true }));
+      sync(); wrap.classList.remove("open");
+    });
+    list.appendChild(li);
+  });
+  sel.style.display = "none";
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.append(sel, btn, list);
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = wrap.classList.contains("open");
+    document.querySelectorAll(".cs.open").forEach((c) => c.classList.remove("open"));
+    if (!open) wrap.classList.add("open");
+  });
+  sel.addEventListener("change", sync);
+  sync();
+}
+document.addEventListener("click", () => document.querySelectorAll(".cs.open").forEach((c) => c.classList.remove("open")));
+document.querySelectorAll("select.psel").forEach(buildCustom);
 
 // ── Injected scraper (runs in page MAIN world) ─────────────────────
 // self-contained: ห้ามอ้างตัวแปรนอก func นี้

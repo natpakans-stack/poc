@@ -26,12 +26,33 @@
   .prow select,.prow input{flex:1}
   textarea.pin{resize:vertical;line-height:1.5;margin-top:0}
   .chk{display:flex;align-items:center;gap:7px;font-size:11.5px;margin-top:10px;cursor:pointer}
+  /* custom dropdown (แทน native select) */
+  .cs{position:relative;width:100%}
+  .prow .cs{flex:1}
+  .cs-btn{width:100%;text-align:left;font-family:inherit;font-size:12px;border:1.5px solid var(--border);
+    border-radius:9px;padding:9px 11px;background:#fff;color:var(--text);cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .cs.open .cs-btn{border-color:var(--primary)}
+  .cs-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cs-cv{color:var(--muted);font-size:9px;flex:none;transition:.15s}
+  .cs.open .cs-cv{transform:rotate(180deg);color:var(--primary)}
+  .cs-list{position:absolute;z-index:50;top:calc(100% + 4px);left:0;right:0;background:#fff;
+    border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(28,27,26,.16);
+    max-height:230px;overflow-y:auto;padding:4px;display:none}
+  .cs.open .cs-list{display:block}
+  .cs-opt{font-size:12px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--text);line-height:1.3}
+  .cs-opt:hover{background:var(--surface)}
+  .cs-opt.on{background:var(--primary-tint);color:var(--primary-deep);font-weight:600}
   /* tabs */
   .tabs{display:flex;gap:2px;border-bottom:1.5px solid var(--border);margin:10px 0 12px}
   .tab{flex:1;text-align:center;padding:9px 2px 8px;font-size:11px;font-weight:600;color:var(--muted);
     border:none;border-bottom:2.5px solid transparent;cursor:pointer;background:none;font-family:inherit;
     display:flex;flex-direction:column;gap:2px;align-items:center}
-  .tab .ic{font-size:15px}
+  .tab .ic{display:flex}
+  .tab .ic svg{width:18px;height:18px;display:block}
+  .ici{width:1em;height:1em;vertical-align:-.14em;flex:none}
+  button.go .ici{margin-right:5px}.sect .ici,.rv-h .ici,.selbar .ici{margin-right:4px}
+  .scene-h button .ici,.cs-opt .ici{margin-right:3px}
   .tab.on{color:var(--primary-deep);border-bottom-color:var(--primary)}
   .panel{display:none}
   .panel.on{display:block}
@@ -98,10 +119,16 @@
   </div>
 
   <div class="tabs">
-    <button class="tab on" data-tab="identity"><span class="ic">👤</span>ตัวตน</button>
-    <button class="tab" data-tab="product"><span class="ic">📦</span>สินค้า</button>
-    <button class="tab" data-tab="series"><span class="ic">🎬</span>ซีรีย์</button>
-    <button class="tab" data-tab="settings"><span class="ic">⚙️</span>ตั้งค่า</button>
+    <button class="tab on" data-tab="identity">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>ตัวตน</button>
+    <button class="tab" data-tab="product">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>สินค้า</button>
+    <button class="tab" data-tab="series">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>ซีรีย์</button>
+    <button class="tab" data-tab="viral">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg></span>ไวรัล</button>
+    <button class="tab" data-tab="settings">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>ตั้งค่า</button>
   </div>
 
   <!-- ===== ตัวตน ===== -->
@@ -130,13 +157,13 @@
       <div></div>
     </div>
     <label class="chk"><input type="checkbox" id="idText"> ใส่ข้อความบนภาพ (caption)</label>
-    <button class="go" id="genIdentity" style="margin-top:12px">✨ สร้างพรอมต์ตัวตน</button>
+    <button class="go" id="genIdentity" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างพรอมต์ตัวตน</button>
   </div>
 
   <!-- ===== สินค้า ===== -->
   <div class="panel" id="tab-product">
     <div class="hint">ดึงข้อมูลสินค้าเว็บไหนก็ได้ (เปิดหน้าเองแล้วกด) → gen prompt รีวิว</div>
-    <button class="go" id="go">🔍 ดึงข้อมูลจากหน้านี้</button>
+    <button class="go" id="go"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>ดึงข้อมูลจากหน้านี้</button>
     <div class="status" id="status"></div>
     <div class="card" id="card">
       <div class="selbar" id="selbar"></div>
@@ -164,7 +191,7 @@
       <div></div>
     </div>
     <label class="chk"><input type="checkbox" id="pdText" checked> ใส่ข้อความพาดหัวบนภาพ</label>
-    <button class="go" id="genProduct" style="margin-top:12px">✨ สร้างพรอมต์สินค้า</button>
+    <button class="go" id="genProduct" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างพรอมต์สินค้า</button>
   </div>
 
   <!-- ===== ซีรีย์ ===== -->
@@ -192,7 +219,44 @@
     </div>
     <label class="lab">รายละเอียดตัวเอก / เนื้อเรื่อง</label>
     <textarea class="pin" id="srStory" rows="3" placeholder="เว้นว่างให้ AI คิด — เช่น นางเอกถูกใส่ร้าย ต้องล้างมลทินและแก้แค้น"></textarea>
-    <button class="go" id="genSeries" style="margin-top:12px">✨ สร้างซีรีย์</button>
+    <button class="go" id="genSeries" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างซีรีย์</button>
+  </div>
+
+  <!-- ===== ไวรัล ===== -->
+  <div class="panel" id="tab-viral">
+    <div class="hint">เลือกเอฟเฟกต์ไวรัลฮิตๆ (แนว Higgsfield) → AI เขียน prompt ใส่เอฟเฟกต์นั้นให้</div>
+    <label class="lab">หัวข้อ / ของในคลิป</label>
+    <input class="psel" id="vrSubject" placeholder="เช่น สินค้า X, ครีเอเตอร์, รถซิ่ง">
+    <label class="lab">เอฟเฟกต์ไวรัล</label>
+    <select class="psel" id="vrPreset">
+      <option value="Earth zoom-out from the subject all the way into outer space">ซูมออกสู่อวกาศ (Earth Zoom Out)</option>
+      <option value="Earth zoom-in from outer space down to the subject">ซูมจากอวกาศลงมา (Earth Zoom In)</option>
+      <option value="free-fall skydiving with the subject, wind and motion">ตกอิสระ/สกายไดฟ์ (Free Fall)</option>
+      <option value="superfast first-person flight, extreme speed motion blur">บินความเร็วสูง (Superfast Flight)</option>
+      <option value="green night-vision camera look, grainy IR">กล้องไนท์วิชั่น (Night Vision)</option>
+      <option value="office CCTV surveillance camera footage, timestamp overlay">กล้องวงจรปิด (CCTV)</option>
+      <option value="early-2000s paparazzi flash photography, harsh flash">ปาปารัสซี่ Y2K (Paparazzi)</option>
+      <option value="red carpet celebrity arrival, flashing cameras">เดินพรมแดง (Red Carpet)</option>
+      <option value="neon cyberpunk city at night, reflective rain">เมืองนีออนไซเบอร์พังก์ (Neon City)</option>
+      <option value="disintegration into particles, dissolving away">สลายเป็นผง (Disintegration)</option>
+      <option value="frozen time, camera orbits a still bullet-time moment">หยุดเวลา (Frozen Time)</option>
+      <option value="clean 3D CGI product render reveal on seamless studio">3D เรนเดอร์ (3D Render)</option>
+      <option value="high-speed drift racing, tire smoke, motion blur">ดริฟต์รถซิ่ง (Drift Racing)</option>
+      <option value="casting a magic spell with glowing energy and particles">ร่ายเวทมนตร์ (Magic Spell)</option>
+      <option value="epic dragon fantasy cinematic scene">มังกรแฟนตาซี (Dragon)</option>
+      <option value="slow-motion impact moment, shockwave ripple">สโลโมชันกระแทก (Slow-mo Impact)</option>
+      <option value="bodycam POV first-person action footage">มุมมองบอดี้แคม (Bodycam POV)</option>
+      <option value="fisheye ultra-wide lens, distorted edges">เลนส์ฟิชอาย (Fisheye)</option>
+      <option value="glitch datamosh digital distortion transitions">กลิตช์ดิจิทัล (Glitch)</option>
+      <option value="hyper-macro satisfying extreme close-up">มาโครฟินๆ (Hyper-Macro)</option>
+      <option value="dramatic transformation morph of the subject">แปลงร่าง (Transformation)</option>
+    </select>
+    <div class="prow">
+      <div><label class="lab">จำนวนชุด</label>
+        <select class="psel" id="vrCount"><option>1</option><option selected>3</option><option>5</option><option>8</option></select></div>
+      <div></div>
+    </div>
+    <button class="go" id="genViral" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างพรอมต์ไวรัล</button>
   </div>
 
   <!-- ===== ตั้งค่า ===== -->
@@ -212,22 +276,24 @@
     </div>
   </div>
 
-  <!-- ===== SHARED: results + Flow executor ===== -->
-  <hr class="hr">
-  <div id="genstatus" class="status"></div>
-  <div id="cards"></div>
-  <button class="go" id="autoqueue" style="margin-top:8px;display:none">▶️ Auto: ยิงทุก card เข้า Flow (เปลืองเครดิต)</button>
+  <!-- ===== SHARED: results + Flow executor (ซ่อนในแท็บตั้งค่า) ===== -->
+  <div id="shared">
+    <hr class="hr">
+    <div id="genstatus" class="status"></div>
+    <div id="cards"></div>
+    <button class="go" id="autoqueue" style="margin-top:8px;display:none"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>Auto: ยิงทุก card เข้า Flow (เปลืองเครดิต)</button>
 
-  <hr class="hr">
-  <div class="sect">🎬 Flow (executor)</div>
-  <div class="hint">เปิด Google Flow ที่ <b>login แล้ว</b> → ยัดรูป reference → ยิง card เข้า Flow (ปุ่ม Auto ด้านบน หรือทีละ card)</div>
-  <div class="btn-row">
-    <button class="go alt" id="probe">🔎 ตรวจ DOM</button>
-    <button class="go alt" id="injimg">🖼️ ยัดรูป→Flow</button>
+    <hr class="hr">
+    <div class="sect"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="19" height="18" rx="2"/><path d="M2.5 8.5h19M2.5 15.5h19M8 3v18M16 3v18"/></svg>Flow (executor)</div>
+    <div class="hint">เปิด Google Flow ที่ <b>login แล้ว</b> → ยัดรูป reference → ยิง card เข้า Flow (ปุ่ม Auto ด้านบน หรือทีละ card)</div>
+    <div class="btn-row">
+      <button class="go alt" id="probe"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>ตรวจ DOM</button>
+      <button class="go alt" id="injimg"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>ยัดรูป→Flow</button>
+    </div>
+    <button class="go" id="gen" style="width:100%;margin-top:7px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>กด Generate (1 ครั้ง)</button>
+    <div class="status" id="fstatus"></div>
+    <details id="frawWrap" style="display:none"><summary>candidates (debug)</summary><pre id="fraw"></pre></details>
   </div>
-  <button class="go" id="gen" style="width:100%;margin-top:7px">▶️ กด Generate (1 ครั้ง)</button>
-  <div class="status" id="fstatus"></div>
-  <details id="frawWrap" style="display:none"><summary>candidates (debug)</summary><pre id="fraw"></pre></details>
 
   <script src="sidepanel.js"></script>
 </body>
