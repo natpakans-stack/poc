@@ -261,12 +261,16 @@ function setF(html) { $("fstatus").innerHTML = html; }
 // ── Tabs ───────────────────────────────────────────────────────────
 document.querySelectorAll(".tab[data-tab]").forEach((t) =>
   t.addEventListener("click", () => switchTab(t.dataset.tab)));
+let curTab = "identity";
 function switchTab(name) {
+  if (name !== curTab && name !== "settings") clearResults(); // สลับแท็บ → ล้างการ์ดเก่า กันผลโหมดอื่นค้าง
+  curTab = name;
   document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === `tab-${name}`));
   $("shared").style.display = name === "settings" ? "none" : "block"; // ซ่อน executor/results ในแท็บตั้งค่า
   $("setdock").style.display = name === "settings" ? "" : "none";     // โชว์ปุ่มบันทึก (footer) เฉพาะตั้งค่า
 }
+function clearResults() { $("cards").innerHTML = ""; setG(""); $("autoqueue").style.display = "none"; }
 function setG(html) { $("genstatus").innerHTML = html; }
 
 // ── 3 โหมด gen prompt (ตัวตน/สินค้า/ซีรีย์) ผ่าน system prompt เฉพาะโหมด → cards ────
@@ -312,10 +316,14 @@ $("genIdentity").addEventListener("click", async () => {
       : "";
     userExtra = `\nGender: ${$("idGender").value}\nSkin: ${$("idSkin").value}`;
   }
+  const action = $("idAction").value.trim();
+  const actionClause = action
+    ? `\nThe user described what should happen (action/storyline): distribute it across the ${n} scenes as a coherent flow — each item is one beat of that storyline, in order.`
+    : "";
   const system = `You are a UGC video prompt director for Google Flow (Veo), Thai market.
-${subjectLine}${refClause}
+${subjectLine}${refClause}${actionClause}
 ${schema(lang, 14, $("idText").checked)}`;
-  const user = `Creator: ${$("idName").value || "Thai creator"}${userExtra}\nTheme/setting: ${$("idTheme").value}\nExtra: ${$("idDetails").value}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
+  const user = `Creator: ${$("idName").value || "Thai creator"}${userExtra}\nTheme/setting: ${$("idTheme").value}\nLook details: ${$("idDetails").value}\nAction/storyline: ${action || "(creator decides natural talking moments)"}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
   const items = await callGen(system, user);
   if (items) showCards(items, `พรีเซนเตอร์ ${items.length} ชุด`);
 });
