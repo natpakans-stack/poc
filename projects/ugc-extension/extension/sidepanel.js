@@ -31,6 +31,15 @@ $("go").addEventListener("click", async () => {
 
 function setStatus(html) { $("status").innerHTML = html; }
 
+// แก้ช่องสินค้าเอง → sync เข้า lastProduct (storyboard/prompt ใช้ค่าที่กรอก) — ไม่ตันแม้ scrape ไม่ครบ
+const ensureProduct = () => (lastProduct ||= { manual: true, images: [], reviews: [] });
+$("nm").addEventListener("input", () => { ensureProduct().name = $("nm").value.trim(); });
+$("desc").addEventListener("input", () => { ensureProduct().desc = $("desc").value.trim(); });
+$("pr").addEventListener("input", () => {
+  const n = parseFloat($("pr").value.replace(/[^0-9.]/g, ""));
+  ensureProduct().price = isNaN(n) ? null : n;
+});
+
 function render(r) {
   $("raw").textContent = JSON.stringify(r, null, 2);
   $("rawWrap").style.display = "block";
@@ -41,19 +50,16 @@ function render(r) {
     $("card").style.display = "none";
     return;
   }
-  const got = r.name || r.price || (r.images && r.images.length);
-  if (!got) {
-    setStatus(`<span class="badge bad">ไม่เจอข้อมูลสินค้า</span> หน้านี้อาจไม่ใช่หน้าสินค้า หรือโครงเปลี่ยน (ดู raw)`);
-    $("card").style.display = "none";
-    return;
-  }
-
-  setStatus(`<span class="badge ok">สำเร็จ</span> via <b>${r.method}</b>`);
+  // แสดง card เสมอ (แก้ไขได้) — auto ดึงไม่ครบ ก็กรอกเองต่อได้ ไม่ตัน
   lastProduct = r;
   $("card").style.display = "block";
-  $("nm").textContent = r.name || "(ไม่พบชื่อ)";
-  $("pr").textContent = r.price != null ? `฿${r.price}` : "";
-  $("desc").textContent = r.desc || "";
+  $("nm").value = r.name || "";
+  $("pr").value = r.price != null ? `฿${r.price}` : "";
+  $("desc").value = r.desc || "";
+  const got = r.name || r.price || (r.images && r.images.length);
+  setStatus(got
+    ? `<span class="badge ok">สำเร็จ</span> via <b>${r.method}</b> — แก้ไขช่องได้`
+    : `<span class="badge bad">scrape ไม่เจอ</span> กรอกชื่อ/ราคา/รูปเองได้เลย (storyboard ใช้ค่าที่กรอก)`);
 
   const imgs = r.images || [];
   renderImagePicker(imgs);
@@ -144,6 +150,63 @@ $("pbuild").addEventListener("click", () => {
   $("prompt").value = buildPrompt();
 });
 
+// OpenAI key (เก็บใน chrome.storage.local)
+chrome.storage.local.get("openai_key").then(({ openai_key }) => { if (openai_key) $("apikey").value = openai_key; });
+$("keysave").addEventListener("click", () => {
+  chrome.storage.local.set({ openai_key: $("apikey").value.trim() });
+  $("keysave").textContent = "บันทึกแล้ว ✓";
+  setTimeout(() => { $("keysave").textContent = "บันทึก"; }, 1500);
+});
+const ANGLE_LABEL = { review: "UGC product review (ขายของ)", story: "brand storytelling", unbox: "unboxing", demo: "how-to demo" };
+
+// helper: พิมพ์ข้อความเข้า Flow (ใช้ทั้งปุ่มเดี่ยว + ปุ่มรายซีน) — คืน tabId เผื่อ re-probe
+async function typeToFlow(text) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!/labs\.google|google\.com/.test(tab?.url || "")) return { ok: false, error: "สลับไปแท็บ Flow ก่อน" };
+  const resp = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text });
+  return resp?.ok ? { ok: true, tabId: tab.id } : { ok: false, error: resp?.error || "?" };
+}
+
+// 🎬 สร้าง storyboard หลายซีน ผ่าน LLM
+$("psb").addEventListener("click", async () => {
+  const key = $("apikey").value.trim();
+  if (!lastProduct) { setF(`<span class="badge bad">ยังไม่มีสินค้า</span> ดึงข้อมูลจาก Shopee ก่อน`); return; }
+  if (!key) { $("keywrap").open = true; setF(`<span class="badge bad">ใส่ OpenAI key ก่อน</span> (⚙️ ด้านบน)`); return; }
+  setF("⏳ LLM กำลังแตก storyboard...");
+  try {
+    const resp = await chrome.runtime.sendMessage({
+      type: "genStoryboard", apiKey: key,
+      product: { name: lastProduct.name, desc: lastProduct.desc, reviews: lastProduct.reviews },
+      angle: ANGLE_LABEL[$("ptemplate").value] || "UGC review",
+      lang: $("plang").value, scenes: +$("pscenes").value,
+    });
+    if (!resp?.ok) { setF(`<span class="badge bad">สร้างไม่ได้</span> ${resp?.error || "?"}`); return; }
+    renderScenes(resp.scenes);
+    setF(`<span class="badge ok">ได้ ${resp.scenes.length} ซีน ✅</span> พิมพ์ทีละซีน → Generate → กด + เพิ่มซีนใน Flow`);
+  } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
+});
+
+function renderScenes(scenes) {
+  const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  $("scenes").innerHTML = scenes.map((s, i) => `
+    <div class="scene">
+      <div class="scene-h"><b>ซีน ${i + 1} · ${esc(s.shot || "")}</b><button data-i="${i}">⌨️ พิมพ์ซีนนี้ → Flow</button></div>
+      <textarea data-i="${i}" rows="3">${esc(s.video_prompt || "")}</textarea>
+      ${s.dialogue ? `<div class="dlg">🗣️ ${esc(s.dialogue)}</div>` : ""}
+    </div>`).join("");
+  $("scenes").querySelectorAll("button[data-i]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const i = btn.dataset.i;
+      const ta = $("scenes").querySelector(`textarea[data-i="${i}"]`);
+      setF(`⏳ พิมพ์ซีน ${+i + 1} เข้า Flow...`);
+      const r = await typeToFlow(ta.value.trim());
+      setF(r.ok
+        ? `<span class="badge ok">พิมพ์ซีน ${+i + 1} แล้ว ✅</span> กด ▶️ Generate → รอเสร็จ → กด + เพิ่มซีนใน Flow → พิมพ์ซีนถัดไป`
+        : `<span class="badge bad">พิมพ์ไม่ได้</span> ${r.error}`);
+    });
+  });
+}
+
 $("probe").addEventListener("click", async () => {
   setF("⏳ กำลังตรวจ DOM...");
   try {
@@ -171,15 +234,11 @@ $("fill").addEventListener("click", async () => {
     (lastProduct ? buildPrompt() : "A cinematic vertical 9:16 UGC product review by a Thai creator, warm authentic tone");
   setF("⏳ พิมพ์แบบ keystroke จริง (CDP)... จะมีแถบ debugging โผล่ ปกติ");
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!/labs\.google|google\.com/.test(tab?.url || "")) {
-      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อนกด`); return;
-    }
-    const resp = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text: sample });
-    if (!resp?.ok) { setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${resp?.error || "?"}`); return; }
+    const r = await typeToFlow(sample);
+    if (!r.ok) { setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${r.error}`); return; }
     // เช็คปุ่ม Create เปิดไหม (รอ React re-render)
-    await new Promise((r) => setTimeout(r, 600));
-    const [{ result: p } = {}] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, world: "MAIN", func: probeFlow });
+    await new Promise((res) => setTimeout(res, 600));
+    const [{ result: p } = {}] = await chrome.scripting.executeScript({ target: { tabId: r.tabId }, world: "MAIN", func: probeFlow });
     const ge = p?.bestGenerate && !p.bestGenerate.disabled;
     setF(ge
       ? `<span class="badge ok">พิมพ์สำเร็จ + ปุ่ม Create เปิดแล้ว ✅</span> เขียน Flow ได้จริง → พร้อมกด generate`
@@ -276,20 +335,24 @@ async function scrapeProduct() {
   const meta = (n) =>
     document.querySelector(`meta[property="${n}"],meta[name="${n}"]`)?.content || null;
 
-  // เก็บรูป "ทั้งหมด" ในหน้า: gallery + description + bg — auto-scroll โหลด lazy แล้วเลื่อนกลับ
-  const cdn = /susercontent|lazcdn|alicdn|tiktokcdn/;
-  const normKey = (s) => s.split("?")[0].replace(/_tn$/, "");      // ตัด query + thumbnail suffix
+  // เก็บรูป "ทั้งหมด" ในหน้า (ทุกเว็บ): img + bg ที่ใหญ่พอ (ตัด icon/logo) — auto-scroll โหลด lazy
+  const normKey = (s) => s.split("?")[0].replace(/_tn$/, "");      // ตัด query + thumbnail suffix (shopee)
+  const okImg = (s) => /^https?:\/\//.test(s) && !/\.svg(\?|$)/i.test(s);
   const gatherAllImages = async () => {
     const map = new Map();  // normKey -> url (เก็บตัวเต็ม กันซ้ำ)
     const collect = () => {
-      const og = meta("og:image"); if (og) map.set(normKey(og), og.split("?")[0]);
+      const og = meta("og:image"); if (og && okImg(og)) map.set(normKey(og), og.split("?")[0]);
       document.querySelectorAll("img").forEach((i) => {
         const s = i.currentSrc || i.src || "";
-        if (cdn.test(s)) { const k = normKey(s); if (!map.has(k)) map.set(k, s.split("?")[0]); }
+        if (!okImg(s)) return;
+        const big = (i.naturalWidth || 0) >= 100 || i.getBoundingClientRect().width >= 100; // ตัด icon เล็ก
+        if (big) { const k = normKey(s); if (!map.has(k)) map.set(k, s.split("?")[0]); }
       });
       document.querySelectorAll('[style*="background-image"]').forEach((e) => {
         const m = (e.style.backgroundImage || "").match(/url\(["']?(.*?)["']?\)/);
-        if (m && cdn.test(m[1])) map.set(normKey(m[1]), m[1].split("?")[0]);
+        if (!m || !okImg(m[1])) return;
+        const r = e.getBoundingClientRect();
+        if (r.width >= 100 || r.height >= 100) map.set(normKey(m[1]), m[1].split("?")[0]);
       });
     };
     const y0 = window.scrollY;
@@ -356,30 +419,35 @@ async function scrapeProduct() {
     } catch (e) { out.debug.api = "throw:" + e.message; }
   }
 
-  // strategy B: og-meta (เกือบทุกเว็บมี เสถียรสุด)
+  // strategy B: og-meta (เกือบทุกเว็บมี)
   const ogTitle = meta("og:title"), ogImg = meta("og:image");
   if (ogTitle || ogImg) {
     out.method = "og-meta";
-    out.name = ogTitle || document.title;
+    out._og = ogTitle;
     if (ogImg) out.images = [ogImg];
     out.desc = (meta("og:description") || "").slice(0, 200);
     const pa = meta("product:price:amount");
     if (pa) out.price = +pa;
   }
 
-  // strategy C: JSON-LD Product (เติมราคา/รูปถ้า og ไม่มี)
+  // strategy C: JSON-LD Product (รองรับ @graph ของ Yoast/WooCommerce + ราคาหลายรูปแบบ)
   try {
-    const lds = [...document.querySelectorAll('script[type="application/ld+json"]')]
+    const raw = [...document.querySelectorAll('script[type="application/ld+json"]')]
       .map((s) => { try { return JSON.parse(s.textContent); } catch { return null; } })
       .flatMap((x) => Array.isArray(x) ? x : [x]).filter(Boolean);
-    const prod = lds.find((x) => /product/i.test(x?.["@type"] || ""));
+    const flat = raw.flatMap((x) => Array.isArray(x?.["@graph"]) ? x["@graph"] : [x]); // กาง @graph
+    const prod = flat.find((x) => /product/i.test([].concat(x?.["@type"] || "").join(" ")));
     if (prod) {
       out.method = out.method ? out.method + "+jsonld" : "jsonld";
-      out.name = out.name || prod.name;
-      if (!out.images.length && prod.image) out.images = [].concat(prod.image);
+      out._ld = prod.name;
+      if (prod.image) {
+        const imgs = [].concat(prod.image).map((im) => typeof im === "string" ? im : im?.url).filter(Boolean);
+        out.images = [...out.images, ...imgs];
+      }
       const offer = [].concat(prod.offers || []).find(Boolean);
-      if (out.price == null && offer?.price) out.price = +offer.price;
-      out.desc = out.desc || (prod.description || "").slice(0, 200);
+      const price = offer?.price ?? offer?.priceSpecification?.price ?? offer?.lowPrice;
+      if (out.price == null && price != null) out.price = +price;
+      out.desc = out.desc || (prod.description || "").slice(0, 300);
     }
   } catch (e) { out.debug.jsonld = "throw:" + e.message; }
 
@@ -389,6 +457,25 @@ async function scrapeProduct() {
     const mm = txt.match(/(?:฿|บาท)\s*([\d,]+(?:\.\d+)?)/) || txt.match(/([\d,]+(?:\.\d+)?)\s*บาท/);
     if (mm) { out.price = +mm[1].replace(/,/g, ""); out.method = (out.method || "") + "+dom-price"; }
   }
+
+  // เลือกชื่อ: JSON-LD > h1 (ดีกับ SPA ที่ og เป็น homepage) > og > document.title
+  const h1 = [...document.querySelectorAll("h1")].map((h) => (h.innerText || "").trim())
+    .find((t) => t.length >= 5 && t.length <= 120);
+  let nm = out._ld || h1 || out._og || document.title;
+  // ตัด suffix " | ชื่อเว็บ" ออก — เทียบกับ og:site_name หรือชื่อ domain (เช่น lazada/thaimart)
+  // ตัดเฉพาะ segment สุดท้ายที่ match เว็บ → ปลอดภัย ไม่โดนชื่อสินค้าที่มี - คั่น
+  if (nm) {
+    const site = (meta("og:site_name") || "").trim().toLowerCase();
+    const host = location.hostname.replace(/^www\./, "").split(".")[0].toLowerCase(); // lazada, thaimart...
+    const parts = nm.split(/\s+[|–—·]\s+|\s+-\s+/);
+    if (parts.length > 1) {
+      const last = parts[parts.length - 1].trim().toLowerCase();
+      if ((host && last.includes(host)) || (site && last === site))
+        nm = parts.slice(0, -1).join(" - ").trim();
+    }
+  }
+  out.name = nm;
+  delete out._ld; delete out._og;
 
   // เว็บอื่น (ไม่ผ่าน shopee-api): รวมรูปทั้งหน้าให้ครบเหมือนกัน
   out.images = dedup([...(out.images || []), ...(await gatherAllImages())]);

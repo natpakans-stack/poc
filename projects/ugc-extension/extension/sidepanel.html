@@ -24,6 +24,14 @@
     border-radius:9px;padding:9px;color:var(--text);background:#fff}
   .prow select{flex:1}
   textarea.pin{resize:vertical;line-height:1.5;margin-top:7px}
+  .scene{border:1.5px solid var(--border);border-radius:10px;padding:9px;margin-top:8px;background:var(--surface)}
+  .scene-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+  .scene-h b{font-size:11px;color:var(--primary-deep)}
+  .scene-h button{font-size:10px;border:1px solid var(--primary);background:#fff;color:var(--primary-deep);
+    border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit}
+  .scene textarea{width:100%;font-family:inherit;font-size:11px;line-height:1.45;border:1px solid var(--border);
+    border-radius:7px;padding:7px;resize:vertical;background:#fff;color:var(--text)}
+  .scene .dlg{font-size:10.5px;color:var(--muted);margin-top:5px}
   button.go.alt{background:var(--surface);color:var(--primary-deep);border:1.5px solid var(--primary);
     box-shadow:none;font-size:12px;padding:10px}
   button.go{width:100%;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:12px;
@@ -55,9 +63,13 @@
   .rv-star{color:#F5A623;font-size:10px}
   .rv-txt{font-size:11px;line-height:1.5;margin-top:3px}
   .info{padding:11px 12px}
-  .nm{font-size:13px;font-weight:700;line-height:1.35}
-  .pr{font-size:15px;font-weight:800;color:var(--primary-deep);margin-top:4px}
-  .desc{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .info input.ed,.info textarea.ed{width:100%;font-family:inherit;border:1px solid transparent;border-radius:7px;
+    padding:5px 7px;background:transparent;color:var(--text);display:block}
+  .info input.ed:hover,.info textarea.ed:hover{border-color:var(--border);background:#fff}
+  .info input.ed:focus,.info textarea.ed:focus{border-color:var(--primary);background:#fff;outline:none}
+  .info input#nm.ed{font-size:13px;font-weight:700}
+  .info input#pr.ed{font-size:14px;font-weight:800;color:var(--primary-deep);margin-top:2px}
+  .info textarea#desc.ed{font-size:11px;color:var(--muted);line-height:1.5;resize:vertical;margin-top:2px}
   .meta-row{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
   .chip{font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:#4A453F}
   details{margin-top:12px}
@@ -71,8 +83,8 @@
     <div class="logo">PCS</div>
     <div><h1>Product Scraper</h1><span>spike v0.1 · passive scrape</span></div>
   </div>
-  <div class="sect">🅰 สินค้า (Shopee/Lazada)</div>
-  <div class="hint">เปิดหน้าสินค้า <b>ด้วยตัวเอง</b>ตามปกติ แล้วกดปุ่มนี้ — ระบบอ่านจากหน้าที่เปิดอยู่ (ไม่เปิดหน้าเอง)</div>
+  <div class="sect">🅰 สินค้า (เว็บไหนก็ได้)</div>
+  <div class="hint">เปิดหน้าสินค้าเว็บใดก็ได้ <b>ด้วยตัวเอง</b> แล้วกดปุ่มนี้ — อ่านจากหน้าที่เปิดอยู่ (Shopee ได้ครบสุดผ่าน API · เว็บอื่นได้ ชื่อ/ราคา/รูป จาก og-meta/JSON-LD)</div>
   <button class="go" id="go">🔍 ดึงข้อมูลจากหน้านี้</button>
   <div class="status" id="status"></div>
 
@@ -80,9 +92,9 @@
     <div class="selbar" id="selbar"></div>
     <div class="imgs grid" id="imgs"></div>
     <div class="info">
-      <div class="nm" id="nm"></div>
-      <div class="pr" id="pr"></div>
-      <div class="desc" id="desc"></div>
+      <input class="ed" id="nm" placeholder="ชื่อสินค้า — กรอก/แก้ได้">
+      <input class="ed" id="pr" placeholder="ราคา">
+      <textarea class="ed" id="desc" rows="3" placeholder="รายละเอียด / จุดขาย — กรอก/แก้ได้"></textarea>
       <div class="meta-row" id="meta"></div>
       <div class="reviews" id="reviews"></div>
     </div>
@@ -95,11 +107,11 @@
 
   <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 0">
 
-  <div class="sect">📝 Prompt (ป้อนเข้า Flow)</div>
-  <div class="hint">สร้าง prompt จากสินค้าที่ scrape + เลือกมุม — แก้เองได้ก่อนพิมพ์เข้า Flow</div>
+  <div class="sect">📝 Prompt / Storyboard (ป้อนเข้า Flow)</div>
+  <div class="hint">เดี่ยว: ✨ จาก template · หลายซีน: 🎬 ให้ LLM แตก storyboard จากสินค้า+รีวิว แล้วพิมพ์ทีละซีนเข้า Flow</div>
   <div class="prow">
     <select class="psel" id="ptemplate">
-      <option value="review">รีวิวขายของ (UGC)</option>
+      <option value="review">รีวิวขายของ</option>
       <option value="story">เล่าเรื่องแบรนด์</option>
       <option value="unbox">แกะกล่อง</option>
       <option value="demo">สาธิตวิธีใช้</option>
@@ -108,9 +120,26 @@
       <option value="th">พากย์ไทย</option>
       <option value="en">English</option>
     </select>
+    <select class="psel" id="pscenes">
+      <option value="1">1 ซีน</option>
+      <option value="3" selected>3 ซีน</option>
+      <option value="5">5 ซีน</option>
+      <option value="8">8 ซีน</option>
+    </select>
   </div>
-  <button class="go alt" id="pbuild" style="width:100%">✨ สร้าง prompt จากสินค้า</button>
-  <textarea class="pin" id="prompt" rows="5" placeholder="prompt ที่จะพิมพ์เข้า Flow — กด ✨ ให้สร้างจากสินค้า หรือพิมพ์เอง"></textarea>
+  <div class="prow">
+    <button class="go alt" id="pbuild" style="flex:1">✨ prompt เดี่ยว</button>
+    <button class="go alt" id="psb" style="flex:1">🎬 storyboard (LLM)</button>
+  </div>
+  <details id="keywrap">
+    <summary style="font-size:11px;color:var(--muted);cursor:pointer">⚙️ OpenAI API key (เก็บในเครื่อง)</summary>
+    <div class="prow" style="margin-top:6px">
+      <input class="psel" id="apikey" type="password" placeholder="sk-..." style="flex:1" autocomplete="off">
+      <button class="go alt" id="keysave" style="width:auto;padding:8px 12px">บันทึก</button>
+    </div>
+  </details>
+  <textarea class="pin" id="prompt" rows="4" placeholder="prompt เดี่ยว — กด ✨ ให้สร้าง หรือพิมพ์เอง"></textarea>
+  <div id="scenes"></div>
 
   <hr style="border:none;border-top:1px solid var(--border);margin:18px 0 0">
 

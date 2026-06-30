@@ -3,15 +3,8 @@
   "name": "PCS — Product Scraper (spike)",
   "version": "0.1.0",
   "description": "Spike: passive scrape ข้อมูลสินค้าจากหน้า Shopee/Lazada ที่ user เปิดเอง เข้า Side Panel",
-  "permissions": ["sidePanel", "scripting", "tabs", "debugger"],
-  "host_permissions": [
-    "https://shopee.co.th/*",
-    "https://*.lazada.co.th/*",
-    "https://*.susercontent.com/*",
-    "https://*.lazcdn.com/*",
-    "https://labs.google/*",
-    "https://*.google.com/*"
-  ],
+  "permissions": ["sidePanel", "scripting", "tabs", "debugger", "storage"],
+  "host_permissions": ["https://*/*", "http://*/*"],
   "background": { "service_worker": "background.js" },
   "action": { "default_title": "เปิด PCS Side Panel" },
   "side_panel": { "default_path": "sidepanel.html" }
