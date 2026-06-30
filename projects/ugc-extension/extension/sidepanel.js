@@ -3,6 +3,7 @@
 // passive: ทำงานเฉพาะตอน user กด, บนหน้าที่เปิดอยู่แล้ว — ไม่ navigate เอง
 
 const $ = (id) => document.getElementById(id);
+let selectedImages = []; // รูปที่ user ติ๊กเลือก (คงอยู่ข้ามแท็บ สำหรับยัดเข้า Flow)
 
 $("go").addEventListener("click", async () => {
   const btn = $("go");
@@ -87,7 +88,7 @@ function renderImagePicker(imgs) {
     `<div class="pick${sel.has(i) ? " sel" : ""}" data-i="${i}">
        <img src="${u}" referrerpolicy="no-referrer" loading="lazy"></div>`).join("");
 
-  const expose = () => { window.pcsSelectedImages = [...sel].sort((a, b) => a - b).map((i) => imgs[i]); };
+  const expose = () => { selectedImages = [...sel].sort((a, b) => a - b).map((i) => imgs[i]); window.pcsSelectedImages = selectedImages; };
   const paint = () => {
     [...box.children].forEach((el) => el.classList.toggle("sel", sel.has(+el.dataset.i)));
     bar.querySelector("b").textContent = sel.size;
@@ -134,10 +135,11 @@ $("probe").addEventListener("click", async () => {
     }
     const okIn = r.bestPrompt ? "✅" : "❌";
     const okBtn = r.bestGenerate ? "✅" : "❌";
+    const gtext = (r.bestGenerate?.text || "ไม่เจอ").replace(/\n/g, " ");
     setF(`<span class="badge ${r.bestPrompt && r.bestGenerate ? "ok" : "bad"}">ผลตรวจ</span>
-      ${okIn} prompt field: <b>${r.bestPrompt?.sel || "ไม่เจอ"}</b><br>
-      ${okBtn} ปุ่ม generate: <b>${r.bestGenerate?.text || "ไม่เจอ"}</b><br>
-      <span style="color:var(--muted)">inputs ${r.inputs.length} · buttons ตรงคำ ${r.buttons.length} · video ${r.media.videos} · loading ${r.media.loading}</span>`);
+      ${okIn} prompt: <b>${r.bestPrompt?.sel || "ไม่เจอ"}</b> ${r.bestPrompt?.editable ? "(editable✓)" : ""}<br>
+      ${okBtn} generate: <b>${gtext}</b> ${r.bestGenerate?.disabled ? "(ปิดอยู่—รอพิมพ์)" : "(พร้อม)"}<br>
+      <span style="color:var(--muted)">fields ${r.fields?.length ?? 0} · buttons ${r.buttons?.length ?? 0} · video ${r.media?.videos ?? 0} · loading ${r.media?.loading ?? 0}</span>`);
   } catch (e) {
     setF(`<span class="badge bad">ตรวจไม่ได้</span> ${e.message}`);
   }
@@ -145,18 +147,99 @@ $("probe").addEventListener("click", async () => {
 
 $("fill").addEventListener("click", async () => {
   const sample = "A cinematic 9:16 product review by a Thai female creator holding a Bluetooth mini keyboard, warm UGC tone, vertical video";
-  setF("⏳ กำลังทดสอบพิมพ์...");
+  setF("⏳ พิมพ์แบบ keystroke จริง (CDP)... จะมีแถบ debugging โผล่ ปกติ");
   try {
-    const { result: r } = await injectActive(fillFlow, [sample]);
-    if (r.ok) {
-      setF(`<span class="badge ok">พิมพ์สำเร็จ</span> ใส่ลง <b>${r.sel}</b> แล้ว (${r.len} ตัวอักษร) — <b>ยังไม่กด generate</b> ✋ ลองดูช่อง prompt ในหน้า Flow ว่าขึ้นข้อความไหม`);
-    } else {
-      setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${r.reason || "ไม่เจอช่อง prompt"} (กด "ตรวจ DOM" ดู candidates)`);
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!/labs\.google|google\.com/.test(tab?.url || "")) {
+      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อนกด`); return;
     }
+    const resp = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text: sample });
+    if (!resp?.ok) { setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${resp?.error || "?"}`); return; }
+    // เช็คปุ่ม Create เปิดไหม (รอ React re-render)
+    await new Promise((r) => setTimeout(r, 600));
+    const [{ result: p } = {}] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, world: "MAIN", func: probeFlow });
+    const ge = p?.bestGenerate && !p.bestGenerate.disabled;
+    setF(ge
+      ? `<span class="badge ok">พิมพ์สำเร็จ + ปุ่ม Create เปิดแล้ว ✅</span> เขียน Flow ได้จริง → พร้อมกด generate`
+      : `<span class="badge bad">พิมพ์แล้ว แต่ Create ยังปิด</span> ดูช่อง prompt ขึ้นข้อความไหม (อาจต้องมี reference image ก่อน Create ถึงเปิด)`);
   } catch (e) {
     setF(`<span class="badge bad">พิมพ์ไม่ได้</span> ${e.message}`);
   }
 });
+
+// ── Flow: ยัดรูปที่เลือก (Shopee) เข้า Flow เป็น reference ──────────
+// background fetch bytes (เลี่ยง CORS) → ส่ง data URL → ประกอบ File ในหน้า Flow → ยัด file input
+$("injimg").addEventListener("click", async () => {
+  try {
+    if (!selectedImages.length) {
+      setF(`<span class="badge bad">ยังไม่มีรูป</span> กด "ดึงข้อมูลจากหน้านี้" แล้วเลือกรูปก่อน (แท็บ Shopee)`);
+      return;
+    }
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!/labs\.google|google\.com/.test(tab?.url || "")) {
+      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อนกด (รูปที่เลือกยังอยู่)`);
+      return;
+    }
+    const urls = selectedImages;
+    let injected = 0, failed = 0;
+    // วนยัดทีละรูป + เว้นจังหวะให้ Flow รับ (re-query input ใหม่ทุกรอบในตัว inject)
+    for (let i = 0; i < urls.length; i++) {
+      setF(`⏳ ยัดรูป ${i + 1}/${urls.length}... (สำเร็จ ${injected})`);
+      const resp = await chrome.runtime.sendMessage({ type: "fetchImage", url: urls[i] });
+      if (!resp?.ok) { failed++; continue; }
+      const [{ result: r } = {}] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id }, world: "MAIN", func: injectImageToFlow,
+        args: [{ dataUrl: resp.dataUrl, filename: `product-${i + 1}.jpg` }],
+      });
+      if (r?.ok) injected++; else failed++;
+      await new Promise((res) => setTimeout(res, 700)); // ให้ Flow ประมวลผลก่อนรูปถัดไป
+    }
+    setF(`<span class="badge ${injected ? "ok" : "bad"}">ยัดเสร็จ</span> สำเร็จ <b>${injected}</b>/${urls.length} รูป${failed ? ` · พลาด ${failed}` : ""}
+      <br>👀 ดูที่ Flow ว่ารูปขึ้นครบไหม — ℹ️ โหมด Ingredients ของ Flow มักรับสูงสุด ~3 รูป`);
+  } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
+});
+
+// กด Create (generate จริง) — user กดเองเท่านั้น = การยืนยัน, ยิงเฉพาะปุ่มที่ enabled
+$("gen").addEventListener("click", async () => {
+  setF("⏳ กด Create...");
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!/labs\.google|google\.com/.test(tab?.url || "")) {
+      setF(`<span class="badge bad">ไม่ใช่หน้า Flow</span> สลับไปแท็บ Flow ก่อน`); return;
+    }
+    const resp = await chrome.runtime.sendMessage({ type: "clickGenerate", tabId: tab.id });
+    setF(resp?.ok
+      ? `<span class="badge ok">กด Create แล้ว ▶️</span> Flow กำลัง generate — รอผลในหน้า Flow แล้วโหลดคลิปเอง`
+      : `<span class="badge bad">กดไม่ได้</span> ${resp?.error || "?"}`);
+  } catch (e) { setF(`<span class="badge bad">ผิดพลาด</span> ${e.message}`); }
+});
+
+// injected: ประกอบ File จาก data URL แล้วยัดเข้า file input / drop ของ Flow
+async function injectImageToFlow(arg) {
+  try {
+    const blob = await (await fetch(arg.dataUrl)).blob(); // data: URL ไม่ติด CORS
+    const file = new File([blob], arg.filename, { type: blob.type || "image/jpeg" });
+    const inputs = [...document.querySelectorAll('input[type="file"]')];
+    if (inputs.length) {
+      const input = inputs.find((i) => !i.disabled) || inputs[0];
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      return { ok: true, method: "file-input", fileInputs: inputs.length };
+    }
+    // fallback: simulate drop บนช่อง prompt/เพจ
+    const drop = document.querySelector('[contenteditable=""],[contenteditable="true"]') || document.body;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    const rc = drop.getBoundingClientRect();
+    const opts = { bubbles: true, cancelable: true, composed: true, dataTransfer: dt,
+      clientX: rc.left + rc.width / 2, clientY: rc.top + rc.height / 2 };
+    for (const t of ["dragenter", "dragover", "drop"]) drop.dispatchEvent(new DragEvent(t, opts));
+    return { ok: true, method: "drop(fallback)", fileInputs: 0 };
+  } catch (e) { return { ok: false, reason: e.message }; }
+}
 
 // ── Injected scraper (runs in page MAIN world) ─────────────────────
 // self-contained: ห้ามอ้างตัวแปรนอก func นี้
@@ -294,100 +377,57 @@ async function scrapeProduct() {
 }
 
 // ── Injected: probe Flow DOM (read-only) ───────────────────────────
-// ค้นหา prompt field + ปุ่ม generate แบบ by-role/by-text (ทนการเปลี่ยน selector)
-// ponytail: discovery > hardcode. ได้ candidates มาแล้วค่อย lock selector ทีหลัง
+// strategy: ช่อง prompt = field ที่ "ใกล้ปุ่ม generate ที่สุด" + ตัด search ทิ้ง
+//   (Flow: ช่อง prompt ติดปุ่ม Create, search อยู่บนสุด)
 function probeFlow() {
-  const desc = (el) => el.tagName.toLowerCase() +
-    (el.id ? `#${el.id}` : "") +
+  const desc = (el) => el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") +
     (typeof el.className === "string" && el.className.trim()
       ? "." + el.className.trim().split(/\s+/).slice(0, 2).join(".") : "");
-  const vis = (el) => {
-    const r = el.getBoundingClientRect();
-    return (el.offsetParent !== null || getComputedStyle(el).position === "fixed")
-      && r.width > 4 && r.height > 4;
+  const vis = (el) => { const r = el.getBoundingClientRect();
+    return (el.offsetParent !== null || getComputedStyle(el).position === "fixed") && r.width > 4 && r.height > 4; };
+  const attrs = (el) => ((el.getAttribute("placeholder") || "") + " " + (el.getAttribute("aria-label") || "") + " " +
+    (el.getAttribute("title") || "") + " " + (el.type || "")).toLowerCase();
+  const center = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  const reGen = /\b(create|generate|render|animate)\b|สร้าง|เริ่ม|เรนเดอร์/i;
+  const reSearch = /search|ค้นหา/i;
+  const genButtons = () => [...document.querySelectorAll('button,[role="button"]')].filter(vis)
+    .filter((b) => { const t = (b.innerText || b.textContent || "").trim(); return t.length < 40 && (reGen.test(t) || reGen.test(attrs(b))); });
+  const fieldCandidates = () => [...document.querySelectorAll(
+    'textarea,[contenteditable="true"],[contenteditable=""],input[type="text"],input[type="search"],input:not([type])'
+  )].filter(vis).filter((el) => !reSearch.test(attrs(el)));
+  const pickPrompt = () => {
+    const fields = fieldCandidates(); if (!fields.length) return null;
+    const gens = genButtons();
+    if (gens.length) {
+      let best = null, bestD = Infinity;
+      for (const f of fields) { const [fx, fy] = center(f);
+        for (const g of gens) { const [gx, gy] = center(g); const d = Math.hypot(fx - gx, fy - gy); if (d < bestD) { bestD = d; best = f; } } }
+      return best;
+    }
+    fields.sort((a, b) => { const ce = (x) => x.isContentEditable ? 1 : 0; const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+      return ce(b) - ce(a) || (br.width * br.height - ar.width * ar.height); });
+    return fields[0];
   };
-  const label = (el) => (el.getAttribute("placeholder") || el.getAttribute("aria-label") ||
-    el.getAttribute("title") || "").slice(0, 80);
 
-  // prompt-field candidates
-  const fields = [...document.querySelectorAll(
-    'textarea, [contenteditable="true"], [contenteditable=""], input[type="text"], input[type="search"], input:not([type])'
-  )].filter(vis).map((el) => {
-    const r = el.getBoundingClientRect();
-    const lab = label(el);
-    return { el, sel: desc(el), tag: el.tagName.toLowerCase(), label: lab,
-      area: Math.round(r.width * r.height),
-      hint: /prompt|describe|idea|generat|video|พิมพ์|บรรยาย|ไอเดีย/i.test(lab) };
-  });
-  fields.sort((a, b) => (b.hint - a.hint) || (b.area - a.area));
-  const bestPrompt = fields[0] ? { sel: fields[0].sel, label: fields[0].label, area: fields[0].area } : null;
-
-  // generate-button candidates (by text/aria)
-  const re = /\b(generate|create|render|animate|make video)\b|สร้าง|เริ่ม|เรนเดอร์/i;
-  const btns = [...document.querySelectorAll('button, [role="button"], a')].filter(vis).map((el) => {
-    const t = (el.innerText || el.textContent || "").trim().slice(0, 40);
-    const lab = label(el);
-    return { el, sel: desc(el), text: t, label: lab,
-      disabled: el.disabled || el.getAttribute("aria-disabled") === "true",
-      match: (t.length < 40 && re.test(t)) || re.test(lab) };
-  }).filter((b) => b.match);
-  const bestGenerate = (btns.find((b) => !b.disabled) || btns[0]);
-
-  // done-detection signals
+  const pf = pickPrompt();
+  const gens = genButtons();
+  const bestGenerate = gens.find((b) => /arrow_forward/i.test(b.innerText)) ||
+    gens.find((b) => !(b.disabled || b.getAttribute("aria-disabled") === "true")) || gens[0];
   const media = {
     videos: document.querySelectorAll("video").length,
-    loading: document.querySelectorAll('[role="progressbar"], [aria-busy="true"]').length +
+    loading: document.querySelectorAll('[role="progressbar"],[aria-busy="true"]').length +
       [...document.querySelectorAll("button,span,div")].filter((e) =>
         /generating|loading|processing|กำลังสร้าง|กำลังประมวล/i.test((e.innerText || "").slice(0, 30))).length,
   };
-
   return {
     url: location.href,
-    bestPrompt,
-    bestGenerate: bestGenerate ? { text: bestGenerate.text, sel: bestGenerate.sel, label: bestGenerate.label, disabled: bestGenerate.disabled } : null,
-    inputs: fields.slice(0, 8).map((f) => ({ sel: f.sel, label: f.label, area: f.area, hint: f.hint })),
-    buttons: btns.slice(0, 8).map((b) => ({ sel: b.sel, text: b.text, label: b.label, disabled: b.disabled })),
+    bestPrompt: pf ? { sel: desc(pf), tag: pf.tagName.toLowerCase(), editable: pf.isContentEditable, attrs: attrs(pf).trim() } : null,
+    bestGenerate: bestGenerate ? { text: (bestGenerate.innerText || "").trim().slice(0, 30), sel: desc(bestGenerate),
+      disabled: bestGenerate.disabled || bestGenerate.getAttribute("aria-disabled") === "true" } : null,
+    fields: fieldCandidates().slice(0, 8).map((el) => ({ sel: desc(el), tag: el.tagName.toLowerCase(), editable: el.isContentEditable, attrs: attrs(el).trim() })),
+    buttons: gens.slice(0, 8).map((b) => ({ sel: desc(b), text: (b.innerText || "").trim().slice(0, 30),
+      disabled: b.disabled || b.getAttribute("aria-disabled") === "true" })),
     media,
   };
 }
 
-// ── Injected: test-fill prompt (NO generate click) ─────────────────
-function fillFlow(text) {
-  const vis = (el) => {
-    const r = el.getBoundingClientRect();
-    return (el.offsetParent !== null || getComputedStyle(el).position === "fixed")
-      && r.width > 4 && r.height > 4;
-  };
-  const label = (el) => (el.getAttribute("placeholder") || el.getAttribute("aria-label") ||
-    el.getAttribute("title") || "");
-
-  const fields = [...document.querySelectorAll(
-    'textarea, [contenteditable="true"], [contenteditable=""], input[type="text"], input[type="search"], input:not([type])'
-  )].filter(vis).map((el) => {
-    const r = el.getBoundingClientRect();
-    return { el, area: r.width * r.height, hint: /prompt|describe|idea|generat|video|พิมพ์|บรรยาย|ไอเดีย/i.test(label(el)) };
-  });
-  fields.sort((a, b) => (b.hint - a.hint) || (b.area - a.area));
-  const el = fields[0]?.el;
-  if (!el) return { ok: false, reason: "ไม่เจอช่อง prompt ที่มองเห็น" };
-
-  el.focus();
-  const sel = el.tagName.toLowerCase() + (el.id ? `#${el.id}` : "");
-  try {
-    if (el.isContentEditable) {
-      el.textContent = text;
-      el.dispatchEvent(new InputEvent("input", { bubbles: true, data: text, inputType: "insertText" }));
-    } else {
-      // React-controlled: ใช้ native setter เพื่อให้ state อัปเดต
-      const proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-      const setter = Object.getOwnPropertyDescriptor(proto, "value").set;
-      setter.call(el, text);
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    const got = (el.value ?? el.textContent ?? "");
-    return { ok: got.includes(text.slice(0, 12)), sel, len: got.length };
-  } catch (e) {
-    return { ok: false, reason: e.message, sel };
-  }
-}
