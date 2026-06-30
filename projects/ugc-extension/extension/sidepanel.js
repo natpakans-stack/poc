@@ -32,6 +32,7 @@ function renderRefThumbs() {
     `<div class="refthumb"><img src="${u}"><button data-i="${i}" title="ลบ">×</button></div>`).join("");
   $("refThumbs").querySelectorAll("button[data-i]").forEach((b) =>
     b.addEventListener("click", () => { uploadedRefs.splice(+b.dataset.i, 1); renderRefThumbs(); }));
+  $("refTypeWrap").style.display = uploadedRefs.length ? "" : "none"; // ถามชนิดรูปเฉพาะตอนมีรูป
 }
 
 // ── viral preset gallery (แทน dropdown — เห็นภาพสไตล์) ──
@@ -288,10 +289,26 @@ function showCards(items, label) {
 
 $("genIdentity").addEventListener("click", async () => {
   const n = +$("idCount").value, lang = $("lang").value;
+  const hasRef = uploadedRefs.length > 0;
+  const refType = hasRef ? $("idRefType").value : "none";
+  let subjectLine, refClause, userExtra;
+  if (refType === "mascot") {
+    // รูป = ตัวการ์ตูน/มาสคอตแบรนด์ → ยึดดีไซน์ทั้งตัว, theme คุมแค่ฉาก, ห้ามแปลงเป็นคน
+    subjectLine = `Generate EXACTLY ${n} distinct vertical 9:16 video prompts featuring ONE brand mascot/character (identical design in every item), placed in the theme's setting. Each item = a DIFFERENT shot/moment of that character.`;
+    refClause = `\nThe brand mascot/character is shown in the attached reference image. EVERY video_prompt MUST explicitly refer to "the exact brand mascot character from the attached reference image" and keep its precise design, colors and proportions identical. Do NOT turn it into a real human. The theme controls only the scene/setting, NOT the character's appearance.`;
+    userExtra = "";
+  } else {
+    // คนจริง (มีรูป=ยึดหน้า / ไม่มีรูป=คิดเอง) → theme คุมเสื้อผ้า+ฉากเสมอ
+    subjectLine = `Generate EXACTLY ${n} distinct vertical 9:16 video prompts for ONE consistent Thai content creator (same person every item), in the given theme. Each item = a DIFFERENT shot/moment of that creator talking to camera.`;
+    refClause = hasRef
+      ? `\nThe creator's FACE is shown in the attached reference image. EVERY video_prompt MUST explicitly refer to "the same person (face) from the attached reference image" and keep the face/identity identical — but the clothing and setting follow the chosen theme, NOT the reference image's outfit.`
+      : "";
+    userExtra = `\nGender: ${$("idGender").value}\nSkin: ${$("idSkin").value}`;
+  }
   const system = `You are a UGC video prompt director for Google Flow (Veo), Thai market.
-Generate EXACTLY ${n} distinct vertical 9:16 video prompts for ONE consistent Thai content creator (same gender/skin/look every item), in the given theme. Each item = a DIFFERENT shot/moment of that creator talking to camera.
+${subjectLine}${refClause}
 ${schema(lang, 14, $("idText").checked)}`;
-  const user = `Creator: ${$("idName").value || "Thai creator"}\nGender: ${$("idGender").value}\nSkin: ${$("idSkin").value}\nTheme/setting: ${$("idTheme").value}\nExtra: ${$("idDetails").value}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
+  const user = `Creator: ${$("idName").value || "Thai creator"}${userExtra}\nTheme/setting: ${$("idTheme").value}\nExtra: ${$("idDetails").value}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
   const items = await callGen(system, user);
   if (items) showCards(items, `พรีเซนเตอร์ ${items.length} ชุด`);
 });
@@ -301,9 +318,12 @@ $("genProduct").addEventListener("click", async () => {
     switchTab("product"); setG(`<span class="badge bad">ยังไม่มีข้อมูลสินค้า</span> ดึง/กรอกในแท็บ สินค้า ก่อน`); return;
   }
   const n = +$("pdCount").value, lang = $("lang").value;
+  const refClause = selectedImages.length
+    ? `\nReference image(s) of the REAL product are attached in Flow — the product shown in every shot MUST match the attached reference image(s) exactly (same product, packaging, color).`
+    : "";
   const system = `You are a UGC product-review prompt director for Google Flow (Veo), Thai market.
 Generate EXACTLY ${n} distinct vertical 9:16 video prompts reviewing the product. The REAL product appears; each item a DIFFERENT shot. Use only real facts from details/reviews.
-EVERY prompt MUST strictly obey this shot directive (it defines the style/angle — do not deviate): ${$("pdAngle").value}.
+EVERY prompt MUST strictly obey this shot directive (it defines the style/angle — do not deviate): ${$("pdAngle").value}.${refClause}
 ${schema(lang, 14, $("pdText").checked)}`;
   const reviews = lastProduct.reviews || [];
   const pickedReviews = [...selectedReviews].sort((a, b) => a - b).map((i) => reviews[i]?.comment).filter(Boolean);
