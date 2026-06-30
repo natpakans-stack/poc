@@ -328,6 +328,14 @@ ${schema(lang, 14, $("idText").checked)}`;
   if (items) showCards(items, `พรีเซนเตอร์ ${items.length} ชุด`);
 });
 
+// push: จากพรีเซนเตอร์ → ไปรีวิวสินค้า (เปิด synergy + พาไปแท็บสินค้า)
+$("presentProduct").addEventListener("click", () => {
+  $("pdUsePresenter").checked = true;
+  switchTab("product");
+  setG(lastProduct ? `<span class="badge ok">ใช้พรีเซนเตอร์นี้แล้ว</span> กดสร้างฉากรีวิวสินค้าได้เลย`
+    : `<span class="badge ok">ใช้พรีเซนเตอร์นี้แล้ว</span> ดึง/กรอกสินค้าก่อน แล้วกดสร้าง`);
+});
+
 $("genProduct").addEventListener("click", async () => {
   if (!lastProduct || (!lastProduct.name && !lastProduct.desc)) {
     switchTab("product"); setG(`<span class="badge bad">ยังไม่มีข้อมูลสินค้า</span> ดึง/กรอกในแท็บ สินค้า ก่อน`); return;
@@ -437,7 +445,7 @@ $("autoqueue").addEventListener("click", async () => {
   $("autoqueue").disabled = true;
   try {
     for (let i = 0; i < tas.length; i++) {
-      const text = tas[i].value.trim();
+      const text = withDialogue(tas[i]);
       setF(`ฉาก ${i + 1}/${tas.length}: กำลังส่ง...`);
       const t = await chrome.runtime.sendMessage({ type: "typeInFlow", tabId: tab.id, text });
       if (!t?.ok) { setF(`<span class="badge bad">ฉาก ${i + 1}: ส่งไม่ได้</span> ${t?.error}`); return; }
@@ -459,20 +467,26 @@ $("autoqueue").addEventListener("click", async () => {
   } finally { $("autoqueue").disabled = false; }
 });
 
+// รวมบทพูดเข้า prompt ตอนส่ง Flow — Veo 3 จะสร้างเสียงพูดเมื่อ prompt บอกบทพูดชัด
+function withDialogue(ta) {
+  const vp = ta.value.trim(), dlg = ta.dataset.dlg;
+  return dlg ? `${vp}\n\nSpoken dialogue (audible voice, lip-synced to the character): "${dlg}"` : vp;
+}
 function renderCards(items) {
   const esc = (s) => (s || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const escAttr = (s) => esc(s).replace(/"/g, "&quot;");
   $("cards").innerHTML = items.map((s, i) => `
     <div class="scene">
       <div class="scene-h"><b>${i + 1} · ${esc(s.label || s.shot || "")}</b><button data-i="${i}">${ic("keyboard")}ส่งฉากนี้</button></div>
-      <textarea data-i="${i}" rows="3">${esc(s.video_prompt || s.prompt || "")}</textarea>
-      ${s.dialogue ? `<div class="dlg">${ic("mic")}${esc(s.dialogue)}</div>` : ""}
+      <textarea data-i="${i}" data-dlg="${escAttr(s.dialogue || "")}" rows="3">${esc(s.video_prompt || s.prompt || "")}</textarea>
+      ${s.dialogue ? `<div class="dlg">${ic("mic")}${esc(s.dialogue)} <span class="dlg-note">(ส่งเป็นเสียงพูดให้ด้วย)</span></div>` : ""}
     </div>`).join("");
   $("cards").querySelectorAll("button[data-i]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const i = btn.dataset.i;
       const ta = $("cards").querySelector(`textarea[data-i="${i}"]`);
       setF(`กำลังส่งฉาก ${+i + 1}...`);
-      const r = await typeToFlow(ta.value.trim());
+      const r = await typeToFlow(withDialogue(ta));
       setF(r.ok
         ? `<span class="badge ok">ส่งฉาก ${+i + 1} แล้ว</span> กดสร้างวิดีโอ → รอเสร็จ → เพิ่มฉากใน Flow → ส่งฉากถัดไป`
         : `<span class="badge bad">ส่งไม่ได้</span> ${r.error}`);
