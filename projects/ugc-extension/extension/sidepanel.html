@@ -63,9 +63,15 @@
   .vrname{position:relative;z-index:2;color:#fff}
   .vrname b{font-size:9.5px;font-weight:700;line-height:1.2;display:block;text-shadow:0 1px 4px rgba(0,0,0,.7)}
   .vrname span{font-size:8px;opacity:.85;text-shadow:0 1px 3px rgba(0,0,0,.7)}
-  .refthumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .refthumb{position:relative;width:54px;height:54px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-  .refthumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .refrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .refthumbs{display:contents}
+  .reftile{width:54px;height:54px;flex:none;border:1.5px dashed var(--border);border-radius:8px;background:transparent;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--muted);
+    font-size:9.5px;line-height:1;transition:border-color .12s,color .12s}
+  .reftile:hover{border-color:var(--primary);color:var(--primary)}
+  .reftile svg{width:18px;height:18px}
+  .refthumb{position:relative;width:54px;height:54px}
+  .refthumb img{width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;border:1px solid var(--border)}
   .refthumb button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--bg);
     background:var(--red);color:var(--on-accent);font-size:12px;cursor:pointer;line-height:1;display:grid;place-items:center;padding:0}
   /* custom dropdown (แทน native select) */
@@ -200,9 +206,22 @@
   <!-- ===== ตัวตน ===== -->
   <div class="panel on" id="tab-identity">
     <div class="hint">สร้างคาแรกเตอร์ครีเอเตอร์ไทย ได้หลายแบบจากตัวตนเดียวกัน</div>
+    <label class="lab">รูปอ้างอิง (หน้า / ตัวละคร) — ไม่บังคับ</label>
+    <div class="refrow">
+      <button class="reftile" id="refUpload" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span>เพิ่มรูป</span></button>
+      <span class="refthumbs" id="refThumbs"></span>
+    </div>
+    <input type="file" id="refFile" accept="image/*" multiple hidden>
+    <div id="refTypeWrap" style="display:none;margin-top:8px">
+      <label class="lab">รูปนี้คือ</label>
+      <select class="psel" id="idRefType">
+        <option value="person">คนจริง — ยึดหน้า, แต่งตัว+ฉากตามธีม</option>
+        <option value="mascot">การ์ตูน / มาสคอตแบรนด์ — ยึดดีไซน์ทั้งตัว, ฉากตามธีม</option>
+      </select>
+    </div>
     <label class="lab">ชื่อ / คาแรกเตอร์</label>
     <input class="psel" id="idName" placeholder="เช่น ครูพิม, นักธุรกิจสาว, เชฟหนุ่ม">
-    <div class="prow">
+    <div class="prow" id="idHumanFields">
       <div><label class="lab">เพศ / ตัวแบบ</label>
         <select class="psel" id="idGender"><option>ผู้หญิงไทย</option><option>ผู้ชายไทย</option><option>หญิงสาว</option><option>หนุ่ม</option></select></div>
       <div><label class="lab">โทนสีผิว</label>
@@ -223,17 +242,6 @@
       <div></div>
     </div>
     <label class="chk"><input type="checkbox" id="idText"> ใส่ข้อความบนภาพ (caption)</label>
-    <label class="lab">รูปอ้างอิง (หน้า / ตัวละคร) — ไม่บังคับ</label>
-    <button class="go alt" id="refUpload" type="button" style="width:100%"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>อัปโหลดรูปจากเครื่อง</button>
-    <input type="file" id="refFile" accept="image/*" multiple hidden>
-    <div class="refthumbs" id="refThumbs"></div>
-    <div id="refTypeWrap" style="display:none;margin-top:8px">
-      <label class="lab">รูปนี้คือ</label>
-      <select class="psel" id="idRefType">
-        <option value="person">คนจริง — ยึดหน้า, แต่งตัว+ฉากตามธีม</option>
-        <option value="mascot">การ์ตูน / มาสคอตแบรนด์ — ยึดดีไซน์ทั้งตัว, ฉากตามธีม</option>
-      </select>
-    </div>
     <button class="go" id="genIdentity" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างฉากพรีเซนเตอร์</button>
   </div>
 

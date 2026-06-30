@@ -33,7 +33,14 @@ function renderRefThumbs() {
   $("refThumbs").querySelectorAll("button[data-i]").forEach((b) =>
     b.addEventListener("click", () => { uploadedRefs.splice(+b.dataset.i, 1); renderRefThumbs(); }));
   $("refTypeWrap").style.display = uploadedRefs.length ? "" : "none"; // ถามชนิดรูปเฉพาะตอนมีรูป
+  updateHumanFields();
 }
+// มาสคอต ไม่ใช้ เพศ/โทนสีผิว → ซ่อน (prompt ก็ตัดทิ้งอยู่แล้ว)
+function updateHumanFields() {
+  const mascot = uploadedRefs.length && $("idRefType").value === "mascot";
+  $("idHumanFields").style.display = mascot ? "none" : "";
+}
+$("idRefType").addEventListener("change", updateHumanFields);
 
 // ── viral preset gallery (แทน dropdown — เห็นภาพสไตล์) ──
 // [value(prompt), ชื่อไทย, ชื่ออังกฤษ]
