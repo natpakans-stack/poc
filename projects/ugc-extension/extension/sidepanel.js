@@ -336,9 +336,17 @@ $("genProduct").addEventListener("click", async () => {
   const refClause = selectedImages.length
     ? `\nReference image(s) of the REAL product are attached in Flow — the product shown in every shot MUST match the attached reference image(s) exactly (same product, packaging, color).`
     : "";
+  // synergy: ใช้คาแรกเตอร์จากแท็บพรีเซนเตอร์เป็นคนรีวิว ("คนนี้ถือสินค้านี้")
+  let presenterClause = "";
+  if ($("pdUsePresenter").checked) {
+    const isMascot = uploadedRefs.length && $("idRefType").value === "mascot";
+    presenterClause = isMascot
+      ? `\nThe presenter is the brand mascot/character from the attached reference image (keep its EXACT design, do NOT turn it into a human). This same mascot presents and holds the real product in every shot.`
+      : `\nThe presenter/reviewer is ONE consistent Thai creator${$("idName").value.trim() ? ` ("${$("idName").value.trim()}")` : ""} (${$("idGender").value}, ${$("idSkin").value})${uploadedRefs.length ? `, with the SAME face as the attached reference image` : ""}. This SAME presenter holds/uses and reviews the real product in every shot (this overrides any "no person" part of the directive).`;
+  }
   const system = `You are a UGC product-review prompt director for Google Flow (Veo), Thai market.
 Generate EXACTLY ${n} distinct vertical 9:16 video prompts reviewing the product. The REAL product appears; each item a DIFFERENT shot. Use only real facts from details/reviews.
-EVERY prompt MUST strictly obey this shot directive (it defines the style/angle — do not deviate): ${$("pdAngle").value}.${refClause}
+EVERY prompt MUST strictly obey this shot directive (it defines the style/angle — do not deviate): ${$("pdAngle").value}.${presenterClause}${refClause}
 ${schema(lang, 14, $("pdText").checked)}`;
   const reviews = lastProduct.reviews || [];
   const pickedReviews = [...selectedReviews].sort((a, b) => a - b).map((i) => reviews[i]?.comment).filter(Boolean);
