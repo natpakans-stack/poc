@@ -3,13 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <style>
+  /* Anuphan (vendored woff2, latin+thai) — offline, ไม่ต้อง build */
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/anuphan-400-thai.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/anuphan-400-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/anuphan-500-thai.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/anuphan-500-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/anuphan-600-thai.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/anuphan-600-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/anuphan-700-thai.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}
+  @font-face{font-family:'Anuphan';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/anuphan-700-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
   :root{
-    --primary:#F2603A; --primary-tint:#FDEDE7; --primary-deep:#D94A26;
-    --bg:#FFFFFF; --surface:#F7F5F3; --border:#DEDAD4; --text:#1C1B1A;
-    --muted:#8C867F; --green:#15A34A; --red:#D92D20; --red-tint:#FDECEA;
+    /* light · warm-tinted neutrals + coral accent (restrained) — OKLCH */
+    --primary:oklch(0.645 0.18 36);       /* coral — primary action */
+    --primary-deep:oklch(0.55 0.17 33);   /* darker coral — text/active */
+    --primary-tint:oklch(0.95 0.03 45);   /* coral-tint bg — selected */
+    --bg:oklch(0.994 0.004 75);           /* panel content (warm near-white) */
+    --surface:oklch(0.975 0.006 70);      /* inputs · alt buttons · cards */
+    --elevated:oklch(0.999 0.002 75);     /* dropdown · raised */
+    --border:oklch(0.905 0.008 65);
+    --border-strong:oklch(0.82 0.012 60);
+    --text:oklch(0.27 0.013 55);
+    --muted:oklch(0.55 0.012 58);
+    --on-accent:oklch(0.99 0.006 75);     /* near-white text on coral */
+    --hover:oklch(0.955 0.008 65);        /* neutral hover */
+    --green:oklch(0.56 0.13 155); --green-bg:oklch(0.95 0.04 155);
+    --red:oklch(0.55 0.19 28); --red-tint:oklch(0.955 0.025 28);
+    --shadow:0 10px 30px oklch(0.45 0.03 55 / 0.14);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  body{font-family:"Anuphan",system-ui,-apple-system,"Segoe UI",sans-serif;
     background:var(--bg);color:var(--text);font-size:13px;padding:14px;-webkit-font-smoothing:antialiased}
   .head{display:flex;align-items:center;gap:9px}
   .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#F2603A,#F59E5B);
@@ -21,33 +43,56 @@
   .lab{font-size:11px;font-weight:600;margin:10px 0 4px;display:block}
   .btn-row{display:flex;gap:7px}
   .prow{display:flex;gap:7px;margin:8px 0}
+  .prow > div{flex:1;min-width:0}
+  .cs{min-width:0}
   select.psel,textarea.pin,input.psel{width:100%;font-family:inherit;font-size:12px;border:1.5px solid var(--border);
-    border-radius:9px;padding:9px;color:var(--text);background:#fff}
+    border-radius:9px;padding:9px;color:var(--text);background:var(--surface)}
   .prow select,.prow input{flex:1}
   textarea.pin{resize:vertical;line-height:1.5;margin-top:0}
   .chk{display:flex;align-items:center;gap:7px;font-size:11.5px;margin-top:10px;cursor:pointer}
+  /* viral preset gallery */
+  .vrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:7px;margin-top:6px;padding:2px}
+  .vrcard{cursor:pointer;border-radius:10px;overflow:hidden;border:2px solid transparent;background:var(--surface);transition:transform .1s,border-color .12s}
+  .vrcard:hover{transform:translateY(-1px)}
+  .vrcard.sel{border-color:var(--primary)}
+  .vrtile{aspect-ratio:3/4;display:flex;align-items:flex-end;padding:6px;position:relative;overflow:hidden;background:var(--surface)}
+  .vrvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+  .vrtile::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(0,0,0,.55),transparent 50%)}
+  .vrcard.sel .vrtile::after{content:"✓";position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;z-index:2;
+    background:var(--primary);color:var(--on-accent);font-size:11px;font-weight:700;display:grid;place-items:center}
+  .vrname{position:relative;z-index:2;color:#fff}
+  .vrname b{font-size:9.5px;font-weight:700;line-height:1.2;display:block;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+  .vrname span{font-size:8px;opacity:.85;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+  .refthumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .refthumb{position:relative;width:54px;height:54px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .refthumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .refthumb button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--bg);
+    background:var(--red);color:var(--on-accent);font-size:12px;cursor:pointer;line-height:1;display:grid;place-items:center;padding:0}
   /* custom dropdown (แทน native select) */
   .cs{position:relative;width:100%}
   .prow .cs{flex:1}
   .cs-btn{width:100%;text-align:left;font-family:inherit;font-size:12px;border:1.5px solid var(--border);
-    border-radius:9px;padding:9px 11px;background:#fff;color:var(--text);cursor:pointer;
+    border-radius:9px;padding:9px 11px;background:var(--surface);color:var(--text);cursor:pointer;
     display:flex;justify-content:space-between;align-items:center;gap:6px}
   .cs.open .cs-btn{border-color:var(--primary)}
   .cs-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cs-cv{color:var(--muted);font-size:9px;flex:none;transition:.15s}
+  .cs-cv{display:flex;color:var(--muted);flex:none;transition:transform .15s,color .15s}
+  .cs-cv svg{width:15px;height:15px;display:block}
   .cs.open .cs-cv{transform:rotate(180deg);color:var(--primary)}
-  .cs-list{position:absolute;z-index:50;top:calc(100% + 4px);left:0;right:0;background:#fff;
-    border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(28,27,26,.16);
+  .cs-list{position:absolute;z-index:50;top:calc(100% + 4px);left:0;right:0;background:var(--elevated);
+    border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--shadow);
     max-height:230px;overflow-y:auto;padding:4px;display:none}
   .cs.open .cs-list{display:block}
+  .cs.up .cs-list{top:auto;bottom:calc(100% + 4px)}
+  .cs-btn:focus-visible{outline:none;border-color:var(--primary)}
   .cs-opt{font-size:12px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--text);line-height:1.3}
-  .cs-opt:hover{background:var(--surface)}
+  .cs-opt.active{background:var(--hover)}
   .cs-opt.on{background:var(--primary-tint);color:var(--primary-deep);font-weight:600}
   /* tabs */
   .tabs{display:flex;gap:2px;border-bottom:1.5px solid var(--border);margin:10px 0 12px}
-  .tab{flex:1;text-align:center;padding:9px 2px 8px;font-size:11px;font-weight:600;color:var(--muted);
+  .tab{flex:1;text-align:center;padding:9px 1px 8px;font-size:10px;font-weight:600;color:var(--muted);
     border:none;border-bottom:2.5px solid transparent;cursor:pointer;background:none;font-family:inherit;
-    display:flex;flex-direction:column;gap:2px;align-items:center}
+    display:flex;flex-direction:column;gap:3px;align-items:center;white-space:nowrap}
   .tab .ic{display:flex}
   .tab .ic svg{width:18px;height:18px;display:block}
   .ici{width:1em;height:1em;vertical-align:-.14em;flex:none}
@@ -60,34 +105,34 @@
   .scene{border:1.5px solid var(--border);border-radius:10px;padding:9px;margin-top:8px;background:var(--surface)}
   .scene-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
   .scene-h b{font-size:11px;color:var(--primary-deep)}
-  .scene-h button{font-size:10px;border:1px solid var(--primary);background:#fff;color:var(--primary-deep);
+  .scene-h button{font-size:10px;border:1px solid var(--primary);background:var(--surface);color:var(--primary-deep);
     border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit}
   .scene textarea{width:100%;font-family:inherit;font-size:11px;line-height:1.45;border:1px solid var(--border);
-    border-radius:7px;padding:7px;resize:vertical;background:#fff;color:var(--text)}
+    border-radius:7px;padding:7px;resize:vertical;background:var(--surface);color:var(--text)}
   .scene .dlg{font-size:10.5px;color:var(--muted);margin-top:5px}
   button.go.alt{background:var(--surface);color:var(--primary-deep);border:1.5px solid var(--primary);
     box-shadow:none;font-size:12px;padding:10px}
-  button.go{width:100%;background:var(--primary);color:#fff;border:none;border-radius:10px;padding:12px;
-    font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(242,96,58,.28)}
+  button.go{width:100%;background:var(--primary);color:var(--on-accent);border:none;border-radius:10px;padding:12px;
+    font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px oklch(0.67 0.17 39 / 0.30)}
   button.go:active{transform:translateY(1px)}
   button.go:disabled{opacity:.6;cursor:default}
   .status{margin-top:10px;font-size:11.5px;line-height:1.5}
   .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px}
-  .ok{color:var(--green);background:#E7F6ED}
+  .ok{color:var(--green);background:var(--green-bg)}
   .bad{color:var(--red);background:var(--red-tint)}
   .card{margin-top:12px;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;display:none}
   .selbar{display:flex;justify-content:space-between;align-items:center;padding:9px 12px 5px;font-size:10.5px;gap:6px}
   .selbar b{color:var(--primary-deep)}
-  .selbar button{font-size:10px;border:1px solid var(--border);background:#fff;border-radius:6px;padding:3px 8px;
-    cursor:pointer;font-family:inherit;color:#4A453F}
+  .selbar button{font-size:10px;border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:3px 8px;
+    cursor:pointer;font-family:inherit;color:var(--muted)}
   .imgs{display:flex;gap:6px;padding:10px;background:var(--surface);overflow-x:auto}
   .imgs.grid{display:grid;grid-template-columns:repeat(4,1fr);max-height:200px;overflow-y:auto}
   .pick{position:relative;cursor:pointer;aspect-ratio:1}
-  .pick img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border);background:#fff;display:block}
+  .pick img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:block}
   .pick:not(.sel) img{opacity:.45}
   .pick.sel img{border-color:var(--primary);outline:2.5px solid var(--primary);outline-offset:-2.5px}
   .pick.sel::after{content:"✓";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;
-    background:var(--primary);color:#fff;font-size:10px;display:grid;place-items:center;font-weight:700}
+    background:var(--primary);color:var(--on-accent);font-size:10px;display:grid;place-items:center;font-weight:700}
   .reviews{margin-top:12px;border-top:1px solid var(--border);padding-top:10px}
   .rv-h{font-size:11px;font-weight:700;color:var(--primary-deep);margin-bottom:8px}
   .rv{padding:8px 0;border-bottom:1px dashed var(--border)}
@@ -98,18 +143,37 @@
   .info{padding:11px 12px}
   .info input.ed,.info textarea.ed{width:100%;font-family:inherit;border:1px solid transparent;border-radius:7px;
     padding:5px 7px;background:transparent;color:var(--text);display:block}
-  .info input.ed:hover,.info textarea.ed:hover{border-color:var(--border);background:#fff}
-  .info input.ed:focus,.info textarea.ed:focus{border-color:var(--primary);background:#fff;outline:none}
+  .info input.ed:hover,.info textarea.ed:hover{border-color:var(--border);background:var(--surface)}
+  .info input.ed:focus,.info textarea.ed:focus{border-color:var(--primary);background:var(--surface);outline:none}
   .info input#nm.ed{font-size:13px;font-weight:700}
   .info input#pr.ed{font-size:14px;font-weight:800;color:var(--primary-deep);margin-top:2px}
   .info textarea#desc.ed{font-size:11px;color:var(--muted);line-height:1.5;resize:vertical;margin-top:2px}
   .meta-row{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
-  .chip{font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:#4A453F}
+  .chip{font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:var(--muted)}
   details{margin-top:12px}
   summary{font-size:11px;color:var(--muted);cursor:pointer}
   pre{font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px;
     margin-top:7px;white-space:pre-wrap;word-break:break-all;max-height:240px;overflow:auto;line-height:1.45}
   .hr{border:none;border-top:1px solid var(--border);margin:16px 0 0}
+  /* Flow executor = fixed footer เกาะขอบล่างจอเสมอ (เนื้อหาเลื่อนใต้) */
+  .flowdock{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bg);padding:10px 14px 14px;
+    border-top:1px solid var(--border);box-shadow:0 -10px 24px oklch(0.45 0.03 55 / 0.12)}
+  .flowdock .sect{margin-top:0}
+  /* interactive states (default · hover · focus · active) */
+  select.psel,textarea.pin,input.psel,.cs-btn,.scene textarea{transition:border-color .15s,background .15s}
+  input.psel:focus,textarea.pin:focus,.scene textarea:focus{outline:none;border-color:var(--primary)}
+  .cs-btn:hover{border-color:var(--border-strong)}
+  .cs-opt:hover{background:var(--hover)}
+  button.go{transition:filter .15s,transform .08s}
+  button.go:hover{filter:brightness(1.07)}
+  button.go.alt:hover{background:var(--elevated);filter:none}
+  .scene-h button:hover{background:var(--primary-tint)}
+  .tab{transition:color .15s,border-color .15s}
+  .tab:hover{color:var(--text)}
+  .chip{transition:none}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:8px;border:2px solid var(--bg)}
+  ::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
 <body>
@@ -120,11 +184,11 @@
 
   <div class="tabs">
     <button class="tab on" data-tab="identity">
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>ตัวตน</button>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>พรีเซนเตอร์</button>
     <button class="tab" data-tab="product">
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>สินค้า</button>
     <button class="tab" data-tab="series">
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>ซีรีย์</button>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>ละครสั้น</button>
     <button class="tab" data-tab="viral">
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg></span>ไวรัล</button>
     <button class="tab" data-tab="settings">
@@ -157,7 +221,11 @@
       <div></div>
     </div>
     <label class="chk"><input type="checkbox" id="idText"> ใส่ข้อความบนภาพ (caption)</label>
-    <button class="go" id="genIdentity" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างฉากตัวตน</button>
+    <label class="lab">รูปใบหน้า / ลุค (อ้างอิง) — ไม่บังคับ</label>
+    <button class="go alt" id="refUpload" type="button" style="width:100%"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>อัปโหลดรูปจากเครื่อง</button>
+    <input type="file" id="refFile" accept="image/*" multiple hidden>
+    <div class="refthumbs" id="refThumbs"></div>
+    <button class="go" id="genIdentity" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างฉากพรีเซนเตอร์</button>
   </div>
 
   <!-- ===== สินค้า ===== -->
@@ -196,8 +264,8 @@
 
   <!-- ===== ซีรีย์ ===== -->
   <div class="panel" id="tab-series">
-    <div class="hint">AI สร้างซีรีย์ ตัวเอกคนเดิมหน้าเดิมทุกฉาก — ต่อเนื่อง</div>
-    <label class="lab">แนวซีรีย์</label>
+    <div class="hint">AI สร้างละครสั้น ตัวเอกคนเดิมหน้าเดิมทุกฉาก ต่อเนื่องกัน</div>
+    <label class="lab">แนวเรื่อง</label>
     <select class="psel" id="srGenre">
       <option>ซีรีย์จีนโบราณ (ฮ่องเต้/วังหลวง)</option><option>ซีรีย์จีนทันสมัย (CEO/โรแมนติก)</option>
       <option>ซีรีย์เกาหลี (โรแมนติก/ดราม่า)</option><option>เกาหลีย้อนยุค (ซากึก/ราชวงศ์)</option>
@@ -219,7 +287,7 @@
     </div>
     <label class="lab">รายละเอียดตัวเอก / เนื้อเรื่อง</label>
     <textarea class="pin" id="srStory" rows="3" placeholder="เว้นว่างให้ AI คิด — เช่น นางเอกถูกใส่ร้าย ต้องล้างมลทินและแก้แค้น"></textarea>
-    <button class="go" id="genSeries" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างซีรีย์</button>
+    <button class="go" id="genSeries" style="margin-top:12px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 5.06 8.5 9.5 4.06 10.94 8.5 12.38l1.44 4.44 1.44-4.44 4.44-1.44-4.44-1.44z"/><path d="M18 4v4M20 6h-4"/></svg>สร้างละครสั้น</button>
   </div>
 
   <!-- ===== ไวรัล ===== -->
@@ -227,30 +295,8 @@
     <div class="hint">เลือกเอฟเฟกต์ไวรัลฮิตๆ → AI สร้างฉากใส่เอฟเฟกต์นั้นให้</div>
     <label class="lab">หัวข้อ / ของในคลิป</label>
     <input class="psel" id="vrSubject" placeholder="เช่น สินค้า X, ครีเอเตอร์, รถซิ่ง">
-    <label class="lab">เอฟเฟกต์ไวรัล</label>
-    <select class="psel" id="vrPreset">
-      <option value="Earth zoom-out from the subject all the way into outer space">ซูมออกสู่อวกาศ (Earth Zoom Out)</option>
-      <option value="Earth zoom-in from outer space down to the subject">ซูมจากอวกาศลงมา (Earth Zoom In)</option>
-      <option value="free-fall skydiving with the subject, wind and motion">ตกอิสระ/สกายไดฟ์ (Free Fall)</option>
-      <option value="superfast first-person flight, extreme speed motion blur">บินความเร็วสูง (Superfast Flight)</option>
-      <option value="green night-vision camera look, grainy IR">กล้องไนท์วิชั่น (Night Vision)</option>
-      <option value="office CCTV surveillance camera footage, timestamp overlay">กล้องวงจรปิด (CCTV)</option>
-      <option value="early-2000s paparazzi flash photography, harsh flash">ปาปารัสซี่ Y2K (Paparazzi)</option>
-      <option value="red carpet celebrity arrival, flashing cameras">เดินพรมแดง (Red Carpet)</option>
-      <option value="neon cyberpunk city at night, reflective rain">เมืองนีออนไซเบอร์พังก์ (Neon City)</option>
-      <option value="disintegration into particles, dissolving away">สลายเป็นผง (Disintegration)</option>
-      <option value="frozen time, camera orbits a still bullet-time moment">หยุดเวลา (Frozen Time)</option>
-      <option value="clean 3D CGI product render reveal on seamless studio">3D เรนเดอร์ (3D Render)</option>
-      <option value="high-speed drift racing, tire smoke, motion blur">ดริฟต์รถซิ่ง (Drift Racing)</option>
-      <option value="casting a magic spell with glowing energy and particles">ร่ายเวทมนตร์ (Magic Spell)</option>
-      <option value="epic dragon fantasy cinematic scene">มังกรแฟนตาซี (Dragon)</option>
-      <option value="slow-motion impact moment, shockwave ripple">สโลโมชันกระแทก (Slow-mo Impact)</option>
-      <option value="bodycam POV first-person action footage">มุมมองบอดี้แคม (Bodycam POV)</option>
-      <option value="fisheye ultra-wide lens, distorted edges">เลนส์ฟิชอาย (Fisheye)</option>
-      <option value="glitch datamosh digital distortion transitions">กลิตช์ดิจิทัล (Glitch)</option>
-      <option value="hyper-macro satisfying extreme close-up">มาโครฟินๆ (Hyper-Macro)</option>
-      <option value="dramatic transformation morph of the subject">แปลงร่าง (Transformation)</option>
-    </select>
+    <label class="lab">เอฟเฟกต์ไวรัล — แตะเลือกสไตล์</label>
+    <div class="vrgrid" id="vrGrid"></div>
     <div class="prow">
       <div><label class="lab">จำนวนชุด</label>
         <select class="psel" id="vrCount"><option>1</option><option selected>3</option><option>5</option><option>8</option></select></div>
@@ -267,13 +313,19 @@
       <select class="psel" id="provider" style="max-width:120px"><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option></select>
       <input class="psel" id="apikey" type="password" placeholder="API key" autocomplete="off">
     </div>
-    <label class="lab">Model (เว้น = ค่าเริ่มต้น)</label>
-    <input class="psel" id="model" placeholder="เช่น gpt-4o / deepseek-chat / deepseek-v4-flash">
-    <div class="prow">
-      <div><label class="lab">ภาษาพากย์</label>
-        <select class="psel" id="lang"><option value="th">ไทย</option><option value="en">English</option></select></div>
-      <div style="display:flex;align-items:flex-end"><button class="go alt" id="keysave" style="width:100%;padding:9px">บันทึก</button></div>
-    </div>
+    <label class="lab">Model</label>
+    <select class="psel" id="model">
+      <option value="">ค่าเริ่มต้น (อัตโนมัติตาม provider)</option>
+      <option value="gpt-4o">gpt-4o (OpenAI)</option>
+      <option value="gpt-4o-mini">gpt-4o-mini (OpenAI)</option>
+      <option value="gpt-4.1">gpt-4.1 (OpenAI)</option>
+      <option value="gpt-4.1-mini">gpt-4.1-mini (OpenAI)</option>
+      <option value="deepseek-chat">deepseek-chat (DeepSeek)</option>
+      <option value="deepseek-reasoner">deepseek-reasoner (DeepSeek)</option>
+      <option value="deepseek-v4-flash">deepseek-v4-flash (DeepSeek)</option>
+    </select>
+    <label class="lab">ภาษาพากย์</label>
+    <select class="psel" id="lang"><option value="th">ไทย</option><option value="en">English</option></select>
   </div>
 
   <!-- ===== SHARED: results + Flow executor (ซ่อนในแท็บตั้งค่า) ===== -->
@@ -283,7 +335,7 @@
     <div id="cards"></div>
     <button class="go" id="autoqueue" style="margin-top:8px;display:none"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>สร้างทุกฉากอัตโนมัติ (ใช้หลายเครดิต)</button>
 
-    <hr class="hr">
+    <div class="flowdock" id="flowdock">
     <div class="sect"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="19" height="18" rx="2"/><path d="M2.5 8.5h19M2.5 15.5h19M8 3v18M16 3v18"/></svg>ส่งเข้า Google Flow</div>
     <div class="hint">เปิด Google Flow ที่เข้าสู่ระบบแล้ว → ใส่รูปสินค้า → ส่งฉากที่สร้างไปทำเป็นวิดีโอ (ทั้งหมดด้านบน หรือทีละฉาก)</div>
     <div class="btn-row">
@@ -293,6 +345,11 @@
     <button class="go" id="gen" style="width:100%;margin-top:7px"><svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>สร้างวิดีโอ 1 คลิป</button>
     <div class="status" id="fstatus"></div>
     <details id="frawWrap" style="display:none"><summary>candidates (debug)</summary><pre id="fraw"></pre></details>
+    </div>
+  </div>
+
+  <div class="flowdock" id="setdock" style="display:none">
+    <button class="go" id="keysave">บันทึกการตั้งค่า</button>
   </div>
 
   <script src="sidepanel.js"></script>

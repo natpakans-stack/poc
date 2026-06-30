@@ -12,8 +12,74 @@ const ICONS = {
   thumb: '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
 };
 const ic = (n) => `<svg class="ici" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ""}</svg>`;
-let selectedImages = []; // รูปที่ user ติ๊กเลือก (คงอยู่ข้ามแท็บ สำหรับส่งเข้า Flow)
+let selectedImages = []; // รูปที่ user ติ๊กเลือก (จาก scrape สินค้า)
+let uploadedRefs = [];   // รูปใบหน้า/ลุค ที่ user อัปจากเครื่อง (data URL) — reference เพิ่ม
 let lastProduct = null;  // ผล scrape ล่าสุด (ใช้สร้าง prompt)
+
+// ── อัปโหลดรูปอ้างอิง (ใบหน้า/ลุค) จากเครื่อง — แท็บพรีเซนเตอร์ ──
+$("refUpload").addEventListener("click", () => $("refFile").click());
+$("refFile").addEventListener("change", () => {
+  [...$("refFile").files].forEach((f) => {
+    const r = new FileReader();
+    r.onload = () => { uploadedRefs.push(r.result); renderRefThumbs(); };
+    r.readAsDataURL(f);
+  });
+  $("refFile").value = "";
+});
+function renderRefThumbs() {
+  $("refThumbs").innerHTML = uploadedRefs.map((u, i) =>
+    `<div class="refthumb"><img src="${u}"><button data-i="${i}" title="ลบ">×</button></div>`).join("");
+  $("refThumbs").querySelectorAll("button[data-i]").forEach((b) =>
+    b.addEventListener("click", () => { uploadedRefs.splice(+b.dataset.i, 1); renderRefThumbs(); }));
+}
+
+// ── viral preset gallery (แทน dropdown — เห็นภาพสไตล์) ──
+// [value(prompt), ชื่อไทย, ชื่ออังกฤษ]
+const VIRAL = [
+  ["Earth zoom-out from the subject all the way into outer space", "ซูมออกสู่อวกาศ", "Earth Zoom Out"],
+  ["Earth zoom-in from outer space down to the subject", "ซูมจากอวกาศลงมา", "Earth Zoom In"],
+  ["free-fall skydiving with the subject, wind and motion", "ตกอิสระ/สกายไดฟ์", "Free Fall"],
+  ["superfast first-person flight, extreme speed motion blur", "บินความเร็วสูง", "Superfast Flight"],
+  ["green night-vision camera look, grainy IR", "กล้องไนท์วิชั่น", "Night Vision"],
+  ["office CCTV surveillance camera footage, timestamp overlay", "กล้องวงจรปิด", "CCTV"],
+  ["early-2000s paparazzi flash photography, harsh flash", "ปาปารัสซี่ Y2K", "Paparazzi"],
+  ["red carpet celebrity arrival, flashing cameras", "เดินพรมแดง", "Red Carpet"],
+  ["neon cyberpunk city at night, reflective rain", "เมืองนีออน", "Neon City"],
+  ["disintegration into particles, dissolving away", "สลายเป็นผง", "Disintegration"],
+  ["frozen time, camera orbits a still bullet-time moment", "หยุดเวลา", "Frozen Time"],
+  ["clean 3D CGI product render reveal on seamless studio", "3D เรนเดอร์", "3D Render"],
+  ["high-speed drift racing, tire smoke, motion blur", "ดริฟต์รถซิ่ง", "Drift Racing"],
+  ["casting a magic spell with glowing energy and particles", "ร่ายเวทมนตร์", "Magic Spell"],
+  ["epic dragon fantasy cinematic scene", "มังกรแฟนตาซี", "Dragon"],
+  ["slow-motion impact moment, shockwave ripple", "สโลโมชันกระแทก", "Slow-mo Impact"],
+  ["dramatic transformation morph of the subject", "แปลงร่าง", "Transformation"],
+];
+// preview จริงจาก Higgsfield (mp4 + thumbnail) — null = ใช้ gradient
+const VIRAL_PREVIEW = [["https://cdn.higgsfield.ai/superhero-gen-preset/5b5cf127-8992-457f-8828-dfeb76603556.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/701b42c5-e637-45f8-a099-0b00a5fa9e8f.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/548bd523-4c5e-4a2d-a0d0-e72a0ca90380.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/3164376b-1cf1-48d4-84a7-44eeb965608a.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/c4fecf92-2899-47e8-a6c3-d8dc9630050f.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/801ea6a6-234e-4acc-86f6-15696f592e09.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/f3b95333-a0da-4317-9abe-69986aef299c.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/d3aa1e93-58cd-4190-bf7c-3b2c7138dc3c.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/9e1aa9b3-52cc-49de-b2bb-638175503ba0.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/e9c8396b-6fdc-4249-a893-4f1a287f5573.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/e7c754af-a8b3-4f16-850f-5422c2e05f3c.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/dffebc7a-dadf-4773-80d6-6ea2fa06e4fe.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/38f76e53-bd38-4976-a0c3-db11c27a654f.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/a5c957be-ee55-4f4f-a243-4e95751bd268.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/a3278dc3-13d2-4fd4-84da-5f708b16e419.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/0c8d6e22-707d-4d51-9fb7-4d2f2cb50b4e.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/313a91ab-0c72-48d7-820a-f67feec2ac0d.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/d0405bee-bb6e-4e6f-939d-f5ff207a5f5d.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/1490876d-9651-4ad8-9b8d-6989e3f7b76d.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/94e3850f-03dd-4aa8-b225-f4bc2cf68936.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/9a53dca8-6e11-4cd7-85c5-065b8d86badc.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/f8f10138-d49d-49da-b5f5-b5b7f7ae48ab.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/771aae60-d237-4da1-8f1e-5966f8dd7ecd.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/125ab1f6-1cde-4051-b017-4d70e75278fa.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/38bd10a6-f5a1-4f83-bcd8-39620399e2b1.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/29d305ff-b656-42c3-a2ac-94027f30b391.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/3ee48cb6-8f34-4f5a-aea9-f3ff467eb0a8.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/519917c4-1ce9-49c5-86b9-a75897400780.webp"],["https://cdn.higgsfield.ai/job_set_chain_preset/6f635ee6-31ee-4b86-9bc9-be16211f3a38.mp4","https://cdn.higgsfield.ai/job_set_chain_preset/d7344f77-ae4c-4e16-884a-84b30a8d14df.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/4c490279-bcbe-4dd6-9e22-281a3bf9c84a.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/f927e509-25b0-47b4-8430-8a4bfeafbaff.webp"],["https://cdn.higgsfield.ai/superhero-gen-preset/ba13b36e-a8c7-4cc8-9a66-67600782abd4.mp4","https://cdn.higgsfield.ai/superhero-gen-preset/f2db962f-ba52-44e3-a5f7-c2b7b2da9da3.webp"]];
+let viralPreset = VIRAL[0][0];
+(function renderViral() {
+  $("vrGrid").innerHTML = VIRAL.map((p, i) => {
+    const pv = VIRAL_PREVIEW[i];
+    const vis = pv
+      ? `<video class="vrvid" src="${pv[0]}" poster="${pv[1]}" muted loop playsinline preload="none"></video>`
+      : `<div class="vrvid" style="background:linear-gradient(135deg, oklch(0.62 0.16 ${(i * 47) % 360}), oklch(0.42 0.14 ${((i * 47) + 45) % 360}))"></div>`;
+    return `<div class="vrcard${i === 0 ? " sel" : ""}" data-i="${i}">
+      <div class="vrtile">${vis}<div class="vrname"><b>${p[1]}</b><span>${p[2]}</span></div></div>
+    </div>`;
+  }).join("");
+  $("vrGrid").querySelectorAll(".vrcard").forEach((c) => {
+    const vid = c.querySelector("video");
+    if (vid) {
+      c.addEventListener("mouseenter", () => vid.play().catch(() => {}));
+      c.addEventListener("mouseleave", () => { vid.pause(); });
+    }
+    c.addEventListener("click", () => {
+      $("vrGrid").querySelectorAll(".vrcard").forEach((x) => x.classList.remove("sel"));
+      c.classList.add("sel");
+      viralPreset = VIRAL[+c.dataset.i][0];
+    });
+  });
+})();
 
 $("go").addEventListener("click", async () => {
   const btn = $("go");
@@ -147,6 +213,7 @@ function switchTab(name) {
   document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === `tab-${name}`));
   $("shared").style.display = name === "settings" ? "none" : "block"; // ซ่อน executor/results ในแท็บตั้งค่า
+  $("setdock").style.display = name === "settings" ? "" : "none";     // โชว์ปุ่มบันทึก (footer) เฉพาะตั้งค่า
 }
 function setG(html) { $("genstatus").innerHTML = html; }
 
@@ -180,7 +247,7 @@ Generate EXACTLY ${n} distinct vertical 9:16 video prompts for ONE consistent Th
 ${schema(lang, 14)}`;
   const user = `Creator: ${$("idName").value || "Thai creator"}\nGender: ${$("idGender").value}\nSkin: ${$("idSkin").value}\nTheme/setting: ${$("idTheme").value}\nExtra: ${$("idDetails").value}\nText overlay: ${$("idText").checked ? "yes" : "no"}\nCount: ${n}`;
   const items = await callGen(system, user);
-  if (items) showCards(items, `ตัวตน ${items.length} ชุด`);
+  if (items) showCards(items, `พรีเซนเตอร์ ${items.length} ชุด`);
 });
 
 $("genProduct").addEventListener("click", async () => {
@@ -203,13 +270,13 @@ Generate a CONNECTED ${n}-scene vertical 9:16 story in genre "${$("srGenre").val
 ${schema(lang, 21)} label = scene beat.`;
   const user = `Genre: ${$("srGenre").value}\nScenes: ${n}\nMain characters: ${$("srChars").value}\nLead gender: ${$("srGender").value}\nSkin: ${$("srSkin").value}\nStory: ${$("srStory").value || "(AI decides a compelling arc)"}`;
   const items = await callGen(system, user);
-  if (items) showCards(items, `ซีรีย์ ${items.length} ฉาก`);
+  if (items) showCards(items, `ละครสั้น ${items.length} ฉาก`);
 });
 
 $("genViral").addEventListener("click", async () => {
   const n = +$("vrCount").value, lang = $("lang").value;
   const subject = $("vrSubject").value.trim() || (lastProduct?.name || "the subject");
-  const effect = $("vrPreset").value;
+  const effect = viralPreset;
   const system = `You are a viral short-video prompt director for Google Flow (Veo).
 Apply the viral video effect/style: "${effect}" to the subject. Generate EXACTLY ${n} vertical 9:16 Veo prompts that showcase this effect DRAMATICALLY — scroll-stopping, high-energy, trend-worthy. The subject appears clearly. Each item a distinct beat/angle of the effect.
 ${schema(lang, 12)}`;
@@ -220,13 +287,15 @@ ${schema(lang, 12)}`;
 
 // LLM key/provider/model (เก็บใน chrome.storage.local) — รองรับ OpenAI + DeepSeek
 const KEY_FIELD = { openai: "openai_key", deepseek: "deepseek_key" };
-chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_model"]).then((s) => {
-  const p = s.llm_provider || "openai";
-  $("provider").value = p;
-  $("apikey").value = s[KEY_FIELD[p]] || "";
-  $("model").value = s.llm_model || "";
-  resyncSelects();
-});
+if (globalThis.chrome?.storage) {
+  chrome.storage.local.get(["llm_provider", "openai_key", "deepseek_key", "llm_model"]).then((s) => {
+    const p = s.llm_provider || "openai";
+    $("provider").value = p;
+    $("apikey").value = s[KEY_FIELD[p]] || "";
+    $("model").value = s.llm_model || "";
+    resyncSelects();
+  });
+}
 $("provider").addEventListener("change", async () => {
   const s = await chrome.storage.local.get(["openai_key", "deepseek_key"]);
   $("apikey").value = s[KEY_FIELD[$("provider").value]] || "";
@@ -238,7 +307,7 @@ $("keysave").addEventListener("click", () => {
     llm_model: $("model").value.trim(),
   });
   $("keysave").textContent = "บันทึกแล้ว ✓";
-  setTimeout(() => { $("keysave").textContent = "บันทึก"; }, 1500);
+  setTimeout(() => { $("keysave").textContent = "บันทึกการตั้งค่า"; }, 1500);
 });
 // helper: พิมพ์ข้อความเข้า Flow (ใช้ทั้งปุ่มเดี่ยว + ปุ่มรายซีน) — คืน tabId เผื่อ re-probe
 async function typeToFlow(text) {
@@ -337,8 +406,9 @@ $("probe").addEventListener("click", async () => {
 // background fetch bytes (เลี่ยง CORS) → ส่ง data URL → ประกอบ File ในหน้า Flow → ส่ง file input
 $("injimg").addEventListener("click", async () => {
   try {
-    if (!selectedImages.length) {
-      setF(`<span class="badge bad">ยังไม่ได้เลือกรูป</span> ไปแท็บ สินค้า กดดึงข้อมูล แล้วเลือกรูปก่อน`);
+    const urls = [...uploadedRefs, ...selectedImages]; // รูปอัปจากเครื่อง + รูป scrape
+    if (!urls.length) {
+      setF(`<span class="badge bad">ยังไม่มีรูป</span> อัปรูป (แท็บพรีเซนเตอร์) หรือเลือกรูป (แท็บสินค้า) ก่อน`);
       return;
     }
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -346,16 +416,17 @@ $("injimg").addEventListener("click", async () => {
       setF(`<span class="badge bad">ยังไม่ได้เปิดหน้า Flow</span> สลับไปแท็บ Flow ก่อน (รูปที่เลือกยังอยู่)`);
       return;
     }
-    const urls = selectedImages;
     let injected = 0, failed = 0;
     // วนส่งทีละรูป + เว้นจังหวะให้ Flow รับ (re-query input ใหม่ทุกรอบในตัว inject)
     for (let i = 0; i < urls.length; i++) {
       setF(`ส่งรูป ${i + 1}/${urls.length}... (สำเร็จ ${injected})`);
-      const resp = await chrome.runtime.sendMessage({ type: "fetchImage", url: urls[i] });
-      if (!resp?.ok) { failed++; continue; }
+      let dataUrl;
+      if (urls[i].startsWith("data:")) dataUrl = urls[i];           // รูปอัปจากเครื่อง — ใช้ตรง
+      else { const resp = await chrome.runtime.sendMessage({ type: "fetchImage", url: urls[i] }); // รูป URL — fetch ผ่าน bg เลี่ยง CORS
+        if (!resp?.ok) { failed++; continue; } dataUrl = resp.dataUrl; }
       const [{ result: r } = {}] = await chrome.scripting.executeScript({
         target: { tabId: tab.id }, world: "MAIN", func: injectImageToFlow,
-        args: [{ dataUrl: resp.dataUrl, filename: `product-${i + 1}.jpg` }],
+        args: [{ dataUrl, filename: `ref-${i + 1}.jpg` }],
       });
       if (r?.ok) injected++; else failed++;
       await new Promise((res) => setTimeout(res, 700)); // ให้ Flow ประมวลผลก่อนรูปถัดไป
@@ -412,36 +483,65 @@ const _csSyncs = [];
 function resyncSelects() { _csSyncs.forEach((f) => f()); }
 function buildCustom(sel) {
   if (sel.dataset.cs) return; sel.dataset.cs = "1";
+  const opts = [...sel.options];
   const wrap = document.createElement("div"); wrap.className = "cs";
   const btn = document.createElement("button"); btn.type = "button"; btn.className = "cs-btn";
-  btn.innerHTML = '<span class="cs-val"></span><span class="cs-cv">▾</span>';
-  const list = document.createElement("div"); list.className = "cs-list";
+  btn.innerHTML = '<span class="cs-val"></span><span class="cs-cv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>';
+  const list = document.createElement("div"); list.className = "cs-list"; list.setAttribute("role", "listbox");
+  let active = -1;
   const sync = () => {
     btn.querySelector(".cs-val").textContent = sel.options[sel.selectedIndex]?.text || "";
     [...list.children].forEach((li, i) => li.classList.toggle("on", i === sel.selectedIndex));
   };
   _csSyncs.push(sync);
-  [...sel.options].forEach((o, i) => {
-    const li = document.createElement("div"); li.className = "cs-opt"; li.textContent = o.text;
-    li.addEventListener("click", () => {
-      sel.selectedIndex = i; sel.dispatchEvent(new Event("change", { bubbles: true }));
-      sync(); wrap.classList.remove("open");
-    });
+  const setActive = (i) => {
+    active = Math.max(0, Math.min(opts.length - 1, i));
+    [...list.children].forEach((li, j) => li.classList.toggle("active", j === active));
+    list.children[active]?.scrollIntoView({ block: "nearest" });
+  };
+  const choose = (i) => { sel.selectedIndex = i; sel.dispatchEvent(new Event("change", { bubbles: true })); sync(); close(); btn.focus(); };
+  const open = () => {
+    document.querySelectorAll(".cs.open").forEach((c) => c.classList.remove("open", "up"));
+    const r = btn.getBoundingClientRect();
+    if (window.innerHeight - r.bottom < 240 && r.top > 240) wrap.classList.add("up"); // เปิดขึ้นบนถ้าใกล้ขอบล่าง
+    wrap.classList.add("open");
+    setActive(sel.selectedIndex >= 0 ? sel.selectedIndex : 0);
+  };
+  const close = () => wrap.classList.remove("open", "up");
+  opts.forEach((o, i) => {
+    const li = document.createElement("div"); li.className = "cs-opt"; li.textContent = o.text; li.setAttribute("role", "option");
+    li.addEventListener("click", () => choose(i));
+    li.addEventListener("mousemove", () => setActive(i));
     list.appendChild(li);
+  });
+  btn.addEventListener("click", (e) => { e.stopPropagation(); wrap.classList.contains("open") ? close() : open(); });
+  btn.addEventListener("keydown", (e) => {
+    if (!wrap.classList.contains("open")) {
+      if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) { e.preventDefault(); open(); }
+      return;
+    }
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive(active + 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(active - 1); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(active); }
+    else if (e.key === "Escape" || e.key === "Tab") { close(); }
   });
   sel.style.display = "none";
   sel.parentNode.insertBefore(wrap, sel);
   wrap.append(sel, btn, list);
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const open = wrap.classList.contains("open");
-    document.querySelectorAll(".cs.open").forEach((c) => c.classList.remove("open"));
-    if (!open) wrap.classList.add("open");
-  });
   sel.addEventListener("change", sync);
   sync();
 }
-document.addEventListener("click", () => document.querySelectorAll(".cs.open").forEach((c) => c.classList.remove("open")));
+document.addEventListener("click", () => document.querySelectorAll(".cs.open").forEach((c) => c.classList.remove("open", "up")));
+
+// fixed footer (flowdock) → เว้น padding ล่างของ body เท่าความสูง dock (วัดอัตโนมัติ)
+if (window.ResizeObserver) {
+  const docks = [$("flowdock"), $("setdock")];      // footer ที่โชว์อยู่ตัวเดียว อีกตัว height 0
+  const ro = new ResizeObserver(() => {
+    const h = docks.reduce((s, d) => s + (d.offsetHeight || 0), 0);
+    document.body.style.paddingBottom = (h ? h + 4 : 0) + "px";
+  });
+  docks.forEach((d) => ro.observe(d));
+}
 document.querySelectorAll("select.psel").forEach(buildCustom);
 
 // ── Injected scraper (runs in page MAIN world) ─────────────────────
