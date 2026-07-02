@@ -9,6 +9,9 @@ import { startGenerate, getStatus, openEditor, type Avatar, type Template, type 
 const DEFAULT_SCRIPT =
   "สวัสดีค่าทุกคน วันนี้มารีวิวเซรั่มวิตามินซี AURA ทาแล้วหน้าใสขึ้นออร่า ซึมไว ไม่เหนียว ลดจุดด่างดำ วันนี้ลดพิเศษเฉพาะไลฟ์ กดสั่งเลยน้า";
 
+// ประมาณเวลาพูดจากบท: ไทย ~8 ตัวอักษร/วินาที, จำกัด 5–60 วิ (ต้องตรงกับ estSec ใน ScriptColumn)
+const estDur = (s: string) => String(Math.min(60, Math.max(5, Math.round(s.length / 8))));
+
 export default function App() {
   // source
   const [images, setImages] = useState<File[]>([]);
@@ -16,8 +19,20 @@ export default function App() {
   const [avatarId, setAvatarId] = useState<string | null>(null);
   // script
   const [script, setScript] = useState(DEFAULT_SCRIPT);
-  // output settings + template
-  const [settings, setSettings] = useState<Settings>({ mode: "product_review", aspect: "9:16", duration: "15", resolution: "720p" });
+  // output settings + template — duration เริ่มต้นตามความยาวบท (auto จนกว่าผู้ใช้จะแก้เอง)
+  const [durTouched, setDurTouched] = useState(false);
+  const [settings, setSettings] = useState<Settings>({ mode: "product_review", aspect: "9:16", duration: estDur(DEFAULT_SCRIPT), resolution: "720p" });
+
+  // แก้บท → sync duration ให้พอดีเสียง (เว้นแต่ผู้ใช้ตั้งวินาทีเองแล้ว)
+  const onScript = (s: string) => {
+    setScript(s);
+    if (!durTouched) setSettings((v) => ({ ...v, duration: estDur(s) }));
+  };
+  // ผู้ใช้แตะช่องวินาทีเอง → หยุด auto-sync
+  const onSettings = (s: Settings) => {
+    if (s.duration !== settings.duration) setDurTouched(true);
+    setSettings(s);
+  };
   const [template, setTemplate] = useState<Template>("avatar");
   // lightbox + generation
   const [zoom, setZoom] = useState<Avatar | null>(null);
@@ -26,7 +41,7 @@ export default function App() {
   const fail = (msg: string) => setGen({ phase: "error", videoUrl: null, statusText: msg, statusErr: true });
 
   async function onGenerate() {
-    if (!images.length) return fail("กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป");
+    if (template !== "avatar" && !images.length) return fail("กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป");
     if (!avatarId) return fail("กรุณาเลือก avatar");
     if (!script.trim()) return fail("กรุณาใส่สคริปต์");
 
@@ -95,12 +110,12 @@ export default function App() {
         </Column>
 
         <Column index={2} title="Script" variant="script">
-          <ScriptColumn script={script} setScript={setScript} targetSec={parseInt(settings.duration, 10) || 15} />
+          <ScriptColumn script={script} setScript={onScript} targetSec={parseInt(settings.duration, 10) || 15} />
         </Column>
 
         <Column index={3} title="Output" variant="output">
           <OutputColumn
-            settings={settings} setSettings={setSettings}
+            settings={settings} setSettings={onSettings}
             template={template} setTemplate={setTemplate}
             gen={gen} onGenerate={onGenerate} onEdit={onEdit}
           />

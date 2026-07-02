@@ -83,9 +83,12 @@ Bun.serve({
         const images = form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
         const refVideo = form.get("refVideo");
 
+        const template = String(form.get("template") || "avatar");
+
         if (!script) return json({ error: "กรุณาใส่สคริปต์" }, 400);
         if (!avatarId) return json({ error: "กรุณาเลือก avatar" }, 400);
-        if (!images.length) return json({ error: "กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป" }, 400);
+        // avatar mode = presenter just stands & talks, product image optional; pipeline templates need one.
+        if (template !== "avatar" && !images.length) return json({ error: "กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป" }, 400);
 
         const jobDir = `${JOBS}/${crypto.randomUUID()}`;
         await mkdir(jobDir, { recursive: true });
@@ -101,7 +104,6 @@ Bun.serve({
         // ── template routing ──
         // "full" / "no_person" → run the Remotion pipeline as a background job (minutes); poll with kind=pipeline.
         // "avatar" (default)   → Higgsfield single-shot below (presenter speaks, lip-synced).
-        const template = String(form.get("template") || "avatar");
         if (template === "full" || template === "no_person") {
           const id = crypto.randomUUID();
           const outName = `web_${id}.mp4`;
@@ -127,10 +129,19 @@ Bun.serve({
         const avatarsFile = `${jobDir}/avatars.json`;
         await writeFile(avatarsFile, JSON.stringify([{ id: avatarId, type: "preset" }]));
 
-        const prompt =
-          `Vertical UGC live-selling clip. A presenter sits at a cozy livestream setup and shows the product to the camera, ` +
-          `foreground product, simple lifestyle background, energetic natural live-stream selling vibe. ` +
-          `The host says: "${script}"`;
+        const prompt = imgPaths.length
+          ? `Vertical UGC live-selling clip. A presenter sits at a cozy livestream setup and shows the product to the camera, ` +
+            `foreground product, simple lifestyle background, energetic natural live-stream selling vibe. ` +
+            `The host says: "${script}"`
+          : `Single continuous locked-off talking-head clip, ONE fixed camera shot for the entire video: no cuts, no camera movement, ` +
+            `no zoom, no scene change, no b-roll, the framing stays identical the whole time. ` +
+            `A pretty, friendly young woman presenter talks straight to camera. ` +
+            `Waist-up medium shot, well-framed and centered: full head with clear headroom (top of the head NOT cropped), ` +
+            `shoulders and torso down to the waist all visible, body never cut off at the edges. ` +
+            `She stays in place with both hands gently clasped together in front at waist level, holding nothing, no product anywhere in frame; ` +
+            `only her lips, subtle facial expression and small natural hand gestures move — she does not walk, turn, or move around. ` +
+            `Clean plain white studio background, soft even lighting, warm natural live-stream selling vibe, precise lip-sync to the speech. ` +
+            `The host says: "${script}"`;
 
         const args = [
           "generate", "create", "marketing_studio_video", "--json",
